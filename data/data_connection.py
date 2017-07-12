@@ -1,20 +1,27 @@
-import pyorient
+from pyorient.ogm import Graph, Config
+from pyorient.ogm.declarative import declarative_node, declarative_relationship
 
-__data_client = None
+NodeBase = declarative_node()
+RelationshipBase = declarative_relationship()
+
+graph: Graph = None
 
 
-def __is_connected():
-    global __data_client
-    return __data_client is not None
+def is_connected():
+    global graph
+    return graph is not None
 
+def get_graph():
+    return graph
 
 def connect_database(host, database, user, password):
-    global __data_client
-    __data_client = pyorient.OrientDB(host, 2424)
-    __data_client.db_open(database, user, password)
+    global graph
+    graph = Graph(Config.from_url('plocal://5.153.55.125:2424/test', 'root', '5e256570-8870-4441-9f88-6194f4fefd9a'))
+    graph.create_all(NodeBase.registry)
+    graph.create_all(RelationshipBase.registry)
 
 
 def get_dbsize():
-    global __data_client
-    if __is_connected():
-        return __data_client.db_size()
+    global graph
+    if is_connected():
+        return graph.client.db_size()

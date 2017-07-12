@@ -26,6 +26,7 @@ data.data_connection.connect_database('5.153.55.125', 'test', 'reader', 'reader'
 # Register API controllers (/api/)
 api.register_controllers(app)
 
+
 @app.route('/')
 def get_all_routes():
     output = []
@@ -36,8 +37,7 @@ def get_all_routes():
             options[arg] = "[{0}]".format(arg)
 
         methods = ','.join(rule.methods)
-        url = url_for(rule.endpoint, **options)
-        line = urllib.parse.unquote("{:50s} {:20s} {}".format(rule.endpoint, methods, url))
+        line = urllib.parse.unquote("{:50s} {:20s} {}".format(rule.endpoint, methods, rule.rule))
         output.append(line)
 
     return jsonify(sorted(output))

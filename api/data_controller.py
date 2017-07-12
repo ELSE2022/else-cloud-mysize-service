@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify
 from data import data_connection
 
+
 data_controller = Blueprint('data_controller', __name__)
 
 

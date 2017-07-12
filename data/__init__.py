@@ -1,1 +1,1 @@
-from data import data_connection
+from . import data_connection
