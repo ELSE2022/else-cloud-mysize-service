@@ -14,9 +14,9 @@ def is_connected():
 def get_graph():
     return graph
 
-def connect_database(host, database, user, password):
+def connect_database(host, user, password):
     global graph
-    graph = Graph(Config.from_url('plocal://5.153.55.125:2424/test', 'root', '5e256570-8870-4441-9f88-6194f4fefd9a'))
+    graph = Graph(Config.from_url(host, user, password))
     graph.create_all(NodeBase.registry)
     graph.create_all(RelationshipBase.registry)
 

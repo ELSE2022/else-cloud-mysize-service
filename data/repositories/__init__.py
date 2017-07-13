@@ -1,1 +1,2 @@
 from .UsersRepository import UsersRepository
+from .UserLikesRepository import UserLikesRepository

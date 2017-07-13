@@ -21,23 +21,32 @@ class RepositoryBase(object):
     def __init__(self, model_type):
         self.__model_type = model_type
 
-    def add(self, prop_dict):
+    def add(self, prop_dict, result_JSON= False):
         """
         add record by properties dict
         :param prop_dict: dictionary of values for properties updating (OUT OF TYPE will be ignored)
-        :return: created MODEL OBJECT)
+        :param result_JSON: return result as JSON text (default = False)
+        :return: created MODEL OBJECT or JSON
         """
-        if self.__broker:
-            return self.__broker.create(**prop_dict)
+        if self.is_connected():
+            if result_JSON:
+                return self.sql_command("SELECT * FROM V WHERE @rid = {}"
+                                        .format(self.__broker.create(**prop_dict)), result_JSON=True)[0].oRecordData['data']
+            else:
+                return self.__broker.create(**prop_dict)
 
-    def get(self, query_dict):
+    def get(self, query_dict, result_JSON= False):
         """
         get records by query dict
         :param query_dict: dictionary of values for records searching
         :return: list of MODEL OBJECTS
         """
         if self.is_connected():
-            return [obj for obj in self.__broker.query(**query_dict)]
+            if result_JSON:
+                json_list = [val.oRecordData['data'] for val in self.sql_command(self.__broker.query(**query_dict), result_JSON=True)]
+                return "{[" + ",".join(json_list) + "]}"
+            else:
+                return [obj for obj in self.__broker.query(**query_dict)]
 
     def update(self, query_dict, prop_dict):
         """
@@ -48,7 +57,7 @@ class RepositoryBase(object):
 
         :param query_dict: dictionary of values for records searching
         :param prop_dict: dictionary of values for properties updating (OUT OF TYPE will be ignored)
-        :return: list of updated orient records
+        :return: list of updated MODEL OBJECTS
         """
         if self.is_connected():
             result = []
@@ -56,10 +65,16 @@ class RepositoryBase(object):
                 for key in prop_dict:
                     setattr(rec, key, prop_dict[key])
                 cluster, id = (int(val) for val in rec._id.replace('#', '').split(':'))
-                result.append(self.__graph.client.record_update(cluster, id, rec._props))
+                self.__graph.client.record_update(cluster, id, rec._props)
+                result.append(rec)
             return result
 
     def delete(self, query_dict):
+        """
+        delete records in database
+        :param query_dict: dictionary of values for records searching
+        :return: Count of deleted records
+        """
         if self.is_connected():
             result = []
             for rec in self.__broker.query(**query_dict):
@@ -67,11 +82,18 @@ class RepositoryBase(object):
                 result.append(self.__graph.client.record_delete(cluster, id))
             return result.count(True)
 
-    def pure_sql_query(self, sqlquery):
+    def sql_command(self, sqlcommand, result_JSON= False):
         """
         Call direct SQL query
-        :param sqlquery: query string
-        :return: list of orient records
+        :param sqlcommand: query string
+        :param result_JSON: return result as JSON text (default = False)
+        :return: list of orient records [oRecordData] or list of Json
         """
         if self.is_connected():
-            return self.__graph.client.query(sqlquery)
+            if result_JSON:
+                return self.__graph.client.command(
+                    "SELECT @this.toJson('rid,version,fetchPlan:*:-1') AS data FROM ({})".format(sqlcommand)
+                )
+            else:
+                return self.__graph.client.command(sqlcommand)
+

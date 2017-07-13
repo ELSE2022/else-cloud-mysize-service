@@ -21,7 +21,7 @@ import api
 app = Flask(__name__)
 
 # Connect database
-data.data_connection.connect_database('5.153.55.125', 'test', 'reader', 'reader')
+data.data_connection.connect_database('plocal://5.153.55.125:2424/test', 'root', '5e256570-8870-4441-9f88-6194f4fefd9a')
 
 # Register API controllers (/api/)
 api.register_controllers(app)
