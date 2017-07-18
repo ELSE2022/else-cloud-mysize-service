@@ -4,5 +4,12 @@ from .ProductRepository import ProductRepository
 from .ModelTypeRepository import ModelTypeRepository
 from .ModelRepository import ModelRepository
 from .SizeRepository import SizeRepository
-from .ModelMetricRepository import ModelMetricRepository
+from .ModelTypeMetricRepository import ModelTypeMetricRepository
 from .ModelMetricValueRepository import ModelMetricValueRepository
+from .ScannerModelRepository import ScannerModelRepository
+from .ScannerRepository import ScannerRepository
+from .ScanMetricRepository import ScanMetricRepository
+from .ComparisonRuleRepository import ComparisonRuleRepository
+from .ComparisonRuleMetricRepository import ComparisonRuleMetricRepository
+from .ScanRepository import ScanRepository
+from .ScanMetricValueRepository import ScanMetricValueRepository

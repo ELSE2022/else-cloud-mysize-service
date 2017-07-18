@@ -25,8 +25,8 @@ app = Flask(__name__)
 initial_drop = False
 data.data_connection.connect_database('plocal://5.153.55.125:2424/test', 'root', '5e256570-8870-4441-9f88-6194f4fefd9a', initial_drop)
 
-#Import data from postgress (if needed)
-# posgress_import.import_sql('postgresql://postgres:postgres@localhost:5432/else')
+# Import data from postgress (if needed)
+# posgresql_import.import_sql('postgresql://postgres:postgres@localhost:5432/else')
 
 # Register API controllers (/api/)
 api.register_controllers(app)

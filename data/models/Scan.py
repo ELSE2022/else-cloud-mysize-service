@@ -11,4 +11,9 @@ class Scan(NodeBase):
     scanner = Link(indexed=True, mandatory=True, nullable=False, linked_to=Scanner)
     model_type = Link(indexed=True, mandatory=True, nullable=False, linked_to=ModelType)
     creation_time = DateTime()
+    scan_id = String()
+
     name = String()
+    sex = String()
+    stl_path = String()
+    img_path = String()
