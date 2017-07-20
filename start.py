@@ -13,11 +13,11 @@
 # limitations under the License.
 
 import os
-from flask import Flask, url_for, jsonify
+from flask import Flask, jsonify
 import urllib
 import data
 import api
-import posgress_import
+import posgresql_import
 
 app = Flask(__name__)
 

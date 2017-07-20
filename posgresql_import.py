@@ -1,4 +1,5 @@
 import sqlalchemy
+import datetime
 from sqlalchemy.orm import sessionmaker, scoped_session
 from collections import namedtuple
 
@@ -17,6 +18,7 @@ from data.repositories import ComparisonRuleRepository
 from data.repositories import ComparisonRuleMetricRepository
 from data.repositories import ScanRepository
 from data.repositories import ScanMetricValueRepository
+from data.repositories import UserSizeRepository
 
 
 def import_sql(connectionstring):
@@ -86,7 +88,8 @@ def import_sql(connectionstring):
         left_rule = left_rule[0]
         right_rule = right_rule[0]
 
-    # Populate sizes, models, model metrics
+    # Repositories links
+
     _productRep = ProductRepository()
     _modelRep = ModelRepository()
     _sizeRep = SizeRepository()
@@ -98,7 +101,9 @@ def import_sql(connectionstring):
     _scannerRep = ScannerRepository()
     _scanRep = ScanRepository()
     _scanMetricValueRep = ScanMetricValueRepository()
+    _userSizeRep = UserSizeRepository()
 
+    # Populate sizes, models, model metrics
     data = call_sql("SELECT product.uuid as product_uuid, last.id as model, last_attr.name as attribute, last_attr.scan_attribute_name as scan_attribute, last_attr.value as value, last.model_type as model_type, size.value as size_value, size.numeric_value as size_order, last_attr.left_limit_value as f1, last_attr.best_value as shift, last_attr.right_limit_value as f2\
                         FROM fitting_lastattribute as last_attr\
                         left outer join fitting_last as last\
@@ -172,7 +177,7 @@ def import_sql(connectionstring):
         print("Import Product, Size, Model, ModelMetric, ModelMetricValue: {0}/{1}".format(i, l))
 
     #Scans import
-    data = call_sql("SELECT users.uuid as user_uuid, users.base_url as user_url, scan.scan_id, scan.scanner, scan.created_date, scan.attachment, scan.model_type, attr.name, attr.value\
+    data = call_sql("SELECT users.id as user_id, users.uuid as user_uuid, users.base_url as user_url, scan.id as scan_num_id, scan.scan_id, scan.scanner, scan.created_date, scan.attachment, scan.model_type, attr.name, attr.value\
                         FROM fitting_scan as scan\
                         left outer join fitting_scanattribute as attr\
                         on attr.scan_id = scan.id\
@@ -183,9 +188,9 @@ def import_sql(connectionstring):
 
     for r in data:
 
-        user = _userRep.get(dict(uuid=r.user_uuid, base_url=r.user_url))
+        user = _userRep.get(dict(uuid=r.user_uuid, num_id=r.user_id, base_url=r.user_url))
         if len(user) == 0:
-            user = _userRep.add(dict(uuid=r.user_uuid, base_url=r.user_url))
+            user = _userRep.add(dict(uuid=r.user_uuid, num_id=r.user_id, base_url=r.user_url))
         else:
             user = user[0]
 
@@ -195,11 +200,11 @@ def import_sql(connectionstring):
         else:
             scanner = scanner[0]
 
-        scan = _scanRep.get(dict(user=user, scanner=scanner, model_type=left_foot if r.model_type == 'LEFT_FOOT' else right_foot,
+        scan = _scanRep.get(dict(num_id=r.scan_num_id, user=user, scanner=scanner, model_type=left_foot if r.model_type == 'LEFT_FOOT' else right_foot,
                                  creation_time=r.created_date, scan_id=r.scan_id, stl_path=r.attachment))
         if len(scan) == 0:
             scan = _scanRep.add(
-                dict(user=user, scanner=scanner, model_type=left_foot if r.model_type == 'LEFT_FOOT' else right_foot,
+                dict(num_id=r.scan_num_id, user=user, scanner=scanner, model_type=left_foot if r.model_type == 'LEFT_FOOT' else right_foot,
                      creation_time=r.created_date, scan_id=r.scan_id, stl_path=r.attachment))
         else:
             scan = scan[0]
@@ -231,4 +236,30 @@ def import_sql(connectionstring):
 
         i += 1
         print("Import Scan, User, ScanMetricValue: {0}/{1}".format(i, l))
+
+    # Default scans import
+    print("Populating default scans")
+    data = call_sql("SELECT * FROM fitting_user_default_scans")
+    for r in data:
+        _scanRep.update(dict(num_id=r.scan_id), dict(is_default=True))
+
+    # User sizes import
+    print("Populating user sizes")
+    data = call_sql("SELECT usizes.user_id as user_id, sizes.numeric_value as size_order, sizes.value as size_value\
+                        FROM fitting_user_sizes as usizes\
+                        left outer join fitting_size as sizes\
+                        on sizes.id = usizes.size_id")
+    for r in data:
+
+        user = _userRep.get(dict(num_id=r.user_id))
+        if len(user) > 0:
+            user = user[0]
+            size = _sizeRep.get(dict(string_value=r.size_value, order=r.size_order, model_types=foot_types))
+            if len(size) == 0:
+                size = _sizeRep.add(dict(string_value=r.size_value, order=r.size_order, model_types=foot_types))
+            else:
+                size = size[0]
+            _userSizeRep.add(dict(user=user, size=size, creation_time=datetime.datetime.now()))
+
+
     print('Import Ended')

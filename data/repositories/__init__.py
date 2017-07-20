@@ -13,3 +13,4 @@ from .ComparisonRuleRepository import ComparisonRuleRepository
 from .ComparisonRuleMetricRepository import ComparisonRuleMetricRepository
 from .ScanRepository import ScanRepository
 from .ScanMetricValueRepository import ScanMetricValueRepository
+from .UserSizeRepository import UserSizeRepository
