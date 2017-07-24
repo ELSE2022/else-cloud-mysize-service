@@ -6,6 +6,6 @@ from .ModelTypeMetric import ModelTypeMetric
 
 class ModelMetricValue(NodeBase):
     element_plural = 'model_metric_values'
-    model = Link(indexed=True, mandatory=True, nullable=False, linked_to=Model)
-    metric = Link(indexed=True, mandatory=True, nullable=False, linked_to=ModelTypeMetric)
+    model = Link(mandatory=True, nullable=False, linked_to=Model)
+    metric = Link(mandatory=True, nullable=False, linked_to=ModelTypeMetric)
     value = String()

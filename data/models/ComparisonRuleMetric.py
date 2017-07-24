@@ -8,10 +8,10 @@ from .ScanMetric import ScanMetric
 
 class ComparisonRuleMetric(NodeBase):
     element_plural = 'comparisonrule_metrics'
-    rule = Link(indexed=True, mandatory=True, nullable=False, linked_to=ComparisonRule)
-    size = Link(indexed=True, mandatory=True, nullable=False, linked_to=Size)
-    model_metric = Link(indexed=True, mandatory=True, nullable=False, linked_to=ModelTypeMetric)
-    scan_metric = Link(indexed=True, mandatory=True, nullable=False, linked_to=ScanMetric)
+    rule = Link(mandatory=True, nullable=False, linked_to=ComparisonRule)
+    size = Link(mandatory=True, nullable=False, linked_to=Size)
+    model_metric = Link(mandatory=True, nullable=False, linked_to=ModelTypeMetric)
+    scan_metric = Link(mandatory=True, nullable=False, linked_to=ScanMetric)
 
     f1 = Float()
     shift = Float()

@@ -6,7 +6,7 @@ data_controller = Blueprint('data_controller', __name__)
 
 
 @data_controller.route('/api/data/checkdb')
-def checkDB():
+def check_db():
     size = data_connection.get_dbsize()
     return jsonify({
         'db_size': size
