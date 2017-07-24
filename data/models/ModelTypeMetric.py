@@ -5,5 +5,5 @@ from .ModelType import ModelType
 
 class ModelTypeMetric(NodeBase):
     element_plural = 'modeltype_metrics'
-    model_type = Link(indexed=True, mandatory=True, nullable=False, linked_to=ModelType)
+    model_type = Link(mandatory=True, nullable=False, linked_to=ModelType)
     name = String()

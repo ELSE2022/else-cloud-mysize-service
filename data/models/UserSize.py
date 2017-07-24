@@ -6,6 +6,6 @@ from .Size import Size
 
 class UserSize(NodeBase):
     element_plural = 'user_sizes'
-    user = Link(indexed=True, mandatory=True, nullable=False, linked_to=User)
-    size = Link(indexed=True, mandatory=True, nullable=False, linked_to=Size)
+    user = Link(mandatory=True, nullable=False, linked_to=User)
+    size = Link(mandatory=True, nullable=False, linked_to=Size)
     creation_time = DateTime(mandatory=True)
