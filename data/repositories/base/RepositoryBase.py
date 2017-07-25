@@ -82,11 +82,12 @@ class RepositoryBase(object):
                 result.append(self.__graph.client.record_delete(cluster, id))
             return result.count(True)
 
-    def sql_command(self, sqlcommand, result_JSON= False):
+    def sql_command(self, sqlcommand, result_as_dict=False, result_JSON= False):
         """
         Call direct SQL query
         :param sqlcommand: query string
         :param result_JSON: return result as JSON text (default = False)
+        :param result_as_dict: return result as 'list of dict' but NOT orientRecord (default = False)
         :return: list of orient records [oRecordData] or list of Json
         """
         if self.is_connected():
@@ -94,6 +95,8 @@ class RepositoryBase(object):
                 return self.__graph.client.command(
                     "SELECT @this.toJson('rid,version,fetchPlan:*:-1') AS data FROM ({})".format(sqlcommand)
                 )
+            elif result_as_dict:
+                return [rec.oRecordData for rec in self.__graph.client.command(sqlcommand)]
             else:
                 return self.__graph.client.command(sqlcommand)
 
