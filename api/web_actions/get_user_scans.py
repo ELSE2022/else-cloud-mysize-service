@@ -1,5 +1,6 @@
 import logging
 from flask import Blueprint, jsonify, request, abort
+from ..authentication import requires_auth
 
 from data.repositories import UserRepository
 from data.repositories import ScanRepository
@@ -26,6 +27,7 @@ def get_foot_scans(scans):
 
 
 @get_user_scans_action.route('/fitting/get_user_scans')
+@requires_auth
 def get_user_scans():
     user_uuid = request.args.get('user')
     user = _userRep.get(dict(uuid=user_uuid))

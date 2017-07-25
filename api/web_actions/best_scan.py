@@ -1,5 +1,6 @@
 import logging
 from flask import Blueprint, jsonify, request, abort
+from ..authentication import requires_auth
 
 from data.repositories import UserRepository, ScanRepository, ScannerModelRepository, ScanMetricRepository, ScanMetricValueRepository
 from data import data_connection
@@ -50,6 +51,7 @@ best_scan_action = Blueprint('best_scan_action', __name__)
 
 
 @best_scan_action.route('/fitting/best_scan')
+@requires_auth
 def best_scan():
     user_uuid = request.args.get('user')
     user = _userRep.get(dict(uuid=user_uuid))
