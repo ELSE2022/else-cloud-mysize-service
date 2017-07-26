@@ -79,14 +79,11 @@ def import_sql(connectionstring):
     # Populate Comparison Rule
     print("Import ComparisonRule")
     _rep = ComparisonRuleRepository()
-    left_rule = _rep.get(dict(name='LEFT_FOOT', model_type=left_foot, scanner_model=scanner_model))
-    right_rule = _rep.get(dict(name='RIGHT_FOOT', model_type=right_foot, scanner_model=scanner_model))
-    if len(left_rule) == 0 and len(right_rule) == 0:
-        left_rule = _rep.add(dict(name='LEFT_FOOT', model_type=left_foot, scanner_model=scanner_model))
-        right_rule = _rep.add(dict(name='RIGHT_FOOT', model_type=right_foot, scanner_model=scanner_model))
+    comp_rule = _rep.get(dict(name='FOOT', model_types=foot_types, scanner_model=scanner_model))
+    if len(comp_rule) == 0:
+        comp_rule = _rep.add(dict(name='FOOT', model_types=foot_types, scanner_model=scanner_model))
     else:
-        left_rule = left_rule[0]
-        right_rule = right_rule[0]
+        comp_rule = comp_rule[0]
 
     # Repositories links
 
@@ -153,7 +150,7 @@ def import_sql(connectionstring):
                 scan_metric = scan_metric[0]
 
             # Comparison Rule metric
-            rule_metric = _compRuleMetricRep.get(dict(rule=left_rule if r.model_type == 'LEFT_FOOT' else right_rule,
+            rule_metric = _compRuleMetricRep.get(dict(rule=comp_rule,
                                                       size=size,
                                                       model_metric=metric,
                                                       scan_metric=scan_metric,
@@ -162,7 +159,7 @@ def import_sql(connectionstring):
                                                       f2=r.f2
                                                       ))
             if len(rule_metric) == 0:
-                rule_metric = _compRuleMetricRep.add(dict(rule=left_rule if r.model_type == 'LEFT_FOOT' else right_rule,
+                rule_metric = _compRuleMetricRep.add(dict(rule=comp_rule,
                                                           size=size,
                                                           model_metric=metric,
                                                           scan_metric=scan_metric,
