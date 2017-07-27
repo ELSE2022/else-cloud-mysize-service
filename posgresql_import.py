@@ -44,24 +44,6 @@ def import_sql(connectionstring):
     else:
         scanner_model = scanner_model[0]
 
-    # Populate Brand (FAKE)
-    print("Import Brand")
-    _rep = BrandRepository()
-    brand = None
-    if len(_rep.get(dict(uuid='860f5cd9-0edf-41dd-acb9-c162e95fa6c7'))) == 0:
-        brand = _rep.add(dict(uuid='860f5cd9-0edf-41dd-acb9-c162e95fa6c7', name='Initial BRAND (data export)'))
-    else:
-        brand = _rep.get(dict(uuid='860f5cd9-0edf-41dd-acb9-c162e95fa6c7'))[0]
-
-    # Populate Product
-    print("Import Product")
-    _rep = ProductRepository()
-    for r in call_sql("SELECT *\
-                FROM fitting_product\
-                where uuid in ('X004-128-C1825', 'X004-994-C723', 'X001-081-C351R', 'X001-894-C443R', 'X001-776-C510R', 'X001-286-C3001R') "):
-        if len(_rep.get(dict(uuid=r.uuid))) == 0:
-            _rep.add(dict(uuid=r.uuid, brand=brand))
-
     # Populate model types'
     print("Import ModelType")
     _rep = ModelTypeRepository()
@@ -84,6 +66,24 @@ def import_sql(connectionstring):
         comp_rule = _rep.add(dict(name='FOOT', model_types=foot_types, scanner_model=scanner_model))
     else:
         comp_rule = comp_rule[0]
+
+    # Populate Brand (FAKE)
+    print("Import Brand")
+    _rep = BrandRepository()
+    brand = None
+    if len(_rep.get(dict(uuid='860f5cd9-0edf-41dd-acb9-c162e95fa6c7'))) == 0:
+        brand = _rep.add(dict(uuid='860f5cd9-0edf-41dd-acb9-c162e95fa6c7', name='Initial BRAND (data export)'))
+    else:
+        brand = _rep.get(dict(uuid='860f5cd9-0edf-41dd-acb9-c162e95fa6c7'))[0]
+
+    # Populate Product
+    print("Import Product")
+    _rep = ProductRepository()
+    for r in call_sql("SELECT *\
+                FROM fitting_product\
+                where uuid in ('X004-128-C1825', 'X004-994-C723', 'X001-081-C351R', 'X001-894-C443R', 'X001-776-C510R', 'X001-286-C3001R') "):
+        if len(_rep.get(dict(uuid=r.uuid))) == 0:
+            _rep.add(dict(uuid=r.uuid, brand=brand, default_comparison_rule=comp_rule))
 
     # Repositories links
 

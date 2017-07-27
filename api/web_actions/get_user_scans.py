@@ -26,7 +26,7 @@ def get_foot_scans(scans):
     return result.values()
 
 
-@get_user_scans_action.route('/fitting/get_user_scans')
+@get_user_scans_action.route('/fitting/user_scans')
 @requires_auth
 def get_user_scans():
     user_uuid = request.args.get('user')

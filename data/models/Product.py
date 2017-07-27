@@ -1,6 +1,7 @@
 from pyorient.ogm.property import String, Link
 from data.data_connection import NodeBase
 from .Brand import Brand
+from .ComparisonRule import ComparisonRule
 
 
 class Product(NodeBase):
@@ -9,3 +10,5 @@ class Product(NodeBase):
     brand = Link(mandatory=True, nullable=False, linked_to=Brand)
     sku = String()
     name = String()
+
+    default_comparison_rule = Link(mandatory=True, nullable=False, linked_to=ComparisonRule)
