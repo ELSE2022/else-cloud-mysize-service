@@ -151,7 +151,7 @@ def import_sql(connectionstring):
 
             # Comparison Rule metric
             rule_metric = _compRuleMetricRep.get(dict(rule=comp_rule,
-                                                      size=size,
+                                                      model=model,
                                                       model_metric=metric,
                                                       scan_metric=scan_metric,
                                                       f1=r.f1,
@@ -160,7 +160,7 @@ def import_sql(connectionstring):
                                                       ))
             if len(rule_metric) == 0:
                 rule_metric = _compRuleMetricRep.add(dict(rule=comp_rule,
-                                                          size=size,
+                                                          model=model,
                                                           model_metric=metric,
                                                           scan_metric=scan_metric,
                                                           f1=r.f1,

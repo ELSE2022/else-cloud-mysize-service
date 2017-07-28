@@ -17,33 +17,39 @@ _modelMetrValueRep = ModelMetricValueRepository()
 
 def get_foot_best_size(product, model_types, scans):
     _graph = data_connection.get_graph()
-    references = [dict(scan=_graph.get_element(ref['scan']), model=_graph.get_element(ref['model'])) for ref in _compRuleMetricRep.get_reference_ids(_graph.element_from_link(product.default_comparison_rule)) if 'model' in ref and 'scan' in ref]
+    rule = _graph.element_from_link(product.default_comparison_rule)
 
     all_results = {}
 
     for ty in model_types:
+        references = [dict(scan=_graph.get_element(ref['scan']), model=_graph.get_element(ref['model']))
+                      for ref in _compRuleMetricRep.get_distinct_reference_ids(rule.name, product.uuid, ty)]
+
         scan = [scan for scan in scans if str(scan.model_type) == ty._id]
-        if len(scan) > 0:
+        if len(references) > 0 and len(scan) > 0:
             scan = scan[0]
             scan_data = [float(_scanMetrValueRep.get(dict(scan=scan, metric=ref['scan']))[0].value) for ref in references]
 
             lasts_data = []
-            for size in [_graph.get_element(s['size']) for s in _compRuleMetricRep.get_size_ids(_graph.element_from_link(product.default_comparison_rule))]:
-                model = _modelRep.get(dict(product=product, model_type=ty, size=size))
+            config = _compRuleMetricRep.get_config_by_product(rule.name, product.uuid, ty)
+            values = _modelMetrValueRep.get_values_for_comparison(_graph.element_from_link(product.default_comparison_rule).name, product.uuid, ty)
 
-                last_values = []
-                last_ranges = []
-                if len(model) > 0:
-                    model = model[0]
-                    for ref in references:
-                        rulemetric = _compRuleMetricRep.get(dict(rule=_graph.element_from_link(product.default_comparison_rule),
-                                                                 size=size,
-                                                                 scan_metric=ref['scan']))
-                        rulemetric = [metr for metr in rulemetric if _graph.element_from_link(_graph.element_from_link(metr.model_metric).model_type) == ty][0]
-                        last_ranges.append((rulemetric.f1, rulemetric.shift, rulemetric.f2))
-                        last_values.append(float(_modelMetrValueRep.get(dict(model=model, metric=_graph.element_from_link(rulemetric.model_metric)))[0].value))
-                lasts_data.append((size.string_value, last_values, last_ranges))
-        all_results[ty.name] = get_metrics_by_sizes(scan_data, lasts_data)
+            last_values = []
+            last_ranges = []
+            curr_size = ''
+            for val in zip(values, config):
+                if curr_size == '':
+                    curr_size = val[0]['size']
+                elif val[0]['size'] != curr_size:
+                    lasts_data.append((curr_size, last_values, last_ranges))
+                    last_values = []
+                    last_ranges = []
+                    curr_size = val[0]['size']
+                last_values.append(float(val[0]['value']))
+                last_ranges.append((val[1]['f1'], val[1]['shift'], val[1]['f2']))
+            lasts_data.append((curr_size, last_values, last_ranges))
+
+            all_results[ty.name] = get_metrics_by_sizes(scan_data, lasts_data)
 
     return all_results
 
