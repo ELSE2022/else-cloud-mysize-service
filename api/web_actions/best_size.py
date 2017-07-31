@@ -53,6 +53,42 @@ def get_foot_best_size(product, model_types, scans):
 
     return all_results
 
+
+def generate_result(data):
+    sizes = []
+    avg_result = []
+    count_typ = 0
+    for typ in data:
+        for size in data[typ]:
+            if size[0] not in sizes:
+                sizes.append(size[0])
+                avg_result.append(size[1])
+            else:
+                idx = sizes.index(size[0])
+                avg_result[idx] += size[1]
+        count_typ += 1
+    avg_result = [val / count_typ for val in avg_result]
+
+    max_val = max(avg_result)
+    max_idx = avg_result.index(max_val)
+
+    def result(i):
+        if i < len(avg_result):
+            return {
+            'score': round(avg_result[i], 2),
+            'output_model': '',
+            'size': sizes[i],
+            'size_type': 'FOOT'
+            }
+
+    return {
+        'prev_best_size': result(max_idx - 1),
+        'best_size': result(max_idx),
+        'next_best_size': result(max_idx + 1),
+    }
+
+
+
 best_size_action = Blueprint('best_size_action', __name__)
 
 
@@ -61,7 +97,7 @@ best_size_action = Blueprint('best_size_action', __name__)
 def best_size():
     _graph = data_connection.get_graph()
 
-    product_uuid = request.args.get('product_id')
+    product_uuid = request.args.get('product')
 
     product = _productRep.get(dict(uuid=product_uuid))
     if len(product) == 0:
@@ -82,4 +118,6 @@ def best_size():
     for ty in model_types:
         scans += _scanRep.get(dict(user=user, is_default=True, model_type=ty))
 
-    return jsonify(get_foot_best_size(product, model_types, scans))
+    result = get_foot_best_size(product, model_types, scans)
+
+    return jsonify(generate_result(result))
