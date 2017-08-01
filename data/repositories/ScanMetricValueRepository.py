@@ -1,5 +1,5 @@
 from data.models.ScanMetricValue import ScanMetricValue
-from .base import RepositoryBase
+from orientdb_data_layer.data import RepositoryBase
 
 
 class ScanMetricValueRepository(RepositoryBase):

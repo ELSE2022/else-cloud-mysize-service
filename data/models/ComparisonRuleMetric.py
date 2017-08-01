@@ -1,5 +1,5 @@
 from pyorient.ogm.property import String, Link, Float
-from data.data_connection import NodeBase
+from orientdb_data_layer.data_connection import NodeBase
 from .ComparisonRule import ComparisonRule
 from .Model import Model
 from .ModelTypeMetric import ModelTypeMetric

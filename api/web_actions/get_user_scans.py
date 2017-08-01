@@ -4,7 +4,7 @@ from ..authentication import requires_auth
 
 from data.repositories import UserRepository
 from data.repositories import ScanRepository
-from data import data_connection
+from orientdb_data_layer import data_connection
 
 logger = logging.getLogger(__name__)
 

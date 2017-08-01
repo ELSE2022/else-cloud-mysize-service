@@ -1,5 +1,5 @@
 from data.models.ComparisonRule import ComparisonRule
-from .base import RepositoryBase
+from orientdb_data_layer.data import RepositoryBase
 
 
 class ComparisonRuleRepository(RepositoryBase):

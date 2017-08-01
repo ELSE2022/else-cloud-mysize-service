@@ -1,5 +1,5 @@
 from data.models.Model import Model
-from .base import RepositoryBase
+from orientdb_data_layer.data import RepositoryBase
 
 
 class ModelRepository(RepositoryBase):

@@ -17,13 +17,15 @@ from flask import Flask, jsonify
 import urllib
 import data
 import api
+from orientdb_data_layer import data_connection
 import posgresql_import
 
 app = Flask(__name__)
 
 # Connect database
 initial_drop = False
-data.data_connection.connect_database('plocal://5.153.55.125:2424/test', 'root', '5e256570-8870-4441-9f88-6194f4fefd9a', initial_drop)
+data_connection.connect_database('plocal://5.153.55.125:2424/test', 'root', '5e256570-8870-4441-9f88-6194f4fefd9a', initial_drop)
+data_connection.refresh_models()
 
 # Import data from postgress (if needed)
 # posgresql_import.import_sql('postgresql://postgres:postgres@localhost:5432/else')

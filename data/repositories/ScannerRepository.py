@@ -1,5 +1,5 @@
 from data.models.Scanner import Scanner
-from .base import RepositoryBase
+from orientdb_data_layer.data import RepositoryBase
 
 
 class ScannerRepository(RepositoryBase):

@@ -1,5 +1,5 @@
 from data.models.UserSize import UserSize
-from .base import RepositoryBase
+from orientdb_data_layer.data import RepositoryBase
 
 
 class UserSizeRepository(RepositoryBase):

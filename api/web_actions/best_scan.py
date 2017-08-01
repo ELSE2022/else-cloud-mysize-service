@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify, request, abort
 from ..authentication import requires_auth
 
 from data.repositories import UserRepository, ScanRepository, ScannerModelRepository, ScanMetricRepository, ScanMetricValueRepository
-from data import data_connection
+from orientdb_data_layer import data_connection
 from calculations.fitting_algorithms.get_best_scan import get_best_scan
 
 logger = logging.getLogger(__name__)

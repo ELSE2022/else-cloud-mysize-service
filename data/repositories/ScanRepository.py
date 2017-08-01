@@ -1,5 +1,5 @@
 from data.models.Scan import Scan
-from .base import RepositoryBase
+from orientdb_data_layer.data import RepositoryBase
 
 
 class ScanRepository(RepositoryBase):
@@ -9,7 +9,7 @@ class ScanRepository(RepositoryBase):
 
     def get_scans(self, user, scanner_model):
         from .ScannerRepository import ScannerRepository
-        from data import data_connection
+        from orientdb_data_layer import data_connection
 
         graph = data_connection.get_graph()
         _scannerRep = ScannerRepository()

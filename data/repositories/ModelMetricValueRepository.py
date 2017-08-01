@@ -1,5 +1,5 @@
 from data.models.ModelMetricValue import ModelMetricValue
-from .base import RepositoryBase
+from orientdb_data_layer.data import RepositoryBase
 
 
 class ModelMetricValueRepository(RepositoryBase):

@@ -1,5 +1,5 @@
 from pyorient.ogm.property import String, Link
-from data.data_connection import NodeBase
+from orientdb_data_layer.data_connection import NodeBase
 from .Scan import Scan
 from .ScanMetric import ScanMetric
 

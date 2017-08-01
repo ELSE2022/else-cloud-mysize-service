@@ -1,5 +1,5 @@
 from pyorient.ogm.property import DateTime, Link
-from data.data_connection import NodeBase
+from orientdb_data_layer.data_connection import NodeBase
 from .User import User
 from .Size import Size
 

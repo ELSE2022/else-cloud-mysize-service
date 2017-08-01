@@ -2,7 +2,7 @@ import logging
 from flask import Blueprint, jsonify, request, abort
 from ..authentication import requires_auth
 from data.repositories import ProductRepository, UserRepository, UserSizeRepository, ScanRepository, ComparisonRuleMetricRepository, ScanMetricValueRepository, ModelMetricValueRepository
-from data import data_connection
+from orientdb_data_layer import data_connection
 from calculations.fitting_algorithms.get_metrics_by_sizes import get_metrics_by_sizes
 
 logger = logging.getLogger(__name__)

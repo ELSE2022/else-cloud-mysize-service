@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify, request, abort
 from ..authentication import requires_auth
 from data.repositories import ProductRepository, ComparisonRuleRepository, ComparisonRuleMetricRepository, UserRepository, ScanRepository, ScanMetricRepository
 from .best_scan import get_best_foot_scan, extract_calculation_attributes
-from data import data_connection
+from orientdb_data_layer import data_connection
 from calculations.fitting_algorithms import metrics_comparison_config
 
 logger = logging.getLogger(__name__)
