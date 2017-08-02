@@ -1,9 +1,18 @@
 from functools import wraps
 from flask import request, Response
 
+__username = ''
+__password = ''
+
+
+def set_credentials(username, password):
+    global __username, __password
+    __username = username
+    __password = password
+
 
 def check_auth(username, password):
-    return username == 'else' and password == '4d84b8e4-7127-11e7-8cf7-a6006ad3dba0'
+    return username == __username and password == __password
 
 
 def authenticate():

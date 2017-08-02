@@ -12,15 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
+import os, urllib
 from flask import Flask, jsonify
-import urllib
-import data
-import api
 from orientdb_data_layer import data_connection
+import api
+from data import cloud_object_storage
+from api import authentication
+from api.authentication import requires_auth
 import posgresql_import
 
 app = Flask(__name__)
+
+# set web access credentials
+authentication.set_credentials(username='else', password='4d84b8e4-7127-11e7-8cf7-a6006ad3dba0')
+
+# connect cloud object-storage
+cloud_object_storage.connect_to_storage(dict(key="MfRt~2TyK~nacEY6",
+                                             authurl="https://lon-identity.open.softlayer.com/v3",
+                                             auth_version='3',
+                                             os_options={
+                                                'project_id': "ba3612943bd34a1eac2d1e2630bd824b",
+                                                'user_id': "a9ba56b9ad794a87aa93ee817890db2d",
+                                                'region_name': "london"
+                                                }))
 
 # Connect database
 initial_drop = False
@@ -35,6 +49,7 @@ api.register_controllers(app)
 
 
 @app.route('/')
+@requires_auth
 def get_all_routes():
     output = []
     for rule in app.url_map.iter_rules():
