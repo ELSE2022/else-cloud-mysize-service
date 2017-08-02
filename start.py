@@ -24,7 +24,7 @@ app = Flask(__name__)
 
 # Connect database
 initial_drop = False
-data_connection.connect_database('plocal://5.153.55.125:2424/test', 'root', '5e256570-8870-4441-9f88-6194f4fefd9a', initial_drop)
+data_connection.connect_database('plocal://5.153.55.125:2424/test', 'root', '68f90924-cd63-4df1-a945-47bcd18d45d3', initial_drop)
 data_connection.refresh_models()
 
 # Import data from postgress (if needed)
