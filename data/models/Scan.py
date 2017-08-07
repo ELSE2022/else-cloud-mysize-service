@@ -19,4 +19,3 @@ class Scan(NodeBase):
     sex = String()
     stl_path = String()
     img_path = String()
-
