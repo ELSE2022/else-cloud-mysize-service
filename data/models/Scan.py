@@ -19,3 +19,16 @@ class Scan(NodeBase):
     sex = String()
     stl_path = String()
     img_path = String()
+
+    def __str__(self):
+        from orientdb_data_layer import data_connection
+        graph = data_connection.get_graph()
+
+        user = graph.element_from_link(self.user).uuid
+        model_type = graph.element_from_link(self.model_type).name
+        scanner = graph.element_from_link(self.scanner).name
+        creation_time = str(self.creation_time)
+
+        return 'scan_id: {}, user: {}, scanner: {}, type: {}, '\
+            'created_date: {}'.format(self.scan_id,
+            user, scanner, model_type, creation_time)
