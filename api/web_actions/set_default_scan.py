@@ -19,13 +19,27 @@ def set_default_scan():
     user_uuid = request.args.get('user')
     scan_id = request.args.get('scan')
 
-    user = _userRep.get({'uuid': user_uuid})[0]
+    user = get_user(user_uuid)
     scans = _scanRep.get({'user': user, 'scan_id': scan_id})
 
     for scan in scans:
         set_scan(user, scan)
 
     return jsonify([str(scan) for scan in scans])
+
+
+def get_user(user_uuid):
+    if user_uuid is None:
+        abort(400, 'Request malformed: \'user\' argument not passed')
+    user = _userRep.get({
+        'uuid': user_uuid,
+    })
+    if len(user) == 0:
+        abort(404, 'User not found')
+    if len(user) > 1:
+        abort(400, 'Too many ({}) users with '
+            'the same user_uuid: {}'.format(len(user), user_uuid))
+    return user[0]
 
 
 def set_scan(user, scan):
