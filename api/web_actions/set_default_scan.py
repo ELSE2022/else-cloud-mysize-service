@@ -25,7 +25,7 @@ def set_default_scan():
     for scan in scans:
         set_scan(user, scan)
 
-    return jsonify([str(scan) for scan in scans])
+    return jsonify([scan_to_string(scan) for scan in scans])
 
 
 def get_user(user_uuid):
@@ -55,3 +55,15 @@ def set_scan(user, scan):
         _scanRep.update({'@rid': default_scan._id}, {'is_default': False})
 
     _scanRep.update({'@rid': scan._id}, {'is_default': True})
+
+
+def scan_to_string(scan):
+    graph = data_connection.get_graph()
+    user = graph.element_from_link(scan.user).uuid
+    model_type = graph.element_from_link(scan.model_type).name
+    scanner = graph.element_from_link(scan.scanner).name
+    creation_time = str(scan.creation_time)
+
+    return 'scan_id: {}, user: {}, scanner: {}, type: {}, '\
+        'created_date: {}'.format(scan.scan_id,
+        user, scanner, model_type, creation_time)
