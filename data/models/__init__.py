@@ -1,3 +1,4 @@
+# Vertices
 from .Brand import Brand
 from .Product import Product
 from .ModelTypeMetric import ModelTypeMetric
@@ -17,3 +18,5 @@ from .ComparisonRule import ComparisonRule
 from .ComparisonRuleMetric import ComparisonRuleMetric
 from .UserSize import UserSize
 
+# Edges
+from .ModelToScanComparison import ModelToScanComparison
