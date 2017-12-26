@@ -1,6 +1,0 @@
-Flask==0.12.2
-pyorient==1.5.5
-SQLAlchemy==1.1.9
-orientdb-data-layer
-python-swiftclient
-python-keystoneclient

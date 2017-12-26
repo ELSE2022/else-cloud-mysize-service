@@ -1,0 +1,39 @@
+---
+
+version: '2'
+services:
+  orientdb:
+    image: orientdb
+    ports:
+      - "2434:2434"
+      - "2480:2480"
+      - "2424:2424"
+    environment:
+      - ORIENTDB_ROOT_PASSWORD=test
+    volumes:
+      - ./dockerfiles/orientdbdata/databases:/orientdb/databases
+      - ./dockerfiles/orientdbdata/backup:/orientdb/backup
+
+  web:
+    build: ./web
+    depends_on:
+      - orientdb
+#    ports:
+#      - "5000:5000"
+    volumes:
+      - ./web:/app
+    links:
+      - orientdb:orientdb
+    command: bash start.sh
+
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:8080"
+      - "5000:5000"
+    volumes:
+      - ./nginx/sites-enabled:/etc/nginx/sites-enabled
+    volumes_from:
+      - web
+    depends_on:
+      - web

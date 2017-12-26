@@ -1,0 +1,9 @@
+Flask==0.12.2
+flask-restplus==0.10.1
+pyorient==1.5.5
+SQLAlchemy==1.1.9
+orientdb-data-layer
+python-swiftclient
+python-keystoneclient
+Flask-SQLAlchemy==2.1
+Flask-SuperAdmin==1.7.1
