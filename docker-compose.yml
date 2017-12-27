@@ -37,3 +37,14 @@ services:
       - web
     depends_on:
       - web
+
+  frontweb:
+    build: ./web/rest_admin
+    volumes:
+      - .:/web/rest_admin
+      - /usr/app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - web
+    command: "npm start"
