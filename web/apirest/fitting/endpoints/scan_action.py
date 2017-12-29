@@ -1,9 +1,11 @@
+import os
 from apirest.fitting.serializers import scan
 from apirest.restplus import api
 from data.repositories import ScannerRepository
 from data.repositories import ScanRepository
 from data.repositories import UserRepository
 from data.repositories import ModelTypeRepository
+from datetime import datetime
 from flask import request
 from flask import abort
 from flask_restplus import Resource
@@ -74,3 +76,102 @@ class Scans(Resource):
         """
         _scanRep.delete({'@rid': id})
         return None, 204
+
+
+def str2bool(in_str):
+    return in_str in ['true', 'True', 'yes']
+
+
+def update_scan(user, scanner, scan_id, scan_type, scan_path):
+    scan = _scanRep.get(dict(user=user, model_type=scan_type, scan_id=scan_id))
+    if not scan:
+        scan = _scanRep.add(dict(user=user, model_type=scan_type, scan_id=scan_id))
+
+    scan.scan_id = scan_id
+    scan.scanner = scanner
+    foot_attachment_content = upload(scan_path)
+    attachment_name = os.path.sep.join(
+        [
+            'Scan',
+            scan.user.uuid,
+            '{}-{}-{}'.format(datetime.now().year, datetime.now().month, datetime.now().day),
+            '{}.{}'.format(scan_type, STL_EXTENSION)
+        ]
+    )
+    # attachment_name = gen_file_name(scan, '{}.{}'.format(scan_type, STL_EXTENSION))
+    attachment_path = create_file(attachment_name)
+    Path(attachment_path).write_bytes(foot_attachment_content)
+
+    scan.attachment = attachment_name
+    scan.save()
+
+    ScanAttribute.objects.filter(scan=scan).delete()
+
+    try:
+        update_scan_attributes(user.base_url, scan, scan_type)
+    except requests.HTTPError:
+        logger.debug('HTTPError')
+        traceback.print_exc(file=sys.stdout)
+    if scan.attachment:
+        create_scan_visualization(scan)
+
+    return scan
+
+
+def update_foot_scans(user, scanner, scan_id, scan_type):
+    try:
+        left_scan = update_scan(user, scanner, scan_id, scan_type, '{}{}/{}/model_l.stl'.format(user.base_url, scanner, scan_id))
+    except requests.HTTPError:
+        left_scan = None
+    try:
+        right_scan = update_scan(user, scanner, scan_id, scan_type, '{}{}/{}/model_r.stl'.format(user.base_url, scanner, scan_id))
+    except requests.HTTPError:
+        right_scan = None
+    scans = []
+    if left_scan is not None:
+        scans.append(left_scan)
+    if right_scan is not None:
+        scans.append(right_scan)
+    return scans
+
+
+@ns.route('/<string:uuid>/get_metrics')
+@api.response(404, 'Scan not found.')
+class ScanItem(Resource):
+    def put(self, uuid):
+        """
+        Returns a .
+        """
+        request_data = dict(request.args)
+        user_uuid = request_data.get('user')
+        scanner = request_data.get('scanner')
+        scan_id = request_data.get('scan')
+        scan_type = request_data.get('type').upper()
+        is_scan_default = str2bool(request_data.get('is_default', 'false'))
+        brand_id = request_data.get('brand', None)
+
+        user = _userRep.get(dict(uuid=user_uuid)).first()
+        if not user:
+            user = _userRep.add(dict(uuid=user_uuid))
+
+        scans = update_foot_scans(user[0], scanner, scan_id, scan_type)
+        if len(scans) == 0:
+            return HttpResponseBadRequest()
+        try:
+            for scan in scans:
+                products = Product.objects.filter(brand_id=int(brand_id)) if brand_id else Product.objects.all()
+                for product in products:
+                    compare_by_metrics(scan, product)
+        except Exception as e:
+            logger.error(f'scan {scan_id} desn`t compare')
+            traceback.print_exc(file=sys.stdout)
+        products = Product.objects.filter(brand_id=int(brand_id)) if brand_id else Product.objects.all()
+        VisualisationThread(scans[0], scans[1], products).start()
+
+        if is_scan_default or not user.default_scans.all().exists():
+            for scan in scans:
+                set_default_scan(user, scan)
+
+        return HttpResponse(
+            json.dumps([str(scan) for scan in scans])
+        )
