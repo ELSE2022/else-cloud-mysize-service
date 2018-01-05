@@ -1,23 +1,54 @@
+import csv
 import os
+import requests
+import settings
+import json
 from apirest.fitting.serializers import scan
 from apirest.restplus import api
+from bs4 import BeautifulSoup
 from data.repositories import ScannerRepository
 from data.repositories import ScanRepository
 from data.repositories import UserRepository
 from data.repositories import ModelTypeRepository
+from data.repositories import ScanMetricValueRepository
+from data.repositories import ScanMetricRepository
+from data.repositories import ProductRepository
+from data.repositories import ScannerModelRepository
 from datetime import datetime
+from datetime import timedelta
 from flask import request
 from flask import abort
 from flask_restplus import Resource
+from flask_restplus import reqparse
+from orientdb_data_layer import data_connection
+from pathlib import Path
 
-ns = api.namespace('fitting/scans/', description='Operations related to Scan')
+ns = api.namespace('fitting_scans', path='/fitting/scans', description='Operations related to Scan')
 
 _scannerRep = ScannerRepository()
+_scannerModelRep = ScannerModelRepository()
+_scanMetricRep = ScanMetricRepository()
+_scanMetricValueRep = ScanMetricValueRepository()
 _scanRep = ScanRepository()
+_productRep = ProductRepository()
 _userRep = UserRepository()
 _modelTypeRep = ModelTypeRepository()
 
 msg_object_does_not_exist = '{} object with id "{}" not found'
+attribute_urls_type = {
+    'LEFT_FOOT': 'left',
+    'RIGHT_FOOT': 'right',
+}
+scan_type_dict = {
+    'FOOT': [{'name': 'LEFT_FOOT', 'stl_name': 'model_l.stl'},
+             {'name': 'RIGHT_FOOT', 'stl_name': 'model_r.stl'}]
+}
+
+update_scan_arguments = reqparse.RequestParser()
+update_scan_arguments.add_argument('user', type=str, required=True)
+update_scan_arguments.add_argument('scanner', type=str, required=True)
+update_scan_arguments.add_argument('type', type=str, required=True)
+update_scan_arguments.add_argument('time', type=int, required=False)
 
 
 @ns.route('', '/', '/<string:id>')
@@ -27,12 +58,10 @@ class Scans(Resource):
         """
         Returns a scans list.
         """
-        print('get scans')
         request_data = dict(request.args)
         page_start = int(request_data.get('_start')[0]) if request_data.get('_start', None) else None
         page_end = int(request_data.get('_end')[0]) if request_data.get('_end', None) else None
-        print('get scans2')
-        print(request_data)
+
         scan_obj = _scanRep.get({})
         return (scan_obj[page_start:page_end], 200, {'X-Total-Count': len(scan_obj)}) if scan_obj else ([], 200, {'X-Total-Count': 0})
 
@@ -78,100 +107,200 @@ class Scans(Resource):
         return None, 204
 
 
+def upload(url):
+    request = requests.get(
+        url=url,
+    )
+    request.raise_for_status()
+    return request.content
+
+
+def create_file(file_name):
+    print(settings.MEDIA_ROOT, file_name)
+    file_path = os.path.join(
+        # os.sep,
+        settings.MEDIA_ROOT.strip('/'),
+        file_name
+    )
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+    Path(file_path).touch()
+    return file_path
+
+
+def update_scan_attributes(base_url, scan, scan_type):
+    _graph = data_connection.get_graph()
+    scanner_obj = _graph.element_from_link(scan.scanner)
+    path_to_csv = '{}{}/{}/{}_{}_mes.csv'.format(base_url, scanner_obj.name, scan.scan_id, scan.scan_id, attribute_urls_type[scan_type.name])
+    request = requests.get(path_to_csv)
+    profile = list(request.iter_lines(decode_unicode=True))[1:]
+    request.raise_for_status()
+    for row in csv.DictReader(profile, delimiter=';'):
+        for key, value in row.items():
+            if key != '':
+                name = key.strip()
+                print('PARSE METRIC1', name, value)
+                scan_metric = _scanMetricRep.get(dict(name=name, scanner_model=scanner_obj.model))
+                if not scan_metric:
+                    scan_metric = _scanMetricRep.add(dict(name=name, scanner_model=_graph.element_from_link(scanner_obj.model)))
+                else: scan_metric = scan_metric[0]
+                results = _scanMetricValueRep.update(dict(scan=scan, metric=scan_metric), dict(value=value))
+                if not results:
+                    _scanMetricValueRep.add(dict(scan=scan, metric=scan_metric, value=value))
+
+
 def str2bool(in_str):
     return in_str in ['true', 'True', 'yes']
 
 
-def update_scan(user, scanner, scan_id, scan_type, scan_path):
+def get_last_scan_id(user, scanner, interval):
+    url = f'{user.base_url}{scanner}/?C=M;O=D'
+    request = requests.get(
+        url=url,
+    )
+    request_date = datetime.strptime(request.headers['Date'].strip(), '%a, %d %b %Y %H:%M:%S %Z')
+    bs = BeautifulSoup(request.text, 'html.parser')
+    image_tag = bs.find('img', alt='[DIR]')
+    row = None
+    if image_tag is not None:
+        row = image_tag.find_parent('tr')
+    scan_id = None
+    if row is not None:
+        date_tag = row.find('td', attrs={'align': 'right'},)
+        string_date = None
+        date = None
+        if date_tag is not None:
+            string_date = date_tag.string
+        if string_date is not None:
+            date = datetime.strptime(string_date.strip(), '%Y-%m-%d %H:%M')
+        if request_date and date:
+            diff = request_date - date
+            if diff < timedelta(minutes=interval):
+                scan_id = row.find('a', href=True,).string.split('/')[0]
+    return scan_id
+
+
+def update_scan(user, scanner_name, scan_id, scan_model_type, scan_path):
+    print(user, scanner_name, scan_model_type, scan_id)
+    _graph = data_connection.get_graph()
+    scanner_model = _scannerModelRep.get({})
+    if not scanner_model:
+        scanner_model = _scannerModelRep.add(dict(name=scanner_name))
+    else: scanner_model = scanner_model[0]
+
+    scanner = _scannerRep.get({'name': scanner_name})
+    if not scanner:
+        scanner = _scannerRep.add(dict(name=scanner_name, model=scanner_model))
+    else:
+        scanner = scanner[0]
+
+    scan_type = _modelTypeRep.get({'name': scan_model_type})
+    if not scan_type:
+        scan_type = _modelTypeRep.add(dict(name=scan_model_type))
+    else: scan_type = scan_type[0]
+
     scan = _scanRep.get(dict(user=user, model_type=scan_type, scan_id=scan_id))
     if not scan:
-        scan = _scanRep.add(dict(user=user, model_type=scan_type, scan_id=scan_id))
+        scan = _scanRep.add(dict(user=user, model_type=scan_type, scan_id=scan_id, scanner=scanner))
+    else: scan = scan[0]
 
-    scan.scan_id = scan_id
-    scan.scanner = scanner
     foot_attachment_content = upload(scan_path)
     attachment_name = os.path.sep.join(
         [
             'Scan',
-            scan.user.uuid,
+            _graph.element_from_link(scan.user).uuid,
             '{}-{}-{}'.format(datetime.now().year, datetime.now().month, datetime.now().day),
-            '{}.{}'.format(scan_type, STL_EXTENSION)
+            '{}.{}'.format(scan_type.name, 'stl')
         ]
     )
+
     # attachment_name = gen_file_name(scan, '{}.{}'.format(scan_type, STL_EXTENSION))
     attachment_path = create_file(attachment_name)
     Path(attachment_path).write_bytes(foot_attachment_content)
+    print('Path', attachment_path)
+    scan = _scanRep.update(dict(user=user, model_type=scan_type, scan_id=scan_id), dict(stl_path=attachment_name))[0]
+    # scan.attachment = attachment_name
+    # scan.save()
 
-    scan.attachment = attachment_name
-    scan.save()
-
-    ScanAttribute.objects.filter(scan=scan).delete()
+    _scanMetricValueRep.delete(dict(scan=scan))
+    # ScanAttribute.objects.filter(scan=scan).delete()
 
     try:
         update_scan_attributes(user.base_url, scan, scan_type)
     except requests.HTTPError:
-        logger.debug('HTTPError')
-        traceback.print_exc(file=sys.stdout)
-    if scan.attachment:
-        create_scan_visualization(scan)
-
+        print('HTTPError')
+        # logger.debug('HTTPError')
+        # traceback.print_exc(file=sys.stdout)
+    # if scan.attachment:
+    #     create_scan_visualization(scan)
     return scan
 
 
-def update_foot_scans(user, scanner, scan_id, scan_type):
-    try:
-        left_scan = update_scan(user, scanner, scan_id, scan_type, '{}{}/{}/model_l.stl'.format(user.base_url, scanner, scan_id))
-    except requests.HTTPError:
-        left_scan = None
-    try:
-        right_scan = update_scan(user, scanner, scan_id, scan_type, '{}{}/{}/model_r.stl'.format(user.base_url, scanner, scan_id))
-    except requests.HTTPError:
-        right_scan = None
+def update_foot_scans(user, scanner, scan_id, scan_types):
     scans = []
-    if left_scan is not None:
-        scans.append(left_scan)
-    if right_scan is not None:
-        scans.append(right_scan)
+    for scan_type in scan_types:
+        try:
+            scan = update_scan(user, scanner, scan_id, scan_type['name'], '{}{}/{}/{}'.format(user.base_url, scanner, scan_id, scan_type['stl_name']))
+        except requests.HTTPError:
+            scan = None
+        scans.append(scan) if scan else None
+
+    # try:
+    #     right_scan = update_scan(user, scanner, scan_id, 'RIGHT_FOOT', '{}{}/{}/model_r.stl'.format(user.base_url, scanner, scan_id))
+    # except requests.HTTPError:
+    #     right_scan = None
+    # scans = []
+    # if left_scan is not None:
+    #     scans.append(left_scan)
+    # if right_scan is not None:
+    #     scans.append(right_scan)
     return scans
 
 
-@ns.route('/<string:uuid>/get_metrics')
+@ns.route('/<string:uuid>/update_user_scan', '/update_last_scan')
 @api.response(404, 'Scan not found.')
 class ScanItem(Resource):
+    @api.expect(update_scan_arguments, validate=True)
     def put(self, uuid):
         """
-        Returns a .
+        Returns a scans.
         """
         request_data = dict(request.args)
-        user_uuid = request_data.get('user')
-        scanner = request_data.get('scanner')
-        scan_id = request_data.get('scan')
-        scan_type = request_data.get('type').upper()
+        user_uuid = request_data.get('user')[0]
+        scanner = request_data.get('scanner')[0]
+        interval = request_data.get('time', None)
+        scan_id = uuid
+        print(request_data)
+        scan_type = request_data.get('type')[0].upper()
         is_scan_default = str2bool(request_data.get('is_default', 'false'))
         brand_id = request_data.get('brand', None)
 
-        user = _userRep.get(dict(uuid=user_uuid)).first()
+        user = _userRep.get(dict(uuid=user_uuid))
         if not user:
             user = _userRep.add(dict(uuid=user_uuid))
-
-        scans = update_foot_scans(user[0], scanner, scan_id, scan_type)
+        else: user = user[0]
+        if interval:
+            scan_id = get_last_scan_id(user, scanner, interval)
+            if scan_id is None:
+                return abort(400)
+        scans = update_foot_scans(user, scanner, scan_id, scan_type_dict[scan_type])
         if len(scans) == 0:
-            return HttpResponseBadRequest()
-        try:
-            for scan in scans:
-                products = Product.objects.filter(brand_id=int(brand_id)) if brand_id else Product.objects.all()
-                for product in products:
-                    compare_by_metrics(scan, product)
-        except Exception as e:
-            logger.error(f'scan {scan_id} desn`t compare')
-            traceback.print_exc(file=sys.stdout)
-        products = Product.objects.filter(brand_id=int(brand_id)) if brand_id else Product.objects.all()
-        VisualisationThread(scans[0], scans[1], products).start()
+            return abort(400)
+        # try:
+        # for scan in scans:
+        #     products = _productRep.get(dict(brand_id=int(brand_id))) if brand_id else _productRep.get({})
+        #     for product in products:
+        #         compare_by_metrics(scan, product)
+        # except Exception as e:
+            # logger.error(f'scan {scan_id} doesn`t compare')
+            # traceback.print_exc(file=sys.stdout)
+        # products = _productRep.get(dict(brand_id=int(brand_id))) if brand_id else _productRep.get({})
+        # VisualisationThread(scans[0], scans[1], products).start()
 
-        if is_scan_default or not user.default_scans.all().exists():
-            for scan in scans:
-                set_default_scan(user, scan)
+        # if is_scan_default or not user.default_scans.all().exists():
+        #     for scan in scans:
+        #         set_default_scan(user, scan)
 
-        return HttpResponse(
-            json.dumps([str(scan) for scan in scans])
-        )
+        # return HttpResponse(
+        #     json.dumps([str(scan) for scan in scans])
+        # )
+        return json.dumps([str(scan.scan_id) for scan in scans])

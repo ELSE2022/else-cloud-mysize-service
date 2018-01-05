@@ -21,7 +21,7 @@ from flask_restplus import Resource
 from orientdb_data_layer import data_connection
 from pyorient import OrientRecordLink
 
-ns = api.namespace('fitting/products/', description='Operations related to Product')
+ns = api.namespace('fitting_products', path='/fitting/products', description='Operations related to Product')
 
 _productRep = ProductRepository()
 _modelRep = ModelRepository()
@@ -132,7 +132,6 @@ class Products(Resource):
         Api method to update product.
         """
         _graph = data_connection.get_graph()
-
         if request.json.get('pictures'):
             filecodestring = request.json['pictures'][0]['src']
             data = base64.b64decode(filecodestring.split(',')[1])

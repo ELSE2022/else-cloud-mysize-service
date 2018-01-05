@@ -39,12 +39,11 @@ services:
       - web
 
   frontweb:
-    build: ./web/rest_admin
+    build: ./rest_admin
     volumes:
-      - .:/web/rest_admin
-      - /usr/app/node_modules
+      - ./rest_admin:/usr/app
     ports:
       - "3000:3000"
     depends_on:
       - web
-    command: "npm start"
+    command: sh start.sh

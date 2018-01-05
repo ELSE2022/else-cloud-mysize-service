@@ -1,9 +1,9 @@
 import React from 'react';
 import { List, Edit, Create, Datagrid, ReferenceInput, TextField, ReferenceField, EditButton, DisabledInput,
-    SimpleForm, SelectInput, TextInput } from 'admin-on-rest';
+    SimpleForm, SelectInput, TextInput, FileInput, FileField } from 'admin-on-rest';
 
 export const ModelList = (props) => (
-    <List {...props}>
+    <List {...props} title="List of Lasts">
         <Datagrid>
             <TextField source="id" />
             <TextField source="name" />
@@ -16,6 +16,7 @@ export const ModelList = (props) => (
             <ReferenceField label="Size" source="size" reference="sizes">
                 <TextField source="string_value" />
             </ReferenceField>
+            <TextField source="stl_path" />
             <EditButton />
         </Datagrid>
     </List>
@@ -39,6 +40,9 @@ export const ModelEdit = (props) => (
             <ReferenceInput label="Size" source="size" reference="sizes" allowEmpty validation={{ required: true }}>
                 <SelectInput optionText="string_value" />
             </ReferenceInput>
+            <FileInput source="stl_path" label="STL" accept=".stl" >
+                <FileField source="stl_path" title="STL" />
+            </FileInput>
         </SimpleForm>
     </Edit>
 );
@@ -56,6 +60,9 @@ export const ModelCreate = (props) => (
             <ReferenceInput label="Size" source="size" reference="sizes" allowEmpty validation={{ required: true }}>
                 <SelectInput optionText="string_value" />
             </ReferenceInput>
+            <FileInput source="files" label="Stl file" accept=".stl">
+                <FileField source="stl_path" title="STL" />
+            </FileInput>
         </SimpleForm>
     </Create>
 );

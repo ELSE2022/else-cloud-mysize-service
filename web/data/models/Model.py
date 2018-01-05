@@ -11,3 +11,4 @@ class Model(NodeBase):
     model_type = Link(mandatory=True, nullable=False, linked_to=ModelType)
     size = Link(mandatory=True, nullable=False, linked_to=Size)
     name = String()
+    stl_path = String()

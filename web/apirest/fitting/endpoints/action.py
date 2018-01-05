@@ -69,7 +69,6 @@ class Users(Resource):
         """
         Returns a users list.
         """
-        print('ssssdsdsdsd')
         request_data = dict(request.args)
         page_start = int(request_data.get('_start')[0]) if request_data.get('_start', None) else None
         page_end = int(request_data.get('_end')[0]) if request_data.get('_end', None) else None
@@ -93,8 +92,8 @@ class Users(Resource):
         """
         Api method to update user.
         """
-        _userRep.update({'uuid': uuid}, request.json)
-        return None, 201
+        user_obj = _userRep.update({'@rid': uuid}, request.json)[0]
+        return {'@rid': user_obj._id, 'uuid': user_obj.uuid}, 201
 
     @api.response(204, 'User successfully deleted.')
     @api.marshal_with(fitting_user)
@@ -235,7 +234,6 @@ class BestStyle(Resource):
         """
         Api method to get best user style.
         """
-        print('ssssdsdsdsd_STYLE')
         _graph = data_connection.get_graph()
 
         user_obj, product_obj, model_types, scans = get_objects(_graph, user_uuid, product_uuid)
