@@ -29,8 +29,8 @@ _compRuleRep = ComparisonRuleRepository()
 
 msg_object_does_not_exist = '{} object with id "{}" not found'
 upload_parser = reqparse.RequestParser()
-upload_parser.add_argument('file', location='files',
-                           type=FileStorage, required=True)
+# upload_parser.add_argument('product', type=str, required=True)
+upload_parser.add_argument('file', location='json', type=FileStorage, required=True)
 
 
 @ns.route('', '/', '/<string:id>')
@@ -48,12 +48,15 @@ class Models(Resource):
 
         return (model_obj[page_start:page_end], 200, {'X-Total-Count': len(model_obj)}) if model_obj else ([], 200, {'X-Total-Count': 0})
 
-    @api.expect(model)
+    # @api.expect(model)
+    @api.expect(upload_parser)
     def post(self):
         """
         Api method to create model.
         """
-        print('POST MODEL')
+        print('POST MODEL', request.files['file'])
+        print('POST MODEL', request.args)
+        print('POST MODEL', request.form)
         attachment_path = None
         product_obj = _productRep.get({'@rid': request.json['product']})
         if not product_obj:
@@ -85,11 +88,11 @@ class Models(Resource):
                                    'model_type': model_type_obj[0], 'stl_path': attachment_path}, result_JSON=True)
         return model_obj
 
-    # @api.expect(model)
-    @api.expect(upload_parser, validate=True)
+    @api.expect(model)
+    # @api.expect(upload_parser, validate=True)
     def put(self, id):
         """
-        Api method to update product.
+        Api method to update model.
         """
         print('UPDATE MODEL')
         print(request.json)

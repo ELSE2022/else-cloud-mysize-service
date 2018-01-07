@@ -11,7 +11,7 @@ from flask import abort
 from flask_restplus import Resource
 from pyorient import OrientRecordLink
 
-ns = api.namespace('fitting/sizes/', description='Operations related to Size')
+ns = api.namespace('fitting_sizes', path='/fitting/sizes', description='Operations related to Size')
 
 _productRep = ProductRepository()
 _modelRep = ModelRepository()
@@ -36,7 +36,7 @@ class Sizes(Resource):
 
         size_obj = _sizeRep.get({})
 
-        return (size_obj[page_start:page_end], 200, {'X-Total-Count': len(size_obj)}) if size_obj else (None, 404)
+        return (size_obj[page_start:page_end], 200, {'X-Total-Count': len(size_obj)}) if size_obj else ([], 200, {'X-Total-Count': 0})
 
     @api.expect(size)
     def put(self, uuid):
@@ -58,11 +58,11 @@ class Sizes(Resource):
         """
         Api method to create size.
         """
-        model_type_obj = _modelTypeRep.get({'@rid': request.json['model_type']})
-        if not model_type_obj:
-            abort(400, msg_object_does_not_exist.format('Model type', request.json['model_type']))
+        model_type_obj = []
+        for x in request.json['model_types']:
+            model_type_obj.append(_modelTypeRep.get({'@rid': x})[0])
 
         data_dict = request.json
-        data_dict['model_type'] = model_type_obj[0]
+        data_dict['model_types'] = model_type_obj
         size_obj = _sizeRep.add(data_dict, result_JSON=True)
         return size_obj

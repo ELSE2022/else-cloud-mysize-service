@@ -19,9 +19,10 @@ import { ComparisonRuleMetricList } from './comparison_rule_metric';
 import { ModelMetricValueList } from './model_metric_value';
 import { ComparisonRulesList, ComparisonRulesCreate, ComparisonRulesEdit } from './comparison_rules';
 import addUploadFeature from './addUploadFeature';
+import addUploadFile from './addUploadFile';
 
 const restClient = myApiRestClient;
-const uploadCapableClient = addUploadFeature(restClient);
+const uploadCapableClient = addUploadFile(restClient);
 
 const App = () => (
     <Admin authClient={authClient} dashboard={Dashboard} restClient={uploadCapableClient}>
