@@ -1,6 +1,7 @@
 import React from 'react';
 import { List, Edit, Create, Datagrid, ReferenceInput, TextField, ReferenceField, EditButton, DisabledInput,
     SimpleForm, SelectInput, TextInput, FileInput, FileField } from 'admin-on-rest';
+import UrlField from './components/UrlField'
 
 export const ModelList = (props) => (
     <List {...props} title="List of Lasts">
@@ -11,7 +12,7 @@ export const ModelList = (props) => (
                 <TextField source="name" />
             </ReferenceField>
             <ReferenceField label="Product" source="product" reference="products">
-                <TextField source="id" />
+                <TextField source="name" />
             </ReferenceField>
             <ReferenceField label="Size" source="size" reference="sizes">
                 <TextField source="string_value" />
@@ -35,14 +36,15 @@ export const ModelEdit = (props) => (
                 <SelectInput optionText="name" />
             </ReferenceInput>
             <ReferenceInput label="Product" source="product" reference="products" allowEmpty validation={{ required: true }}>
-                <SelectInput optionText="id" />
+                <SelectInput optionText="name" />
             </ReferenceInput>
             <ReferenceInput label="Size" source="size" reference="sizes" allowEmpty validation={{ required: true }}>
                 <SelectInput optionText="string_value" />
             </ReferenceInput>
-            <FileInput source="stl_path" label="STL" accept=".stl" >
+            <FileInput source="files" label="STL" accept=".stl" >
                 <FileField source="stl_path" title="STL" />
             </FileInput>
+            <UrlField label="STL file" source="stl_path"/>
         </SimpleForm>
     </Edit>
 );
@@ -55,12 +57,12 @@ export const ModelCreate = (props) => (
                 <SelectInput optionText="name" />
             </ReferenceInput>
             <ReferenceInput label="Product" source="product" reference="products" allowEmpty validation={{ required: true }}>
-                <SelectInput optionText="id" />
+                <SelectInput optionText="name" />
             </ReferenceInput>
             <ReferenceInput label="Size" source="size" reference="sizes" allowEmpty validation={{ required: true }}>
                 <SelectInput optionText="string_value" />
             </ReferenceInput>
-            <FileInput source="files" label="Stl file" accept=".stl">
+            <FileInput source="files" label="STL" accept=".stl">
                 <FileField source="stl_path" title="STL" />
             </FileInput>
         </SimpleForm>

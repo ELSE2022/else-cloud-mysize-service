@@ -29,8 +29,8 @@ services:
   nginx:
     build: ./nginx
     ports:
-      - "80:8080"
-      - "5000:5000"
+      - "80:80"
+#      - "5000:5000"
     volumes:
       - ./nginx/sites-enabled:/etc/nginx/sites-enabled
     volumes_from:
@@ -42,8 +42,8 @@ services:
     build: ./rest_admin
     volumes:
       - ./rest_admin:/usr/app
-    ports:
-      - "3000:3000"
+#    ports:
+#      - "3000:3000"
     depends_on:
       - web
     command: sh start.sh

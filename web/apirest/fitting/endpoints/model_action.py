@@ -17,6 +17,7 @@ from flask_restplus import reqparse
 from pathlib import Path
 from pyorient import OrientRecordLink
 from werkzeug.datastructures import FileStorage
+from orientdb_data_layer import data_connection
 
 ns = api.namespace('fitting_models', path='/fitting/models', description='Operations related to Size')
 
@@ -48,15 +49,12 @@ class Models(Resource):
 
         return (model_obj[page_start:page_end], 200, {'X-Total-Count': len(model_obj)}) if model_obj else ([], 200, {'X-Total-Count': 0})
 
-    # @api.expect(model)
-    @api.expect(upload_parser)
+    @api.expect(model)
     def post(self):
         """
         Api method to create model.
         """
-        print('POST MODEL', request.files['file'])
-        print('POST MODEL', request.args)
-        print('POST MODEL', request.form)
+        print('POST MODEL', request.json)
         attachment_path = None
         product_obj = _productRep.get({'@rid': request.json['product']})
         if not product_obj:
@@ -70,8 +68,9 @@ class Models(Resource):
         if not size_obj:
             abort(400, msg_object_does_not_exist.format('Size', request.json['size']))
 
-        if request.json.get('pictures'):
-            filecodestring = request.json['pictures'][0]['src']
+        files = request.json.get('files')
+        if files:
+            filecodestring = files[0]['src']
             data = base64.b64decode(filecodestring.split(',')[1])
             attachment_name = os.path.sep.join(
                 [
@@ -82,14 +81,12 @@ class Models(Resource):
             )
             attachment_path = create_file(attachment_name)
             Path(attachment_path).write_bytes(data)
-            print('Path1', attachment_path)
 
         model_obj = _modelRep.add({'name': request.json['name'], 'product': product_obj[0], 'size': size_obj[0],
                                    'model_type': model_type_obj[0], 'stl_path': attachment_path}, result_JSON=True)
         return model_obj
 
     @api.expect(model)
-    # @api.expect(upload_parser, validate=True)
     def put(self, id):
         """
         Api method to update model.
@@ -102,14 +99,31 @@ class Models(Resource):
         data_dict['model_type'] = OrientRecordLink(request.json['model_type'])
         data_dict['size'] = OrientRecordLink(request.json['size'])
 
+        files = request.json.get('files')
+        if files:
+            filecodestring = files[0]['src']
+            data = base64.b64decode(filecodestring.split(',')[1])
+            size_obj = _sizeRep.get({'@rid': data_dict['size'].get()})
+            product_obj = _productRep.get({'@rid': data_dict['product'].get()})
+
+            attachment_name = os.path.sep.join(
+                [
+                    'Last',
+                    product_obj[0].name,
+                    '{}.{}'.format(size_obj[0].string_value, 'stl')
+                ]
+            )
+            attachment_path = create_file(attachment_name)
+            Path(attachment_path).write_bytes(data)
+
         model_obj = _modelRep.update({'@rid': id}, data_dict)[0]
         return {'@rid': model_obj._id, 'name': model_obj.name}, 201
 
-    @api.response(204, 'Model successfully deleted.')
+    # @api.response(204, 'Model successfully deleted.')
     @api.marshal_with(model)
     def delete(self, id):
         """
         Api method to delete model.
         """
         _modelRep.delete({'@rid': id})
-        return None, 204
+        return None, 200

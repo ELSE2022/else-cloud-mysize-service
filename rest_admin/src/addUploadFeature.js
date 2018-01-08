@@ -30,7 +30,7 @@ const addUploadCapabilities = requestHandler => (type, resource, params) => {
                     ...params,
                     data: {
                         ...params.data,
-                        pictures: [...transformedNewPictures, ...formerPictures],
+                        files: transformedNewPictures,
                     },
                 }));
         }
