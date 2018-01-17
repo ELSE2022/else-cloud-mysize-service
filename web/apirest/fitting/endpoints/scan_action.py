@@ -45,7 +45,7 @@ scan_type_dict = {
 }
 
 update_scan_arguments = reqparse.RequestParser()
-update_scan_arguments.add_argument('user', type=str, required=True)
+update_scan_arguments.add_argument('user_uuid', type=str, required=True)
 update_scan_arguments.add_argument('scanner', type=str, required=True)
 update_scan_arguments.add_argument('type', type=str, required=True)
 update_scan_arguments.add_argument('time', type=int, required=False)
@@ -218,20 +218,13 @@ def update_scan(user, scanner_name, scan_id, scan_model_type, scan_path):
     Path(attachment_path).write_bytes(foot_attachment_content)
     print('Path', attachment_path)
     scan = _scanRep.update(dict(user=user, model_type=scan_type, scan_id=scan_id), dict(stl_path=attachment_name))[0]
-    # scan.attachment = attachment_name
-    # scan.save()
 
     _scanMetricValueRep.delete(dict(scan=scan))
-    # ScanAttribute.objects.filter(scan=scan).delete()
 
     try:
         update_scan_attributes(user.base_url, scan, scan_type)
     except requests.HTTPError:
         print('HTTPError')
-        # logger.debug('HTTPError')
-        # traceback.print_exc(file=sys.stdout)
-    # if scan.attachment:
-    #     create_scan_visualization(scan)
     return scan
 
 
@@ -243,33 +236,23 @@ def update_foot_scans(user, scanner, scan_id, scan_types):
         except requests.HTTPError:
             scan = None
         scans.append(scan) if scan else None
-
-    # try:
-    #     right_scan = update_scan(user, scanner, scan_id, 'RIGHT_FOOT', '{}{}/{}/model_r.stl'.format(user.base_url, scanner, scan_id))
-    # except requests.HTTPError:
-    #     right_scan = None
-    # scans = []
-    # if left_scan is not None:
-    #     scans.append(left_scan)
-    # if right_scan is not None:
-    #     scans.append(right_scan)
     return scans
 
 
-@ns.route('/<string:uuid>/update_user_scan', '/update_last_scan')
+@ns.route('/<string:scan_id>/update_user_scan', '/update_last_scan')
 @api.response(404, 'Scan not found.')
 class ScanItem(Resource):
     @api.expect(update_scan_arguments, validate=True)
-    def put(self, uuid):
+    def put(self, scan_id=None):
         """
         Returns a scans.
         """
         request_data = dict(request.args)
-        user_uuid = request_data.get('user')[0]
+        user_uuid = request_data.get('user_uuid')[0]
         scanner = request_data.get('scanner')[0]
         interval = request_data.get('time', None)
-        scan_id = uuid
-        print(request_data)
+        # scan_obj_id = scan_id
+
         scan_type = request_data.get('type')[0].upper()
         is_scan_default = str2bool(request_data.get('is_default', 'false'))
         brand_id = request_data.get('brand', None)
@@ -279,28 +262,10 @@ class ScanItem(Resource):
             user = _userRep.add(dict(uuid=user_uuid))
         else: user = user[0]
         if interval:
-            scan_id = get_last_scan_id(user, scanner, interval)
+            scan_id = get_last_scan_id(user, scanner, int(interval[0]))
             if scan_id is None:
                 return abort(400)
         scans = update_foot_scans(user, scanner, scan_id, scan_type_dict[scan_type])
         if len(scans) == 0:
             return abort(400)
-        # try:
-        # for scan in scans:
-        #     products = _productRep.get(dict(brand_id=int(brand_id))) if brand_id else _productRep.get({})
-        #     for product in products:
-        #         compare_by_metrics(scan, product)
-        # except Exception as e:
-            # logger.error(f'scan {scan_id} doesn`t compare')
-            # traceback.print_exc(file=sys.stdout)
-        # products = _productRep.get(dict(brand_id=int(brand_id))) if brand_id else _productRep.get({})
-        # VisualisationThread(scans[0], scans[1], products).start()
-
-        # if is_scan_default or not user.default_scans.all().exists():
-        #     for scan in scans:
-        #         set_default_scan(user, scan)
-
-        # return HttpResponse(
-        #     json.dumps([str(scan) for scan in scans])
-        # )
         return json.dumps([str(scan.scan_id) for scan in scans])

@@ -132,8 +132,8 @@ class Products(Resource):
         Api method to update product.
         """
         _graph = data_connection.get_graph()
-        if request.json.get('pictures'):
-            filecodestring = request.json['pictures'][0]['src']
+        if request.json.get('files'):
+            filecodestring = request.json['files'][0]['src']
             data = base64.b64decode(filecodestring.split(',')[1])
 
             iter_lines = [s.strip().decode('utf-8') for s in data.splitlines()]

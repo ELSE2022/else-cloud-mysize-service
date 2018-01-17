@@ -40,6 +40,7 @@ from apirest.fitting.endpoints.modeltype_metric_action import ns as model_metric
 from apirest.fitting.endpoints.scan_metric_action import ns as scan_metric_namespace
 from apirest.fitting.endpoints.comparison_rule_metric_action import ns as comparison_rule_metric_namespace
 from apirest.fitting.endpoints.model_metric_value_action import ns as model_metric_value_namespace
+from apirest.fitting.endpoints.visual_action import ns as visual_namespace
 from apirest.restplus import api as api_rest
 # from flask.ext.superadmin import Admin, model
 
@@ -131,6 +132,7 @@ def initialize_app(flask_app):
     api_rest.add_namespace(scan_metric_namespace)
     api_rest.add_namespace(comparison_rule_metric_namespace)
     api_rest.add_namespace(model_metric_value_namespace)
+    api_rest.add_namespace(visual_namespace)
     flask_app.register_blueprint(blueprint)
 
 

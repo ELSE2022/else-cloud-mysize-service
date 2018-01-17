@@ -15,7 +15,7 @@ authorizations = {
         'name': 'X-API-KEY'
     }
 }
-api = Api(version='1.0', title='Fitting Service')
+api = Api(version='1.0', title='Fitting Service', doc='/docs/')
 
 
 def auth_required(func):

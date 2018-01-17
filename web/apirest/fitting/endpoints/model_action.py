@@ -115,6 +115,7 @@ class Models(Resource):
             )
             attachment_path = create_file(attachment_name)
             Path(attachment_path).write_bytes(data)
+            data_dict['stl_path'] = attachment_path
 
         model_obj = _modelRep.update({'@rid': id}, data_dict)[0]
         return {'@rid': model_obj._id, 'name': model_obj.name}, 201
