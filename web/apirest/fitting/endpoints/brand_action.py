@@ -10,7 +10,7 @@ from flask import request
 from flask import abort
 from flask_restplus import Resource
 
-ns = api.namespace('fitting/brands/', description='Operations related to Brand')
+ns = api.namespace('fitting_brands', path='/fitting/brands', description='Operations related to Brand')
 
 _productRep = ProductRepository()
 _modelRep = ModelRepository()
@@ -22,7 +22,7 @@ _compRuleRep = ComparisonRuleRepository()
 msg_object_does_not_exist = '{} object with id "{}" not found'
 
 
-@ns.route('', '/', '/<string:uuid>')
+@ns.route('')
 class Brands(Resource):
     @api.marshal_with(brand)
     def get(self):
@@ -43,3 +43,14 @@ class Brands(Resource):
         """
         brand_obj = _brandRep.add(request.json, result_JSON=True)
         return brand_obj
+
+
+@ns.route('/<string:uuid>')
+class BrandItem(Resource):
+    @api.expect(brand)
+    def delete(self, uuid):
+        """
+        Api method to delete brand.
+        """
+        _brandRep.delete({'uuid': uuid})
+        return None, 204

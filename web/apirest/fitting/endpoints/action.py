@@ -62,7 +62,7 @@ def get_objects(graph, user_uuid, product_uuid):
     return user_obj[0], product_obj[0], model_types, scans
 
 
-@ns.route('', '/', '/<string:uuid>')
+@ns.route('',)
 class Users(Resource):
     @api.marshal_with(fitting_user)
     def get(self):
@@ -82,17 +82,19 @@ class Users(Resource):
         Api method to create user.
         """
         user_uuid = request.json.get('uuid')
-        # size_value = request.json.get('size', '35')
-        # model = request.json.get('type')
         user = _userRep.add({'uuid': user_uuid}, result_JSON=True)
         return user
 
+
+@ns.route('/<string:uuid>')
+@api.response(404, 'User not found.')
+class UserItem(Resource):
     @api.expect(fitting_user)
     def put(self, uuid):
         """
         Api method to update user.
         """
-        user_obj = _userRep.update({'@rid': uuid}, request.json)[0]
+        user_obj = _userRep.update({'uuid': uuid}, request.json)[0]
         return {'@rid': user_obj._id, 'uuid': user_obj.uuid}, 201
 
     @api.response(204, 'User successfully deleted.')
@@ -104,19 +106,14 @@ class Users(Resource):
         _userRep.delete({'uuid': uuid})
         return None, 204
 
-
-# @ns.route('/<string:uuid>')
-# @api.response(404, 'User not found.')
-# class UserItem(Resource):
-
-    # @api.marshal_with(fitting_user)
-    # @auth_required
-    # def get(self, uuid):
-    #     """
-    #     Returns a user object.
-    #     """
-    #     user = _userRep.get({'uuid': uuid})
-    #     return user[0] if user else (None, 404)
+    @api.marshal_with(fitting_user)
+    @auth_required
+    def get(self, uuid):
+        """
+        Returns a user object.
+        """
+        user = _userRep.get({'uuid': uuid})
+        return user[0] if user else (None, 404)
 
 
 @ns.route('/<string:uuid>/profile/<string:scan_id>')

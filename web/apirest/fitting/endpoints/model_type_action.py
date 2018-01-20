@@ -9,7 +9,7 @@ from data.repositories import ComparisonRuleRepository
 from flask import request, jsonify
 from flask_restplus import Resource
 
-ns = api.namespace('fitting/modeltypes/', description='Operations related to Model Type')
+ns = api.namespace('fitting_modeltypes', path='/fitting/modeltypes',  description='Operations related to Model Type')
 
 _productRep = ProductRepository()
 _modelRep = ModelRepository()
@@ -21,10 +21,10 @@ _compRuleRep = ComparisonRuleRepository()
 msg_object_does_not_exist = '{} object with id "{}" not found'
 
 
-@ns.route('', '/', '/<string:uuid>')
+@ns.route('')
 class ModelTypes(Resource):
     @api.marshal_with(model_type)
-    def get(self, uuid=None):
+    def get(self):
         """
         Returns a model types list.
         """
@@ -44,9 +44,12 @@ class ModelTypes(Resource):
         model_type_obj = _modelTypeRep.add({'name': request.json['name']}, result_JSON=True)
         return model_type_obj
 
-    def delete(self, uuid):
+
+@ns.route('/<string:id>')
+class ModelTypesItem(Resource):
+    def delete(self, id):
         """
         Api method to delete model type.
         """
-        _modelTypeRep.delete({'@rid': uuid})
+        _modelTypeRep.delete({'@rid': id})
         return None, 204

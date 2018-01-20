@@ -4,14 +4,14 @@ from data.repositories import ModelMetricValueRepository
 from flask import request
 from flask_restplus import Resource
 
-ns = api.namespace('fitting/modelmetricvalues/', description='Operations related to Model metric value')
+ns = api.namespace('fitting_modelmetricvalues', path='/fitting/modelmetricvalues', description='Operations related to Model metric value')
 
 _modelMetricValueRep = ModelMetricValueRepository()
 
 msg_object_does_not_exist = '{} object with id "{}" not found'
 
 
-@ns.route('', '/', '/<string:uuid>')
+@ns.route('',)
 class ModelMetricValue(Resource):
     @api.marshal_with(model_metric_value)
     def get(self):
@@ -33,18 +33,21 @@ class ModelMetricValue(Resource):
         model_metric_value_obj = _modelMetricValueRep.add(request.json, result_JSON=True)
         return model_metric_value_obj
 
+
+@ns.route('/<string:id>')
+class ModelMetricValueItem(Resource):
     @api.expect(model_metric_value)
-    def put(self, uuid):
+    def put(self, id):
         """
         Api method to update model metric value.
         """
-        model_metric_value_obj = _modelMetricValueRep.update({'@rid': uuid}, request.json)[0]
+        model_metric_value_obj = _modelMetricValueRep.update({'@rid': id}, request.json)[0]
         return {'@rid': model_metric_value_obj._id}, 201
 
     @api.response(204, 'Model metric value successfully deleted.')
-    def delete(self, uuid):
+    def delete(self, id):
         """
         Api method to delete model metric value.
         """
-        _modelMetricValueRep.delete({'@rid': uuid})
+        _modelMetricValueRep.delete({'@rid': id})
         return None, 204

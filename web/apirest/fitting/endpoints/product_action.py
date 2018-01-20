@@ -81,7 +81,7 @@ def add_comp_rule_metric(modeltype_metr, scan_metric, value, f1, shift, f2, prod
     return comp_rule_metr_obj
 
 
-@ns.route('', '/', '/<string:uuid>')
+@ns.route('',)
 class Products(Resource):
     @api.marshal_with(product)
     def get(self):
@@ -117,6 +117,10 @@ class Products(Resource):
         product_obj = _productRep.add(data_dict, result_JSON=True)
         return product_obj
 
+
+@ns.route('/<string:uuid>')
+@api.response(404, 'Product not found.')
+class ProductGetMetricsItem(Resource):
     @api.response(204, 'Product successfully deleted.')
     @api.marshal_with(product)
     def delete(self, uuid):
@@ -140,7 +144,7 @@ class Products(Resource):
 
             reader = csv.reader(iter_lines, delimiter=',')
 
-            product_obj = _productRep.get({'@rid': uuid})[0]
+            product_obj = _productRep.get({'uuid': uuid})[0]
             foot_types = _graph.element_from_link(product_obj.default_comparison_rule).model_types
             model_type_objects = []
             for t in foot_types:
@@ -162,14 +166,14 @@ class Products(Resource):
         data_dict['brand'] = OrientRecordLink(request.json['brand'])
         data_dict['default_comparison_rule'] = OrientRecordLink(request.json['default_comparison_rule'])
 
-        product_obj = _productRep.update({'@rid': uuid}, data_dict)
+        product_obj = _productRep.update({'uuid': uuid}, data_dict)
         if product_obj: product_obj = product_obj[0]
         return {'@rid': product_obj._id, 'name': product_obj.name}, 201
 
 
 @ns.route('/<string:uuid>/get_metrics')
 @api.response(404, 'Product not found.')
-class ProductItem(Resource):
+class ProductGetMetricsItem(Resource):
     def get(self, uuid):
         """
         Returns a csv file.

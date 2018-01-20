@@ -6,7 +6,7 @@ from flask import request
 from flask import abort
 from flask_restplus import Resource
 
-ns = api.namespace('fitting/scanners/', description='Operations related to Scanner')
+ns = api.namespace('fitting_scanners', path='/fitting/scanners', description='Operations related to Scanner')
 
 _scannerRep = ScannerRepository()
 _scannerModelRep = ScannerModelRepository()
@@ -14,7 +14,7 @@ _scannerModelRep = ScannerModelRepository()
 msg_object_does_not_exist = '{} object with id "{}" not found'
 
 
-@ns.route('', '/')
+@ns.route('')
 class Scanners(Resource):
     @api.marshal_with(scanner)
     def get(self):
@@ -43,7 +43,7 @@ class Scanners(Resource):
 
 @ns.route('/<string:id>')
 @api.response(404, 'Scanner not found.')
-class ModelItem(Resource):
+class ScannerItem(Resource):
 
     @api.marshal_with(scanner)
     def get(self, id):
@@ -53,7 +53,15 @@ class ModelItem(Resource):
         scanner_obj = _scannerRep.get({'@rid': id})
         return scanner_obj[0] if scanner_obj else (None, 404)
 
-    @api.response(204, 'Model successfully deleted.')
+    @api.expect(scanner)
+    def put(self, id):
+        """
+        Api method to update scanner.
+        """
+        scanner_obj = _scannerRep.update({'@rid': id}, request.json)[0]
+        return {'@rid': scanner_obj._id, 'name': scanner_obj.name}, 201
+
+    @api.response(204, 'Scanner successfully deleted.')
     @api.marshal_with(scanner)
     def delete(self, id):
         """

@@ -23,7 +23,7 @@ _compRuleRep = ComparisonRuleRepository()
 msg_object_does_not_exist = '{} object with id "{}" not found'
 
 
-@ns.route('', '/', '/<string:uuid>')
+@ns.route('')
 class Sizes(Resource):
     @api.marshal_with(size)
     def get(self):
@@ -39,21 +39,6 @@ class Sizes(Resource):
         return (size_obj[page_start:page_end], 200, {'X-Total-Count': len(size_obj)}) if size_obj else ([], 200, {'X-Total-Count': 0})
 
     @api.expect(size)
-    def put(self, uuid):
-        """
-        Api method to update size.
-        """
-        model_type_obj = []
-        for x in request.json['model_types']:
-            model_type_obj.append(OrientRecordLink(x))
-
-        data_dict = request.json
-        data_dict['model_types'] = model_type_obj
-
-        size_obj = _sizeRep.update({'@rid': uuid}, data_dict)[0]
-        return {'@rid': size_obj._id, 'name': size_obj.string_value}, 201
-
-    @api.expect(size)
     def post(self):
         """
         Api method to create size.
@@ -66,3 +51,29 @@ class Sizes(Resource):
         data_dict['model_types'] = model_type_obj
         size_obj = _sizeRep.add(data_dict, result_JSON=True)
         return size_obj
+
+
+@ns.route('/<string:id>')
+class SizeItem(Resource):
+    @api.expect(size)
+    def delete(self, id):
+        """
+        Api method to delete size.
+        """
+        _sizeRep.delete({'@rid': id})
+        return None, 204
+
+    @api.expect(size)
+    def put(self, id):
+        """
+        Api method to update size.
+        """
+        model_type_obj = []
+        for x in request.json['model_types']:
+            model_type_obj.append(OrientRecordLink(x))
+
+        data_dict = request.json
+        data_dict['model_types'] = model_type_obj
+
+        size_obj = _sizeRep.update({'@rid': id}, data_dict)[0]
+        return {'@rid': size_obj._id, 'name': size_obj.string_value}, 201

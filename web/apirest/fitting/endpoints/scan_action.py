@@ -51,7 +51,7 @@ update_scan_arguments.add_argument('type', type=str, required=True)
 update_scan_arguments.add_argument('time', type=int, required=False)
 
 
-@ns.route('', '/', '/<string:id>')
+@ns.route('')
 class Scans(Resource):
     @api.marshal_with(scan)
     def get(self):
@@ -89,6 +89,9 @@ class Scans(Resource):
         scanner_obj = _scannerRep.add(data_dict, result_JSON=True)
         return scanner_obj
 
+
+@ns.route('/<string:id>')
+class ScanItem(Resource):
     @api.expect(scan)
     def put(self, id):
         """

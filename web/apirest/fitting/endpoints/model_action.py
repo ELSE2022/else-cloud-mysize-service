@@ -19,7 +19,7 @@ from pyorient import OrientRecordLink
 from werkzeug.datastructures import FileStorage
 from orientdb_data_layer import data_connection
 
-ns = api.namespace('fitting_models', path='/fitting/models', description='Operations related to Size')
+ns = api.namespace('fitting_models', path='/fitting/models', description='Operations related to Model')
 
 _productRep = ProductRepository()
 _modelRep = ModelRepository()
@@ -34,10 +34,10 @@ upload_parser = reqparse.RequestParser()
 upload_parser.add_argument('file', location='json', type=FileStorage, required=True)
 
 
-@ns.route('', '/', '/<string:id>')
+@ns.route('',)
 class Models(Resource):
     @api.marshal_with(model)
-    def get(self, id=None):
+    def get(self):
         """
         Returns a models list.
         """
@@ -86,14 +86,14 @@ class Models(Resource):
                                    'model_type': model_type_obj[0], 'stl_path': attachment_path}, result_JSON=True)
         return model_obj
 
+
+@ns.route('/<string:id>')
+class ModelItem(Resource):
     @api.expect(model)
     def put(self, id):
         """
         Api method to update model.
         """
-        print('UPDATE MODEL')
-        print(request.json)
-
         data_dict = request.json
         data_dict['product'] = OrientRecordLink(request.json['product'])
         data_dict['model_type'] = OrientRecordLink(request.json['model_type'])
@@ -120,7 +120,6 @@ class Models(Resource):
         model_obj = _modelRep.update({'@rid': id}, data_dict)[0]
         return {'@rid': model_obj._id, 'name': model_obj.name}, 201
 
-    # @api.response(204, 'Model successfully deleted.')
     @api.marshal_with(model)
     def delete(self, id):
         """
