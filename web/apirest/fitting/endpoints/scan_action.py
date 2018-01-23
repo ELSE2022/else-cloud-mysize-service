@@ -246,7 +246,7 @@ def update_foot_scans(user, scanner, scan_id, scan_types):
 @api.response(404, 'Scan not found.')
 class ScanItem(Resource):
     @api.expect(update_scan_arguments, validate=True)
-    def put(self, scan_id=None):
+    def post(self, scan_id=None):
         """
         Returns a scans.
         """

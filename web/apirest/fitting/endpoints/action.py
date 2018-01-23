@@ -11,7 +11,7 @@ from apirest.fitting.serializers import user_size
 from apirest.fitting.endpoints.product_action import msg_object_does_not_exist
 from apirest.restplus import api
 from apirest.restplus import auth_required
-from api.web_actions.get_user_profile import get_user
+# from api.web_actions.get_user_profile import get_user
 from data.repositories import UserRepository
 from data.repositories import ScanRepository
 from data.repositories import ModelTypeRepository
@@ -27,7 +27,9 @@ from flask_restplus import Resource
 from flask_restplus import reqparse
 from orientdb_data_layer import data_connection
 
-ns = api.namespace('fitting/users/', description='Operations related to User')
+from settings import SCANNER_STORAGE_BASE_URL
+
+ns = api.namespace('fitting_users', path='/fitting/users', description='Operations related to User')
 
 _userRep = UserRepository()
 _scanRep = ScanRepository()
@@ -40,6 +42,23 @@ _comparisonResRep = ComparisonResultRepository()
 
 best_style_arguments = reqparse.RequestParser()
 best_style_arguments.add_argument('size', type=str, required=False)
+
+default_scan_arguments = reqparse.RequestParser()
+default_scan_arguments.add_argument('scan', type=str, required=True)
+
+
+def get_user(user_uuid):
+    if user_uuid is None:
+        abort(400, 'Request malformed: \'user\' argument not passed')
+    user = _userRep.get({
+        'uuid': user_uuid,
+    })
+    if len(user) == 0:
+        abort(404, 'User not found')
+    if len(user) > 1:
+        abort(400, 'Too many ({}) users with '
+            'the same user_uuid: {}'.format(len(user), user_uuid))
+    return user[0]
 
 
 def get_objects(graph, user_uuid, product_uuid):
@@ -82,8 +101,29 @@ class Users(Resource):
         Api method to create user.
         """
         user_uuid = request.json.get('uuid')
-        user = _userRep.add({'uuid': user_uuid}, result_JSON=True)
-        return user
+        base_url = request.json.get('base_url', SCANNER_STORAGE_BASE_URL)
+        size_value = request.json.get('size')
+        user_obj = _userRep.add({'uuid': user_uuid, 'base_url': base_url}, result_JSON=True)
+
+        if size_value:
+            left_foot = _modelTypeRep.get(dict(name='LEFT_FOOT'))
+            right_foot = _modelTypeRep.get(dict(name='RIGHT_FOOT'))
+            if len(left_foot) == 0 and len(right_foot) == 0:
+                left_foot = _modelTypeRep.add(dict(name='LEFT_FOOT'))
+                right_foot = _modelTypeRep.add(dict(name='RIGHT_FOOT'))
+            else:
+                left_foot = left_foot[0]
+                right_foot = right_foot[0]
+
+            foot_types = [left_foot, right_foot]
+
+            size_obj = _sizeRep.get({'string_value': size_value, 'model_types': foot_types})
+            if not size_obj:
+                size_obj = _sizeRep.add(dict(string_value=size_value, model_types=foot_types))
+            else: size_obj = size_obj[0]
+            _userSizeRep.add({'user': user_obj, 'size': size_obj, 'creation_time': str(datetime.now())})
+
+        return user_obj
 
 
 @ns.route('/<string:uuid>')
@@ -116,16 +156,17 @@ class UserItem(Resource):
         return user[0] if user else (None, 404)
 
 
-@ns.route('/<string:uuid>/profile/<string:scan_id>')
+@ns.route('/<string:uuid>/profile')
 class UserProfile(Resource):
     @api.marshal_with(profile_user)
-    def get(self, uuid, scan_id):
+    @api.expect(default_scan_arguments)
+    def get(self, uuid):
         """
         Api method to get user profile.
         """
         scans_list = []
         user = get_user(uuid)
-        scans = _scanRep.get({'user': user, 'scan_id': scan_id})
+        scans = _scanRep.get({'user': user, 'scan_id': request.json.get('scan')})
         for sc in scans:
             metric = _scanMetricValueRep.get({
                 'scan': sc,
@@ -135,15 +176,6 @@ class UserProfile(Resource):
             scans_list.append(scans_with_metrics)
         return {'uuid': uuid, 'scans': scans_list}
 
-    @api.marshal_with(user_scans)
-    def put(self, uuid, scan_id):
-        """
-        Api method to set default user scan.
-        """
-        user = _userRep.get({'uuid': uuid})
-        scans = _scanRep.update({'user': user, 'scan_id': scan_id}, {'is_default': True})
-        return scans
-
 
 @ns.route('/<string:uuid>/scans')
 class Scans(Resource):
@@ -152,28 +184,55 @@ class Scans(Resource):
         """
         Api method to get user scans.
         """
-        scans_list = []
-        user = _userRep.get({'uuid': uuid})
-        scans = _scanRep.get_by_tree({'user': user[0]})
-        for sc in scans:
-            metric = _scanMetricValueRep.get({
-                'scan': sc,
-            })
-            scans_with_metrics = sc._props
-            scans_with_metrics['metric'] = metric
-            scans_list.append(scans_with_metrics)
-        return scans_list
+        # scans_list = []
+        # user = _userRep.get({'uuid': uuid})
+        scans = _scanRep.get_by_tree({'user': {'uuid': uuid}})
+        # for sc in scans:
+        #     metric = _scanMetricValueRep.get({
+        #         'scan': sc,
+        #     })
+        #     scans_with_metrics = sc._props
+        #     scans_with_metrics['metric'] = metric
+        #     scans_list.append(scans_with_metrics)
+        return scans
+
+
+@ns.route('/<string:uuid>/scans/set_default')
+class DefaultScan(Resource):
+    @api.expect(default_scan_arguments)
+    def post(self, uuid):
+        """
+        Api method to set default user scan.
+        """
+        scan_id = request.json.get('scan')
+        user = get_user(uuid)
+        scans = _scanRep.update({'user': user, 'scan_id': scan_id}, {'is_default': True})
+
+        return scans
 
 
 @ns.route('/<string:uuid>/size')
 class Size(Resource):
+    @api.marshal_with(size)
+    def get(self, uuid):
+        """
+        Api method to get default user size.
+        """
+        user_obj = get_user(uuid)
+        model_type = request.json.get('type', 'LEFT_FOOT')
+        model_type_obj = _modelTypeRep.get(dict(model_type=model_type))
+        if not model_type_obj:
+            abort(400)
+        user_size_obj = _userSizeRep.get_by_tree(dict(user=user_obj, size=dict(model_types=model_type_obj)))
+        return user_size_obj[0].size
+
     @api.expect(size)
     @api.marshal_with(user_size)
     def post(self, uuid):
         """
         Api method to set default user size.
         """
-        user = _userRep.get({'uuid': uuid})
+        user = get_user(uuid)
         model = _modelTypeRep.get({'name': request.json['model_type']['name']})
         size_object = _sizeRep.get({'string_value': request.json['string_value'], 'model_types': model[0]})
 
@@ -182,7 +241,7 @@ class Size(Resource):
             'size': size_object[0],
         })
 
-        if len(user_size_rep) == 0:
+        if not user_size_rep:
             user_size_rep = _userSizeRep.add({
                 'user': user[0],
                 'size': size_object[0],
