@@ -26,6 +26,7 @@ from flask import abort
 from flask_restplus import Resource
 from flask_restplus import reqparse
 from orientdb_data_layer import data_connection
+from pyorient import OrientRecordLink
 
 from settings import SCANNER_STORAGE_BASE_URL
 
@@ -39,6 +40,9 @@ _userSizeRep = UserSizeRepository()
 _scanMetricValueRep = ScanMetricValueRepository()
 _productRep = ProductRepository()
 _comparisonResRep = ComparisonResultRepository()
+
+default_size_arguments = reqparse.RequestParser()
+default_size_arguments.add_argument('type', type=str, required=False)
 
 best_style_arguments = reqparse.RequestParser()
 best_style_arguments.add_argument('size', type=str, required=False)
@@ -214,13 +218,16 @@ class DefaultScan(Resource):
 @ns.route('/<string:uuid>/size')
 class Size(Resource):
     @api.marshal_with(size)
+    @api.expect(default_size_arguments)
     def get(self, uuid):
         """
-        Api method to get default user size.
+        Api method to get default user size
         """
         user_obj = get_user(uuid)
-        model_type = request.json.get('type', 'LEFT_FOOT')
-        model_type_obj = _modelTypeRep.get(dict(model_type=model_type))
+        args = default_size_arguments.parse_args()
+
+        model_type = args.get('type', 'LEFT_FOOT')
+        model_type_obj = _modelTypeRep.get(dict(name=model_type))
         if not model_type_obj:
             abort(400)
         user_size_obj = _userSizeRep.get_by_tree(dict(user=user_obj, size=dict(model_types=model_type_obj)))
@@ -232,22 +239,30 @@ class Size(Resource):
         """
         Api method to set default user size.
         """
+        model_type_objects = []
         user = get_user(uuid)
-        model = _modelTypeRep.get({'name': request.json['model_type']['name']})
-        size_object = _sizeRep.get({'string_value': request.json['string_value'], 'model_types': model[0]})
+        print(request.json)
+        for mt in request.json['model_types']:
+            model_type_obj = _modelTypeRep.get({'name': mt})
+            if not model_type_obj:
+                abort(400)
+            else: model_type_obj = model_type_obj[0]
+            model_type_objects.append(model_type_obj._id)
 
-        user_size_rep = _userSizeRep.get({
-            'user': user[0],
-            'size': size_object[0],
-        })
-
-        if not user_size_rep:
-            user_size_rep = _userSizeRep.add({
-                'user': user[0],
-                'size': size_object[0],
-                'creation_time': str(datetime.now()),
+            size_object = _sizeRep.sql_command("select @rid as _id, string_value, model_types from size where {0} IN model_types AND string_value={1}".format(model_type_obj._id, request.json['string_value']), result_as_dict=True)
+            user_size_rep = _userSizeRep.get({
+                'user': user,
+                'size': size_object[0].get('_id'),
             })
-        return {'user': user[0], 'size': size_object[0]}
+            if not user_size_rep:
+                user_size_rep = _userSizeRep.add({
+                    'user': user,
+                    'size': size_object[0].get('_id'),
+                    'model_type': model_type_obj._id,
+                    'creation_time': str(datetime.now()),
+                })
+            else: user_size_rep = user_size_rep[0]
+        return {'user': user, 'size': size_object[0]}
 
 
 @ns.route('/<string:user_uuid>/products/<string:product_uuid>/best_size')

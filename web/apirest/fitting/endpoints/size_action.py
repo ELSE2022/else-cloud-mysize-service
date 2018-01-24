@@ -23,7 +23,7 @@ _compRuleRep = ComparisonRuleRepository()
 msg_object_does_not_exist = '{} object with id "{}" not found'
 
 
-@ns.route('')
+@ns.route('', '/')
 class Sizes(Resource):
     @api.marshal_with(size)
     def get(self):
