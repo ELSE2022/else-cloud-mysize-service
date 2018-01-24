@@ -231,6 +231,8 @@ class Size(Resource):
         if not model_type_obj:
             abort(400)
         user_size_obj = _userSizeRep.get_by_tree(dict(user=user_obj, size=dict(model_types=model_type_obj)))
+        if not user_size_obj:
+            return abort(400, 'User doesn\'t have default size')
         return user_size_obj[0].size
 
     @api.expect(size)

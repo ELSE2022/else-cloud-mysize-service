@@ -10,7 +10,7 @@ export const ProductList = (props) => (
             <ReferenceField label="Brand" source="brand" reference="brands">
                 <TextField source="name" />
             </ReferenceField>
-            <ReferenceField label="Comparison rule" source="brand" reference="brands">
+            <ReferenceField label="Comparison rule" source="default_comparison_rule" reference="comparisonrules">
                 <TextField source="name" />
             </ReferenceField>
             <TextField source="sku" />

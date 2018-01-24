@@ -256,7 +256,7 @@ def import_sql(connectionstring):
                 size = _sizeRep.add(dict(string_value=r.size_value, order=r.size_order, model_types=foot_types))
             else:
                 size = size[0]
-            _userSizeRep.add(dict(user=user, size=size, creation_time=datetime.datetime.now()))
-
+            for ft in foot_types:
+                _userSizeRep.add(dict(user=user, size=size, creation_time=datetime.datetime.now(), model_type=ft))
 
     print('Import Ended')

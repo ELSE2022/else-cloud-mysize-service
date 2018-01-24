@@ -36,7 +36,7 @@ const convertRESTRequestToHTTP = (type, resource, params) => {
         break;
     }
     case GET_ONE:
-        url = `${API_URL}/${resource}/${params.id}`;
+        url = `${API_URL}/${resource}`;
         break;
     case GET_MANY: {
         const query = {
