@@ -208,7 +208,7 @@ class DefaultScan(Resource):
         """
         Api method to set default user scan.
         """
-        scan_id = request.json.get('scan')
+        scan_id = request.args.get('scan')
         user = get_user(uuid)
         scans = _scanRep.update({'user': user, 'scan_id': scan_id}, {'is_default': True})
 
