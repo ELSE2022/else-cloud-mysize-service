@@ -5,6 +5,7 @@ from api.web_actions.best_size import get_foot_best_size
 from api.web_actions.best_size import generate_result
 from apirest.fitting.serializers import fitting_user
 from apirest.fitting.serializers import profile_user
+from apirest.fitting.serializers import scan_metric_value
 from apirest.fitting.serializers import size
 from apirest.fitting.serializers import user_scans
 from apirest.fitting.serializers import user_size
@@ -162,23 +163,32 @@ class UserItem(Resource):
 
 @ns.route('/<string:uuid>/profile')
 class UserProfile(Resource):
-    @api.marshal_with(profile_user)
+    # @api.marshal_with(scan_metric_value)
     @api.expect(default_scan_arguments)
     def get(self, uuid):
         """
         Api method to get user profile.
         """
+        _graph = data_connection.get_graph()
         scans_list = []
+        user_profile = {}
         user = get_user(uuid)
-        scans = _scanRep.get({'user': user, 'scan_id': request.json.get('scan')})
+        scans = _scanRep.get({'user': user, 'scan_id': request.args.get('scan')})
         for sc in scans:
             metric = _scanMetricValueRep.get({
                 'scan': sc,
             })
-            scans_with_metrics = sc._props
-            scans_with_metrics['metric'] = metric
-            scans_list.append(scans_with_metrics)
-        return {'uuid': uuid, 'scans': scans_list}
+            for attribute in metric:
+                if _graph.element_from_link(attribute.metric).name not in user_profile:
+                    user_profile[_graph.element_from_link(attribute.metric).name] = {}
+                user_profile[_graph.element_from_link(attribute.metric).name][_graph.element_from_link(sc.model_type).name] = attribute.value
+
+            # metrics_with
+            # scans_with_metrics = sc._props
+            # scans_with_metrics['metric'] = metric
+            scans_list.append(metric)
+        # print(scans_list)
+        return user_profile
 
 
 @ns.route('/<string:uuid>/scans')

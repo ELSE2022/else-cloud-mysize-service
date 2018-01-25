@@ -49,6 +49,13 @@ scan = api.model('Scan', {
     # 'metric': fields.String(required=True, description='Scan metric'),
 })
 
+scan_metric_value = api.model('Scan metric value', {
+    'id': fields.String(required=False, readOnly=True, description='Scan metric value id', attribute='_id'),
+    'scan': fields.Nested(scan),
+    'metric': fields.Nested(scan_metric),
+    'value': fields.String(required=True, description='Value'),
+})
+
 profile_user = api.model('Profile', {
     'uuid': fields.String(required=True, description='Users uuid'),
     'scans': fields.List(fields.Nested(scan)),
