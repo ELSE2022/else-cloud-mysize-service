@@ -12,7 +12,7 @@ export const ModelList = (props) => (
                 <TextField source="name" />
             </ReferenceField>
             <ReferenceField label="Product" source="product" reference="products">
-                <TextField source="name" />
+                <TextField source="uuid" />
             </ReferenceField>
             <ReferenceField label="Size" source="size" reference="sizes">
                 <TextField source="string_value" />

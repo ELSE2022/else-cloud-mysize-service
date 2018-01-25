@@ -331,9 +331,9 @@ class BestStyle(Resource):
             comparison_results = [x for x in results if str(x.size) == size_obj._id]
 
         avg_res = sum(c.value for c in comparison_results) / float(len(comparison_results))
-        return {
+        return {'best_style': {
             'score': round(avg_res, 2),
             'output_model': '',
             'size': size_obj.string_value,
             'size_type': 'FOOT'
-        }
+        }}
