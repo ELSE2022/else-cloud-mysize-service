@@ -204,6 +204,7 @@ class Scans(Resource):
 @ns.route('/<string:uuid>/scans/set_default')
 class DefaultScan(Resource):
     @api.expect(default_scan_arguments)
+    @api.marshal_with(user_scans)
     def post(self, uuid):
         """
         Api method to set default user scan.
