@@ -18,6 +18,7 @@ size = api.model('Size', {
     'id': fields.String(required=False, readOnly=True, description='Size id', attribute='_id'),
     'model_types': fields.List(fields.String, description='name', required=True),
     'string_value': fields.String(required=True),
+    'default_size': fields.String(required=False, attribute='string_value'),
 })
 
 user_size = api.model('User size', {

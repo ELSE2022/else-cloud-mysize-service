@@ -224,17 +224,17 @@ class Size(Resource):
         """
         Api method to get default user size
         """
+        _graph = data_connection.get_graph()
         user_obj = get_user(uuid)
-        args = default_size_arguments.parse_args()
 
-        model_type = args.get('type', 'LEFT_FOOT')
+        model_type = request.args.get('type', 'LEFT_FOOT')
         model_type_obj = _modelTypeRep.get(dict(name=model_type))
         if not model_type_obj:
             abort(400)
-        user_size_obj = _userSizeRep.get_by_tree(dict(user=user_obj, size=dict(model_types=model_type_obj)))
+        user_size_obj = _userSizeRep.get_by_tree(dict(user=user_obj, model_type=model_type_obj[0]))
         if not user_size_obj:
             return abort(400, 'User doesn\'t have default size')
-        return user_size_obj[0].size
+        return _graph.element_from_link(user_size_obj[0].size)
 
     @api.expect(size)
     @api.marshal_with(user_size)
