@@ -293,12 +293,12 @@ class BestSize(Resource):
         results = {k: v / len(types) for k, v in dct.items()}
         max_result = max(results.items(), key=operator.itemgetter(1))
         print(max_result)
-        return {
+        return {'best_size': {
             'score': round(max_result[1], 2),
             'output_model': '',
             'size': _graph.element_from_link(max_result[0]).string_value,
             'size_type': 'FOOT'
-        }
+        }}
 
 
 @ns.route('/<string:user_uuid>/products/<string:product_uuid>/best_style')
