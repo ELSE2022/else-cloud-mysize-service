@@ -5,7 +5,7 @@ from api.web_actions.best_size import get_foot_best_size
 from api.web_actions.best_size import generate_result
 from apirest.fitting.serializers import fitting_user
 from apirest.fitting.serializers import profile_user
-from apirest.fitting.serializers import scan_metric_value
+from apirest.fitting.serializers import scan_metric
 from apirest.fitting.serializers import size
 from apirest.fitting.serializers import user_scans
 from apirest.fitting.serializers import user_size
@@ -18,6 +18,7 @@ from data.repositories import ScanRepository
 from data.repositories import ModelTypeRepository
 from data.repositories import SizeRepository
 from data.repositories import UserSizeRepository
+from data.repositories import ScanMetricRepository
 from data.repositories import ScanMetricValueRepository
 from data.repositories import ProductRepository
 from data.repositories import ComparisonResultRepository
@@ -38,6 +39,7 @@ _scanRep = ScanRepository()
 _modelTypeRep = ModelTypeRepository()
 _sizeRep = SizeRepository()
 _userSizeRep = UserSizeRepository()
+_scanMetricRep = ScanMetricRepository()
 _scanMetricValueRep = ScanMetricValueRepository()
 _productRep = ProductRepository()
 _comparisonResRep = ComparisonResultRepository()
@@ -163,7 +165,7 @@ class UserItem(Resource):
 
 @ns.route('/<string:uuid>/profile')
 class UserProfile(Resource):
-    # @api.marshal_with(scan_metric_value)
+    @api.marshal_with(scan_metric)
     @api.expect(default_scan_arguments)
     def get(self, uuid):
         """
@@ -171,24 +173,39 @@ class UserProfile(Resource):
         """
         _graph = data_connection.get_graph()
         scans_list = []
-        user_profile = {}
+
         user = get_user(uuid)
         scans = _scanRep.get({'user': user, 'scan_id': request.args.get('scan')})
-        for sc in scans:
-            metric = _scanMetricValueRep.get({
-                'scan': sc,
-            })
-            for attribute in metric:
-                if _graph.element_from_link(attribute.metric).name not in user_profile:
-                    user_profile[_graph.element_from_link(attribute.metric).name] = {}
-                user_profile[_graph.element_from_link(attribute.metric).name][_graph.element_from_link(sc.model_type).name] = attribute.value
+        # for sc in scans:
+        #     scans_with_metrics = sc._props
+        #     scans_with_metrics['metric'] = []
+        #     metric_value = _scanMetricValueRep.get({
+        #         'scan': sc,
+        #     })
+        #     for mv in metric_value:
+        #         metric = _graph.element_from_link(mv.metric)
+        #         metric_with_value = metric._props
+        #         metric_with_value['value'] = mv.value
+        #         scans_with_metrics['metric'].append(metric_with_value)
+        #
+        #     scans_list.append(scans_with_metrics)
 
-            # metrics_with
-            # scans_with_metrics = sc._props
-            # scans_with_metrics['metric'] = metric
-            scans_list.append(metric)
-        # print(scans_list)
-        return user_profile
+        # sc_mt = _scanMetricValueRep.sql_command("SELECT scan.uuid as scan, metric, value FROM scanmetricvalue GROUP BY metric", result_as_dict=True)
+        # print(sc_mt)
+        # print(len(sc_mt))
+        all_res_metric = []
+        all_metrics = _scanMetricRep.get({'scanner_model': _graph.element_from_link(scans[0].scanner).model})
+        for metric in all_metrics:
+            res_metric = metric._props
+            metric_value = _scanMetricValueRep.get_by_tree({
+                'metric': metric,
+                'scan': {'scan_id': request.args.get('scan')},
+            })
+            res_metric['values'] = metric_value
+            all_res_metric.append(res_metric)
+            print('aaaa', res_metric)
+        print(len(all_res_metric))
+        return all_res_metric
 
 
 @ns.route('/<string:uuid>/scans')

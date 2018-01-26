@@ -26,11 +26,6 @@ user_size = api.model('User size', {
     'size': fields.Nested(size),
 })
 
-scan_metric = api.model('Scan metric', {
-    'id': fields.String(required=False, readOnly=True, description='Scan metric id', attribute='_id'),
-    'scanner_model': fields.String(required=True, description='Scanner model'),
-    'name': fields.String(required=True, description='Scan metric name'),
-})
 
 scan = api.model('Scan', {
     'id': fields.String(required=False, description='Id', attribute='_id'),
@@ -52,8 +47,16 @@ scan = api.model('Scan', {
 scan_metric_value = api.model('Scan metric value', {
     'id': fields.String(required=False, readOnly=True, description='Scan metric value id', attribute='_id'),
     'scan': fields.Nested(scan),
-    'metric': fields.Nested(scan_metric),
+    'metric': fields.String(required=True, description='Scan metric'),
     'value': fields.String(required=True, description='Value'),
+})
+
+scan_metric = api.model('Scan metric', {
+    'id': fields.String(required=False, readOnly=True, description='Scan metric id', attribute='_id'),
+    'scanner_model': fields.String(required=True, description='Scanner model'),
+    'name': fields.String(required=True, description='Scan metric name'),
+    # 'value': fields.String(required=True, description='Scan metric value'),
+    'values': fields.List(fields.Nested(scan_metric_value)),
 })
 
 profile_user = api.model('Profile', {
