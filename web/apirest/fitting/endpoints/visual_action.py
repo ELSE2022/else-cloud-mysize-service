@@ -95,11 +95,11 @@ class VisualizationItem(Resource):
         scans = _scanRep.get(dict(user=user, scan_id=scan_id))
         if not scans:
             return abort(400)
-        all_requests = []
+        all_requests = {}
         for scan in scans:
             files = {'scan': open('attachments/' + scan.stl_path, 'rb')}
             values = {'user_uuid': _graph.element_from_link(scan.user).uuid}
             url = f'{ELSE_3D_SERVICE_URL}visualization/scan/'
             req = requests.post(url, files=files, data=values)
-            all_requests.append(req.json())
+            all_requests[_graph.element_from_link(scan.model_type).name] = req.json()
         return all_requests
