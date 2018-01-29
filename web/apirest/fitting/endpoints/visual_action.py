@@ -1,5 +1,6 @@
 import requests
 
+from apirest.fitting.endpoints.action import get_user
 from apirest.restplus import api
 from data.repositories import ScannerRepository
 from data.repositories import ScanRepository
@@ -38,6 +39,7 @@ update_compare_arguments.add_argument('scan_id', type=str, required=True)
 update_compare_arguments.add_argument('environment_uuid', type=str, required=False)
 
 update_scan_arguments = reqparse.RequestParser()
+update_scan_arguments.add_argument('user', type=str, required=True)
 update_scan_arguments.add_argument('scan_id', type=str, required=True)
 
 
@@ -87,9 +89,10 @@ class VisualizationItem(Resource):
         _graph = data_connection.get_graph()
         request_data = dict(request.args)
 
+        user = get_user(request_data.get('user')[0])
         scan_id = request_data.get('scan_id')[0]
 
-        scans = _scanRep.get(dict(scan_id=scan_id))
+        scans = _scanRep.get(dict(user=user, scan_id=scan_id))
         if not scans:
             return abort(400)
         all_requests = []
