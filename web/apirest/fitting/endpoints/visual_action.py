@@ -80,7 +80,7 @@ class VisualizationItem(Resource):
 @ns.route('/scan')
 class VisualizationItem(Resource):
     @api.expect(update_scan_arguments, validate=True)
-    def post(self):
+    def get(self):
         """
         User scan visualization
         """
