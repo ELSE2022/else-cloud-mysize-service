@@ -199,7 +199,7 @@ class UserProfile(Resource):
             res_metric = metric._props
             metric_value = _scanMetricValueRep.get_by_tree({
                 'metric': metric,
-                'scan': {'scan_id': request.args.get('scan')},
+                'scan': {'user': user, 'scan_id': request.args.get('scan')},
             })
             res_metric['values'] = metric_value
             all_res_metric.append(res_metric)
