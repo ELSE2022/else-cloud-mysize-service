@@ -1,9 +1,15 @@
 import React from 'react';
-import { List, Edit, Create, Datagrid, ReferenceInput, SelectInput, BooleanInput, DateInput, BooleanField, DateField,
+import { List, Filter, Edit, Create, Datagrid, ReferenceInput, SelectInput, BooleanInput, DateInput, BooleanField, DateField,
     ReferenceField, TextField, NumberInput, NumberField, EditButton, DisabledInput, SimpleForm, TextInput } from 'admin-on-rest';
 
+const ScanFilter = (props) => (
+    <Filter {...props} >
+        <TextInput label="Search" source="q" alwaysOn />
+    </Filter>
+);
+
 export const ScanList = (props) => (
-    <List {...props}>
+    <List {...props} filters={<ScanFilter />}>
         <Datagrid>
             <TextField source="id" />
             <ReferenceField label="User" source="user" reference="users">

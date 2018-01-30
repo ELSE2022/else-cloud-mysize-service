@@ -3,6 +3,7 @@ import os
 import requests
 import settings
 import json
+import ast
 from apirest.fitting.serializers import scan
 from apirest.restplus import api
 from bs4 import BeautifulSoup
@@ -61,8 +62,12 @@ class Scans(Resource):
         request_data = dict(request.args)
         page_start = int(request_data.get('_start')[0]) if request_data.get('_start', None) else None
         page_end = int(request_data.get('_end')[0]) if request_data.get('_end', None) else None
-
-        scan_obj = _scanRep.get({})
+        print(request_data.get('filter')[0])
+        search_query = ast.literal_eval(request_data.get('filter')[0])
+        if search_query:
+            scan_obj = _scanRep.get({'scan_id': search_query.get('q')})
+        else:
+            scan_obj = _scanRep.get({})
         return (scan_obj[page_start:page_end], 200, {'X-Total-Count': len(scan_obj)}) if scan_obj else ([], 200, {'X-Total-Count': 0})
 
     @api.expect(scan)
