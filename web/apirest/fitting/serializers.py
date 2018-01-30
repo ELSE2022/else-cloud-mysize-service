@@ -5,7 +5,7 @@ from data.models import User
 fitting_user = api.model('User', {
     'id': fields.String(readOnly=True, description='Users id', attribute='_id'),
     'uuid': fields.String(required=True, description='Users uuid'),
-    'base_url': fields.String(required=True, description='Users base url'),
+    'base_url': fields.String(required=False, description='Users base url'),
     # 'size': fields.String(required=False, description='Size'),
 })
 

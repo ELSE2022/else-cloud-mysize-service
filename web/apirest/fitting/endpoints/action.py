@@ -103,6 +103,7 @@ class Users(Resource):
         return (user_obj[page_start:page_end], 200, {'X-Total-Count': len(user_obj)}) if user_obj else (None, 404)
 
     @api.expect(fitting_user)
+    @api.marshal_with(fitting_user)
     def post(self):
         """
         Api method to create user.
@@ -110,7 +111,7 @@ class Users(Resource):
         user_uuid = request.json.get('uuid')
         base_url = request.json.get('base_url', SCANNER_STORAGE_BASE_URL)
         size_value = request.json.get('size')
-        user_obj = _userRep.add({'uuid': user_uuid, 'base_url': base_url}, result_JSON=True)
+        user_obj = _userRep.add({'uuid': user_uuid, 'base_url': base_url}, result_JSON=False)
 
         if size_value:
             left_foot = _modelTypeRep.get(dict(name='LEFT_FOOT'))
@@ -128,7 +129,8 @@ class Users(Resource):
             if not size_obj:
                 size_obj = _sizeRep.add(dict(string_value=size_value, model_types=foot_types))
             else: size_obj = size_obj[0]
-            _userSizeRep.add({'user': user_obj, 'size': size_obj, 'creation_time': str(datetime.now())})
+            for mt in foot_types:
+                _userSizeRep.add({'user': user_obj, 'model_type': mt, 'size': size_obj, 'creation_time': str(datetime.now())})
 
         return user_obj
 
