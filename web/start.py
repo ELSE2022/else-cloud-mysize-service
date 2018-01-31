@@ -17,7 +17,8 @@ import os, urllib
 import logging.config
 from flask import Blueprint
 from flask import Flask, jsonify
-from flask import render_template
+from flask import request
+from flask import abort
 from orientdb_data_layer import data_connection
 import api
 import settings
@@ -42,7 +43,6 @@ from apirest.fitting.endpoints.comparison_rule_metric_action import ns as compar
 from apirest.fitting.endpoints.model_metric_value_action import ns as model_metric_value_namespace
 from apirest.fitting.endpoints.visual_action import ns as visual_namespace
 from apirest.restplus import api as api_rest
-# from flask.ext.superadmin import Admin, model
 
 
 app = Flask(__name__)
@@ -77,19 +77,22 @@ if settings.IMPORT_DATA_FROM_POSTGRES:
 api.register_controllers(app)
 
 
-@app.after_request
-def after_request(response):
-    # response.headers.add('Access-Control-Allow-Origin', '*')
-    # response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    # response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
-    # response.headers.add('Access-Control-Expose-Headers', 'X-Total-Count')
+# @app.after_request
+# def after_request(response):
+#     # response.headers.add('Access-Control-Allow-Origin', '*')
+#     # response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+#     # response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
+#     # response.headers.add('Access-Control-Expose-Headers', 'X-Total-Count')
+#
+#     return response
 
-    return response
-
-
-@app.route('/admin')
+@app.route('/fitting/authenticate', methods=('POST',))
 def index():
-  return render_template('/rest_admin/public/index.html')
+    username = request.json.get('username')
+    password = request.json.get('password')
+    if username == settings.REST_ADMIN_LOGIN and password == settings.REST_ADMIN_PASSWORD:
+        return jsonify({'token': 'f150b933-09fd-461b-b181-4b393ce58cce'})
+    return abort(401)
 # @app.route('/')
 # @requires_auth
 # def get_all_routes():

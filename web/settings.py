@@ -2,6 +2,8 @@ import os
 
 # Flask settings
 FLASK_DEBUG = True  # Do not use debug mode in production
+REST_ADMIN_LOGIN = 'root'
+REST_ADMIN_PASSWORD = 'rootpswd'
 
 # Flask-Restplus settings
 RESTPLUS_SWAGGER_UI_DOC_EXPANSION = 'list'

@@ -15,3 +15,4 @@ from .ScanRepository import ScanRepository
 from .ScanMetricValueRepository import ScanMetricValueRepository
 from .UserSizeRepository import UserSizeRepository
 from .ComparisonResultRepository import ComparisonResultRepository
+from .ScanVisualizationRepository import ScanVisualizationRepository

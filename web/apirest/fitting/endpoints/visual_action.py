@@ -11,6 +11,8 @@ from data.repositories import ScanMetricRepository
 from data.repositories import ProductRepository
 from data.repositories import ScannerModelRepository
 from data.repositories import ModelRepository
+from data.repositories import ScanVisualizationRepository
+from datetime import datetime
 from flask import request
 from flask import abort
 from flask_restplus import Resource
@@ -29,6 +31,7 @@ _productRep = ProductRepository()
 _userRep = UserRepository()
 _modelTypeRep = ModelTypeRepository()
 _modelRep = ModelRepository()
+_scanVisualRep = ScanVisualizationRepository()
 
 msg_object_does_not_exist = '{} object with id "{}" not found'
 
@@ -97,9 +100,19 @@ class VisualizationItem(Resource):
             return abort(400)
         all_requests = {}
         for scan in scans:
-            files = {'scan': open('attachments/' + scan.stl_path, 'rb')}
-            values = {'user_uuid': _graph.element_from_link(scan.user).uuid}
-            url = f'{ELSE_3D_SERVICE_URL}visualization/scan/'
-            req = requests.post(url, files=files, data=values)
-            all_requests[_graph.element_from_link(scan.model_type).name] = req.json()
+            scan_visual = _scanVisualRep.get({'scan': scan})
+            if not scan_visual:
+                files = {'scan': open('attachments/' + scan.stl_path, 'rb')}
+                values = {'user_uuid': _graph.element_from_link(scan.user).uuid}
+                url = f'{ELSE_3D_SERVICE_URL}visualization/scan/'
+                req = requests.post(url, files=files, data=values)
+                all_requests[_graph.element_from_link(scan.model_type).name] = req.json()
+                _scanVisualRep.add(dict(scan=scan,
+                                        output_model=req.json().get('output_model'),
+                                        output_model_3d=req.json().get('output_model_3d'),
+                                        creation_time=datetime.now()))
+            else:
+                scan_visual = scan_visual[0]
+                all_requests[_graph.element_from_link(scan.model_type).name] = {'output_model': scan_visual.output_model,
+                                                                                'output_model_3d': scan_visual.output_model_3d}
         return all_requests

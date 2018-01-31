@@ -111,8 +111,10 @@ class Users(Resource):
         user_uuid = request.json.get('uuid')
         base_url = request.json.get('base_url', SCANNER_STORAGE_BASE_URL)
         size_value = request.json.get('size')
-        user_obj = _userRep.add({'uuid': user_uuid, 'base_url': base_url}, result_JSON=False)
-
+        user_obj = _userRep.get({'uuid': user_uuid})
+        if not user_obj:
+            user_obj = _userRep.add({'uuid': user_uuid, 'base_url': base_url}, result_JSON=False)
+        else: user_obj = user_obj[0]
         if size_value:
             left_foot = _modelTypeRep.get(dict(name='LEFT_FOOT'))
             right_foot = _modelTypeRep.get(dict(name='RIGHT_FOOT'))

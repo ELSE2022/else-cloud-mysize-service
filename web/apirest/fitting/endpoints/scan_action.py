@@ -59,15 +59,15 @@ class Scans(Resource):
         """
         Returns a scans list.
         """
+        _graph = data_connection.get_graph()
         request_data = dict(request.args)
         page_start = int(request_data.get('_start')[0]) if request_data.get('_start', None) else None
         page_end = int(request_data.get('_end')[0]) if request_data.get('_end', None) else None
-        print(request_data.get('filter')[0])
         search_query = ast.literal_eval(request_data.get('filter')[0])
-        if search_query:
-            scan_obj = _scanRep.get({'scan_id': search_query.get('q')})
-        else:
-            scan_obj = _scanRep.get({})
+
+        scan_obj = _scanRep.sql_command("SELECT * FROM V WHERE scan_id LIKE '%{0}%'".format(search_query.get('q', '')))
+        scan_obj = _graph.elements_from_records(scan_obj)
+
         return (scan_obj[page_start:page_end], 200, {'X-Total-Count': len(scan_obj)}) if scan_obj else ([], 200, {'X-Total-Count': 0})
 
     @api.expect(scan)
