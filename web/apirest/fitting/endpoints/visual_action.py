@@ -79,7 +79,7 @@ class VisualizationItem(Resource):
             if not last:
                 return abort(400)
             else: last = last[0]
-            compare_visual = _compareVisualRep.get({'scan': scan, 'last': last})
+            compare_visual = _compareVisualRep.get({'scan': scan, 'model': last})
             if not compare_visual:
                 files = {'last': open(last.stl_path, 'rb'), 'scan': open('attachments/' + scan.stl_path, 'rb')}
                 values = {'user_uuid': _graph.element_from_link(scan.user).uuid}
