@@ -81,7 +81,7 @@ def import_sql(connectionstring):
     _rep = ProductRepository()
     for r in call_sql("SELECT *\
                 FROM fitting_product\
-                where uuid in ('X004-128-C1825', 'X004-994-C723', 'X001-081-C351R', 'X001-894-C443R', 'X001-776-C510R', 'X001-286-C3001R') "):
+                where uuid in ('X004-128-C1825', 'X004-994-C723', 'X001-081-C351R', 'X001-894-C443R', 'X001-776-C510R', 'X001-286-C3001R', 'dis_11') "):
         if len(_rep.get(dict(uuid=r.uuid))) == 0:
             _rep.add(dict(uuid=r.uuid, brand=brand, default_comparison_rule=comp_rule))
 
@@ -109,7 +109,7 @@ def import_sql(connectionstring):
                         on product.id = last.product_id\
                         left outer join fitting_size as size\
                         on size.id = last.size_id\
-                        where product.uuid in ('X004-128-C1825', 'X004-994-C723', 'X001-081-C351R', 'X001-894-C443R', 'X001-776-C510R', 'X001-286-C3001R')")
+                        where product.uuid in ('X004-128-C1825', 'X004-994-C723', 'X001-081-C351R', 'X001-894-C443R', 'X001-776-C510R', 'X001-286-C3001R', 'dis_11')")
     i = 0
     l = len(data)
 
