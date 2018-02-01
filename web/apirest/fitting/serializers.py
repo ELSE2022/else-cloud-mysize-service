@@ -97,7 +97,7 @@ model = api.model('Model', {
     'model_type': fields.String(required=True, description='Model type'),
     'size': fields.String(required=True, description='Size'),
     'name': fields.String(required=True, description='Model name'),
-    # 'stl_path': fields.String(required=False, description='Model stl path'),
+    'stl_path': fields.String(required=False, description='Model stl path'),
 })
 
 model_type_metric = api.model('Model type metric', {
