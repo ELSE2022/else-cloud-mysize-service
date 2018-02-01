@@ -88,7 +88,7 @@ class VisualizationItem(Resource):
                     values['environment_uuid'] = request_data.get('environment_uuid')[0]
                 req = requests.post(url, files=files, data=values)
                 all_requests.append(req.json())
-                _compareVisualRep.add(dict(scan=scan, last=last,
+                _compareVisualRep.add(dict(scan=scan, model=last,
                                            output_model=req.json().get('output_model'),
                                            output_model_3d=req.json().get('output_model_3d'),
                                            creation_time=datetime.now()))
