@@ -16,3 +16,4 @@ from .ScanMetricValueRepository import ScanMetricValueRepository
 from .UserSizeRepository import UserSizeRepository
 from .ComparisonResultRepository import ComparisonResultRepository
 from .ScanVisualizationRepository import ScanVisualizationRepository
+from .CompareVisualizationRepository import CompareVisualizationRepository

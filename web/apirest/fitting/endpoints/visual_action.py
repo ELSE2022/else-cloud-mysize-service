@@ -12,6 +12,7 @@ from data.repositories import ProductRepository
 from data.repositories import ScannerModelRepository
 from data.repositories import ModelRepository
 from data.repositories import ScanVisualizationRepository
+from data.repositories import CompareVisualizationRepository
 from datetime import datetime
 from flask import request
 from flask import abort
@@ -32,13 +33,15 @@ _userRep = UserRepository()
 _modelTypeRep = ModelTypeRepository()
 _modelRep = ModelRepository()
 _scanVisualRep = ScanVisualizationRepository()
+_compareVisualRep = CompareVisualizationRepository()
 
 msg_object_does_not_exist = '{} object with id "{}" not found'
 
 update_compare_arguments = reqparse.RequestParser()
 update_compare_arguments.add_argument('product_uuid', type=str, required=True)
 update_compare_arguments.add_argument('size', type=str, required=True)
-update_compare_arguments.add_argument('scan_id', type=str, required=True)
+update_compare_arguments.add_argument('user', type=str, required=True)
+update_compare_arguments.add_argument('scan_id', type=str, required=False)
 update_compare_arguments.add_argument('environment_uuid', type=str, required=False)
 
 update_scan_arguments = reqparse.RequestParser()
@@ -49,7 +52,7 @@ update_scan_arguments.add_argument('scan_id', type=str, required=True)
 @ns.route('/compare')
 class VisualizationItem(Resource):
     @api.expect(update_compare_arguments, validate=True)
-    def post(self):
+    def get(self):
         """
         Compare visualization
         """
@@ -57,12 +60,16 @@ class VisualizationItem(Resource):
 
         request_data = dict(request.args)
         product_uuid = request_data.get('product_uuid')[0]
+        user_uuid = request_data.get('user')[0]
         size = request_data.get('size')[0]
-        scan_id = request_data.get('scan_id')[0]
+        scan_id = request_data.get('scan_id', None)
 
-        scans = _scanRep.get(dict(scan_id=scan_id))
-        if not scans:
-            return abort(400)
+        if scan_id:
+            scans = _scanRep.get(dict(scan_id=scan_id))
+            if not scans:
+                return abort(400)
+        else:
+            scans = _scanRep.get_by_tree({'is_default': True, 'user': {'uuid': user_uuid}})
         all_requests = []
         for scan in scans:
             scan_model_type = _graph.element_from_link(scan.model_type)
@@ -72,13 +79,19 @@ class VisualizationItem(Resource):
             if not last:
                 return abort(400)
             else: last = last[0]
-            files = {'last': open(last.stl_path, 'rb'), 'scan': open('attachments/' + scan.stl_path, 'rb')}
-            values = {'user_uuid': _graph.element_from_link(scan.user).uuid}
-            url = f'{ELSE_3D_SERVICE_URL}visualization/compare_visualization/'
-            if request_data.get('environment_uuid'):
-                values['environment_uuid'] = request_data.get('environment_uuid')[0]
-            req = requests.post(url, files=files, data=values)
-            all_requests.append(req.json())
+            compare_visual = _compareVisualRep.get({'scan': scan, 'last': last})
+            if not compare_visual:
+                files = {'last': open(last.stl_path, 'rb'), 'scan': open('attachments/' + scan.stl_path, 'rb')}
+                values = {'user_uuid': _graph.element_from_link(scan.user).uuid}
+                url = f'{ELSE_3D_SERVICE_URL}visualization/compare_visualization/'
+                if request_data.get('environment_uuid'):
+                    values['environment_uuid'] = request_data.get('environment_uuid')[0]
+                req = requests.post(url, files=files, data=values)
+                all_requests.append(req.json())
+            else:
+                compare_visual = compare_visual[0]
+                all_requests.append({'output_model': compare_visual.output_model,
+                                     'output_model_3d': compare_visual.output_model_3d})
         return all_requests
 
 
