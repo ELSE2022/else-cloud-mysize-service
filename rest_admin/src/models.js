@@ -36,7 +36,7 @@ export const ModelEdit = (props) => (
                 <SelectInput optionText="name" />
             </ReferenceInput>
             <ReferenceInput label="Product" source="product" reference="products" allowEmpty validation={{ required: true }}>
-                <SelectInput optionText="name" />
+                <SelectInput optionText="uuid" />
             </ReferenceInput>
             <ReferenceInput label="Size" source="size" reference="sizes" allowEmpty validation={{ required: true }}>
                 <SelectInput optionText="string_value" />

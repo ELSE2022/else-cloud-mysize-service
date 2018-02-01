@@ -109,7 +109,7 @@ class ModelItem(Resource):
             attachment_name = os.path.sep.join(
                 [
                     'Last',
-                    product_obj[0].name,
+                    product_obj[0].uuid,
                     '{}.{}'.format(size_obj[0].string_value, 'stl')
                 ]
             )
