@@ -117,7 +117,7 @@ class VisualizationItem(Resource):
             if not scans:
                 return abort(400)
         else:
-            scans = _scanRep.get_by_tree(dict(user=user, is_default=True))
+            scans = _scanRep.get(dict(user=user, is_default=True))
         all_requests = {}
         for scan in scans:
             scan_visual = _scanVisualRep.get({'scan': scan})
