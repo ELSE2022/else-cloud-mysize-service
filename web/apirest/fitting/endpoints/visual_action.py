@@ -110,11 +110,14 @@ class VisualizationItem(Resource):
         request_data = dict(request.args)
 
         user = get_user(request_data.get('user')[0])
-        scan_id = request_data.get('scan_id')[0]
+        scan_id = request_data.get('scan_id', None)
 
-        scans = _scanRep.get(dict(user=user, scan_id=scan_id))
-        if not scans:
-            return abort(400)
+        if scan_id:
+            scans = _scanRep.get(dict(scan_id=scan_id))
+            if not scans:
+                return abort(400)
+        else:
+            scans = _scanRep.get_by_tree({'is_default': True, 'user': {'uuid': user}})
         all_requests = {}
         for scan in scans:
             scan_visual = _scanVisualRep.get({'scan': scan})
