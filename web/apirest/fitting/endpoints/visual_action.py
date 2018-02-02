@@ -46,7 +46,7 @@ update_compare_arguments.add_argument('environment_uuid', type=str, required=Fal
 
 update_scan_arguments = reqparse.RequestParser()
 update_scan_arguments.add_argument('user', type=str, required=True)
-update_scan_arguments.add_argument('scan_id', type=str, required=True)
+update_scan_arguments.add_argument('scan_id', type=str, required=False)
 
 
 @ns.route('/compare')
