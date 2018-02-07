@@ -123,7 +123,7 @@ scanner = api.model('Scanner', {
     'id': fields.String(description='Id', attribute='_id'),
     'model': fields.String(required=True, description='Scanner model'),
     'name': fields.String(required=True, description='Scanner name'),
-    'base_url': fields.String(required=False, description='Scanner base url'),
+    'base_url': fields.String(required=True, description='Scanner base url'),
 })
 
 comparison_result = api.model('Comparison result', {

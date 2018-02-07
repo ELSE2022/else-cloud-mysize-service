@@ -2,9 +2,12 @@ from apirest.fitting.serializers import scanner
 from apirest.restplus import api
 from data.repositories import ScannerRepository
 from data.repositories import ScannerModelRepository
+from data.models import Scanner
 from flask import request
 from flask import abort
 from flask_restplus import Resource
+from pyorient import OrientRecordLink
+from settings import SCANNER_STORAGE_BASE_URL
 
 ns = api.namespace('fitting_scanners', path='/fitting/scanners', description='Operations related to Scanner')
 
@@ -21,24 +24,22 @@ class Scanners(Resource):
         """
         Returns a scanners list.
         """
-        request_data = dict(request.args)
-        page_start = int(request_data.get('_start')[0]) if request_data.get('_start', None) else None
-        page_end = int(request_data.get('_end')[0]) if request_data.get('_end', None) else None
-
-        scanner_obj = _scannerRep.get({})
-        return (scanner_obj[page_start:page_end], 200, {'X-Total-Count': len(scanner_obj)}) if scanner_obj else ([], 200, {'X-Total-Count': 0})
+        scanners = Scanner.objects.query()
+        if request.args.get('sort_field', None) != 'id' and request.args.get('sort_field', None):
+            scanners = scanners.order_by(getattr(Scanner, request.args.get('sort_field')), reverse=request.args['order'] == 'DESC')
+        all_scanners = [x for x in scanners.slice(request.args.get('_start', 0), request.args.get('_end', 0)).all()]
+        return all_scanners, 200, {'X-Total-Count': len(scanners)}
 
     @api.expect(scanner)
     def post(self):
         """
         Api method to create scanner
         """
-        print(request.json)
+        data_dict = request.json
         scanner_model_obj = _scannerModelRep.get({'@rid': request.json['model']})
         if not scanner_model_obj:
             abort(400, msg_object_does_not_exist.format('Scanner model', request.json['model']))
-
-        scanner_obj = _scannerRep.add({'name': request.json['name'], 'model': scanner_model_obj[0]}, result_JSON=True)
+        scanner_obj = _scannerRep.add(data_dict, result_JSON=True)
         return scanner_obj
 
 
@@ -59,7 +60,10 @@ class ScannerItem(Resource):
         """
         Api method to update scanner.
         """
-        scanner_obj = _scannerRep.update({'@rid': id}, request.json)[0]
+        data_dict = request.json
+        data_dict['model'] = OrientRecordLink(request.json.get('model'))
+
+        scanner_obj = _scannerRep.update({'@rid': id}, data_dict)[0]
         return {'@rid': scanner_obj._id, 'name': scanner_obj.name}, 201
 
     @api.response(204, 'Scanner successfully deleted.')
