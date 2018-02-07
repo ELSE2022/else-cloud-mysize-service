@@ -6,6 +6,7 @@ from data.repositories import ModelTypeRepository
 from data.repositories import SizeRepository
 from data.repositories import BrandRepository
 from data.repositories import ComparisonRuleRepository
+from data.models import Size
 from flask import request
 from flask import abort
 from flask_restplus import Resource
@@ -30,13 +31,11 @@ class Sizes(Resource):
         """
         Returns a size list.
         """
-        request_data = dict(request.args)
-        page_start = int(request_data.get('_start')[0]) if request_data.get('_start', None) else None
-        page_end = int(request_data.get('_end')[0]) if request_data.get('_end', None) else None
-
-        size_obj = _sizeRep.get({})
-
-        return (size_obj[page_start:page_end], 200, {'X-Total-Count': len(size_obj)}) if size_obj else ([], 200, {'X-Total-Count': 0})
+        sizes = Size.objects.query()
+        if request.args.get('sort_field', None) != 'id' and request.args.get('sort_field', None):
+            sizes = sizes.order_by(getattr(Size, request.args.get('sort_field')), reverse=request.args['order'] == 'DESC')
+        all_sizes = [x for x in sizes.slice(request.args.get('_start', 0), request.args.get('_end', 0)).all()]
+        return all_sizes, 200, {'X-Total-Count': len(sizes)}
 
     @api.expect(size)
     def post(self):

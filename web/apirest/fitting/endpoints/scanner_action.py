@@ -31,11 +31,12 @@ class Scanners(Resource):
     @api.expect(scanner)
     def post(self):
         """
-        Api method to create scanner.
+        Api method to create scanner
         """
-        scanner_model_obj = _scannerModelRep.get({'@rid': request.json['scanner_model']})
+        print(request.json)
+        scanner_model_obj = _scannerModelRep.get({'@rid': request.json['model']})
         if not scanner_model_obj:
-            abort(400, msg_object_does_not_exist.format('Scanner model', request.json['scanner_model']))
+            abort(400, msg_object_does_not_exist.format('Scanner model', request.json['model']))
 
         scanner_obj = _scannerRep.add({'name': request.json['name'], 'model': scanner_model_obj[0]}, result_JSON=True)
         return scanner_obj

@@ -4,7 +4,7 @@ import { List, Edit, Create, Datagrid, ReferenceArrayInput, SelectArrayInput, Re
 export const SizeList = (props) => (
     <List {...props} perPage={10}>
         <Datagrid>
-            <TextField source="id" />
+            <TextField source="id" sortable="False"/>
             <ReferenceArrayField label="Model type" reference="modeltypes" source="model_types">
                 <SingleFieldList>
                     <ChipField source="name" />

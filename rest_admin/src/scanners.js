@@ -9,6 +9,7 @@ export const ScannerList = (props) => (
                 <TextField source="name" />
             </ReferenceField>
             <TextField source="name" />
+            <TextField source="base_url" />
             <EditButton />
         </Datagrid>
     </List>
@@ -26,6 +27,7 @@ export const ScannerEdit = (props) => (
                 <SelectInput optionText="name" />
             </ReferenceInput>
             <TextInput source="name" />
+            <TextInput source="base_url" />
         </SimpleForm>
     </Edit>
 );
@@ -37,6 +39,7 @@ export const ScannerCreate = (props) => (
                 <SelectInput optionText="name" />
             </ReferenceInput>
             <TextInput source="name" />
+            <TextInput source="base_url" />
         </SimpleForm>
     </Create>
 );

@@ -158,7 +158,6 @@ class UserItem(Resource):
         return None, 204
 
     @api.marshal_with(fitting_user)
-    @auth_required
     def get(self, uuid):
         """
         Returns a user object.
@@ -176,10 +175,11 @@ class UserProfile(Resource):
         Api method to get user profile.
         """
         _graph = data_connection.get_graph()
-        scans_list = []
 
         user = get_user(uuid)
         scans = _scanRep.get({'user': user, 'scan_id': request.args.get('scan')})
+        if not scans:
+            return abort(400, msg_object_does_not_exist.format('Scans', request.args.get('scan')))
         # for sc in scans:
         #     scans_with_metrics = sc._props
         #     scans_with_metrics['metric'] = []
@@ -207,8 +207,7 @@ class UserProfile(Resource):
             })
             res_metric['values'] = metric_value
             all_res_metric.append(res_metric)
-            print('aaaa', res_metric)
-        print(len(all_res_metric))
+
         return all_res_metric
 
 

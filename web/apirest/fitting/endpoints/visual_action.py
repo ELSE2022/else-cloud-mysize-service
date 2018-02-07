@@ -113,7 +113,7 @@ class VisualizationItem(Resource):
         scan_id = request_data.get('scan_id', None)
 
         if scan_id:
-            scans = _scanRep.get(dict(user=user, scan_id=scan_id))
+            scans = _scanRep.get(dict(user=user, scan_id=scan_id[0]))
             if not scans:
                 return abort(400)
         else:

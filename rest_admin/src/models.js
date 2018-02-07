@@ -44,7 +44,7 @@ export const ModelEdit = (props) => (
             <FileInput source="files" label="STL" accept=".stl" >
                 <FileField source="stl_path" title="STL" />
             </FileInput>
-            <UrlField label="STL file" source="stl_path"/>
+            {/*<UrlField label="STL file" source="stl_path"/>*/}
         </SimpleForm>
     </Edit>
 );
