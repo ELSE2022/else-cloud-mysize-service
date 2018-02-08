@@ -5,6 +5,7 @@ import settings
 import json
 import ast
 from apirest.fitting.serializers import scan
+from apirest.fitting.mixins import ListModelMixin
 from apirest.restplus import api
 from bs4 import BeautifulSoup
 from data.repositories import ScannerRepository
@@ -54,33 +55,20 @@ update_scan_arguments.add_argument('time', type=int, required=False)
 
 
 @ns.route('')
-class Scans(Resource):
-    @api.marshal_with(scan)
-    def get(self):
-        """
-        Returns a scans list.
-        """
-        # _graph = data_connection.get_graph()
-        # request_data = dict(request.args)
-        # page_start = int(request_data.get('_start')[0]) if request_data.get('_start', None) else None
-        # page_end = int(request_data.get('_end')[0]) if request_data.get('_end', None) else None
-        # search_query = ast.literal_eval(request_data.get('filter')[0])
-        # sort_params = ast.literal_eval(request_data.get('sort')[0])
-        # scan_obj = _scanRep.sql_command("SELECT * FROM V WHERE scan_id LIKE '%{0}%'".format(search_query.get('q', '')))
-        # scan_obj = _graph.elements_from_records(scan_obj)
-        # scan_obj.sort(key=lambda x: getattr(x, sort_params['field']),
-        #               reverse=True if sort_params['order'] == 'DESC' else False)
-        # return (scan_obj[page_start:page_end], 200, {'X-Total-Count': len(scan_obj)}) if scan_obj else ([], 200, {'X-Total-Count': 0})
-        print(request.args.get('filter', None))
+class Scans(Resource, ListModelMixin):
+    model = Scan
+    serializer = scan
+
+    def get_objects(self):
         if request.args.get('filter', None):
             search_query = ast.literal_eval(request.args.get('filter'))
             scans = Scan.objects.query().filter(Scan.scan_id.like('%{}%'.format(search_query.get('q', ''))))
         else:
             scans = Scan.objects.query()
-        if request.args.get('sort_field', None) != 'id' and request.args.get('sort_field', None):
-            scans = scans.order_by(getattr(Scan, request.args.get('sort_field')), reverse=request.args['order'] == 'DESC')
-        all_scans = [x for x in scans.slice(request.args.get('_start', 0), request.args.get('_end', 0)).all()]
-        return all_scans, 200, {'X-Total-Count': len(scans)}
+        return scans
+
+    def get(self):
+        return super().get()
 
     @api.expect(scan)
     def post(self):
@@ -199,7 +187,7 @@ def get_last_scan_id(user, scanner, interval):
     return scan_id
 
 
-def update_scan(user, scanner, scan_id, scan_model_type, scan_path):
+def update_scan(user, scanner, scan_id, scan_model_type, is_scan_default, scan_path):
     print(user, scanner, scan_model_type, scan_id)
     _graph = data_connection.get_graph()
     # scanner_model = _scannerModelRep.get({})
@@ -218,9 +206,9 @@ def update_scan(user, scanner, scan_id, scan_model_type, scan_path):
         scan_type = _modelTypeRep.add(dict(name=scan_model_type))
     else: scan_type = scan_type[0]
 
-    scan = _scanRep.get(dict(user=user, model_type=scan_type, scan_id=scan_id))
+    scan = _scanRep.get(dict(user=user, model_type=scan_type, scan_id=scan_id, is_default=is_scan_default))
     if not scan:
-        scan = _scanRep.add(dict(user=user, model_type=scan_type, scan_id=scan_id, scanner=scanner, creation_time=datetime.now()))
+        scan = _scanRep.add(dict(user=user, model_type=scan_type, scan_id=scan_id, scanner=scanner, creation_time=datetime.now(), is_default=is_scan_default))
     else: scan = scan[0]
 
     foot_attachment_content = upload(scan_path)
@@ -248,11 +236,11 @@ def update_scan(user, scanner, scan_id, scan_model_type, scan_path):
     return scan
 
 
-def update_foot_scans(user, scanner, scan_id, scan_types):
+def update_foot_scans(user, scanner, scan_id, scan_types, is_scan_default):
     scans = []
     for scan_type in scan_types:
         try:
-            scan = update_scan(user, scanner, scan_id, scan_type['name'], '{}{}/{}/{}'.format(scanner.base_url, scanner.name, scan_id, scan_type['stl_name']))
+            scan = update_scan(user, scanner, scan_id, scan_type['name'], is_scan_default, '{}{}/{}/{}'.format(scanner.base_url, scanner.name, scan_id, scan_type['stl_name']))
         except requests.HTTPError:
             scan = None
         scans.append(scan) if scan else None
@@ -291,7 +279,7 @@ class ScanItem(Resource):
             scan_id = get_last_scan_id(user, scanner, int(interval[0]))
             if scan_id is None:
                 return abort(400)
-        scans = update_foot_scans(user, scanner, scan_id, scan_type_dict[scan_type])
+        scans = update_foot_scans(user, scanner, scan_id, scan_type_dict[scan_type], is_scan_default)
         if len(scans) == 0:
             return abort(400)
         return json.dumps([str(scan.scan_id) for scan in scans])

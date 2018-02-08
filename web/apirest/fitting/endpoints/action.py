@@ -10,6 +10,7 @@ from apirest.fitting.serializers import size
 from apirest.fitting.serializers import user_scans
 from apirest.fitting.serializers import user_size
 from apirest.fitting.endpoints.product_action import msg_object_does_not_exist
+from apirest.fitting.mixins import ListModelMixin
 from apirest.restplus import api
 from apirest.restplus import auth_required
 # from api.web_actions.get_user_profile import get_user
@@ -22,6 +23,7 @@ from data.repositories import ScanMetricRepository
 from data.repositories import ScanMetricValueRepository
 from data.repositories import ProductRepository
 from data.repositories import ComparisonResultRepository
+from data.models import User
 from datetime import datetime
 from flask import request
 from flask import abort
@@ -89,18 +91,13 @@ def get_objects(graph, user_uuid, product_uuid):
 
 
 @ns.route('',)
-class Users(Resource):
-    @api.marshal_with(fitting_user)
-    def get(self):
-        """
-        Returns a users list.
-        """
-        request_data = dict(request.args)
-        page_start = int(request_data.get('_start')[0]) if request_data.get('_start', None) else None
-        page_end = int(request_data.get('_end')[0]) if request_data.get('_end', None) else None
+class Users(Resource, ListModelMixin):
+    model = User
+    serializer = fitting_user
 
-        user_obj = _userRep.get({})
-        return (user_obj[page_start:page_end], 200, {'X-Total-Count': len(user_obj)}) if user_obj else (None, 404)
+    # @api.marshal_with(fitting_user)
+    def get(self):
+        return super().get()
 
     @api.expect(fitting_user)
     @api.marshal_with(fitting_user)

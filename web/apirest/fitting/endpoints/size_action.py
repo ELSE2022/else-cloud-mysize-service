@@ -1,4 +1,5 @@
 from apirest.fitting.serializers import size
+from apirest.fitting.mixins import ListModelMixin
 from apirest.restplus import api
 from data.repositories import ProductRepository
 from data.repositories import ModelRepository
@@ -25,17 +26,12 @@ msg_object_does_not_exist = '{} object with id "{}" not found'
 
 
 @ns.route('', '/')
-class Sizes(Resource):
-    @api.marshal_with(size)
+class Sizes(Resource, ListModelMixin):
+    model = Size
+    serializer = size
+
     def get(self):
-        """
-        Returns a size list.
-        """
-        sizes = Size.objects.query()
-        if request.args.get('sort_field', None) != 'id' and request.args.get('sort_field', None):
-            sizes = sizes.order_by(getattr(Size, request.args.get('sort_field')), reverse=request.args['order'] == 'DESC')
-        all_sizes = [x for x in sizes.slice(request.args.get('_start', 0), request.args.get('_end', 0)).all()]
-        return all_sizes, 200, {'X-Total-Count': len(sizes)}
+        return super().get()
 
     @api.expect(size)
     def post(self):
@@ -57,7 +53,7 @@ class SizeItem(Resource):
     @api.expect(size)
     def delete(self, id):
         """
-        Api method to delete size.
+        Api method to delete size
         """
         _sizeRep.delete({'@rid': id})
         return None, 204
