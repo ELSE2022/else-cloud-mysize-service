@@ -1,6 +1,8 @@
 from apirest.fitting.serializers import scanner_model
+from apirest.fitting.mixins import ListModelMixin
 from apirest.restplus import api
 from data.repositories import ScannerModelRepository
+from data.models import ScannerModel
 from flask import request
 from flask_restplus import Resource
 
@@ -12,18 +14,12 @@ msg_object_does_not_exist = '{} object with id "{}" not found'
 
 
 @ns.route('')
-class ScannerModels(Resource):
-    @api.marshal_with(scanner_model)
-    def get(self):
-        """
-        Returns a scanner models list.
-        """
-        request_data = dict(request.args)
-        page_start = int(request_data.get('_start')[0]) if request_data.get('_start', None) else None
-        page_end = int(request_data.get('_end')[0]) if request_data.get('_end', None) else None
+class ScannerModels(Resource, ListModelMixin):
+    model = ScannerModel
+    serializer = scanner_model
 
-        scanner_model_obj = _scannerModelRep.get({})
-        return (scanner_model_obj[page_start:page_end], 200, {'X-Total-Count': len(scanner_model_obj)}) if scanner_model_obj else ([], 200, {'X-Total-Count': 0})
+    def get(self):
+        return super().get()
 
     @api.expect(scanner_model)
     def post(self):

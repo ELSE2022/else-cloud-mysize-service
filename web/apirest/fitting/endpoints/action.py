@@ -95,7 +95,6 @@ class Users(Resource, ListModelMixin):
     model = User
     serializer = fitting_user
 
-    # @api.marshal_with(fitting_user)
     def get(self):
         return super().get()
 

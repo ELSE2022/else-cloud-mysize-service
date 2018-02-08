@@ -58,14 +58,7 @@ update_scan_arguments.add_argument('time', type=int, required=False)
 class Scans(Resource, ListModelMixin):
     model = Scan
     serializer = scan
-
-    def get_objects(self):
-        if request.args.get('filter', None):
-            search_query = ast.literal_eval(request.args.get('filter'))
-            scans = Scan.objects.query().filter(Scan.scan_id.like('%{}%'.format(search_query.get('q', ''))))
-        else:
-            scans = Scan.objects.query()
-        return scans
+    filter_field = 'scan_id'
 
     def get(self):
         return super().get()

@@ -1,4 +1,5 @@
 from apirest.fitting.serializers import scanner
+from apirest.fitting.mixins import ListModelMixin
 from apirest.restplus import api
 from data.repositories import ScannerRepository
 from data.repositories import ScannerModelRepository
@@ -18,17 +19,12 @@ msg_object_does_not_exist = '{} object with id "{}" not found'
 
 
 @ns.route('')
-class Scanners(Resource):
-    @api.marshal_with(scanner)
+class Scanners(Resource, ListModelMixin):
+    model = Scanner
+    serializer = scanner
+
     def get(self):
-        """
-        Returns a scanners list.
-        """
-        scanners = Scanner.objects.query()
-        if request.args.get('sort_field', None) != 'id' and request.args.get('sort_field', None):
-            scanners = scanners.order_by(getattr(Scanner, request.args.get('sort_field')), reverse=request.args['order'] == 'DESC')
-        all_scanners = [x for x in scanners.slice(request.args.get('_start', 0), request.args.get('_end', 0)).all()]
-        return all_scanners, 200, {'X-Total-Count': len(scanners)}
+        return super().get()
 
     @api.expect(scanner)
     def post(self):

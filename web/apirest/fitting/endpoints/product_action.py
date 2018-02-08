@@ -2,6 +2,7 @@ import base64
 import csv
 
 from apirest.fitting.serializers import product
+from apirest.fitting.mixins import ListModelMixin
 from apirest.restplus import api
 from data.repositories import ProductRepository
 from data.repositories import ModelRepository
@@ -14,6 +15,7 @@ from data.repositories import ModelTypeMetricRepository
 from data.repositories import ScanMetricRepository
 from data.repositories import ScannerModelRepository
 from data.repositories import ModelMetricValueRepository
+from data.models import Product
 from flask import request
 from flask import Response
 from flask import abort
@@ -82,19 +84,12 @@ def add_comp_rule_metric(modeltype_metr, scan_metric, value, f1, shift, f2, prod
 
 
 @ns.route('',)
-class Products(Resource):
-    @api.marshal_with(product)
+class Products(Resource, ListModelMixin):
+    model = Product
+    serializer = product
+
     def get(self):
-        """
-        Returns a products list.
-        """
-        request_data = dict(request.args)
-        page_start = int(request_data.get('_start')[0]) if request_data.get('_start', None) else None
-        page_end = int(request_data.get('_end')[0]) if request_data.get('_end', None) else None
-
-        product_obj = _productRep.get({})
-
-        return (product_obj[page_start:page_end], 200, {'X-Total-Count': len(product_obj)}) if product_obj else ([], 200, {'X-Total-Count': 0})
+        return super().get()
 
     @api.expect(product)
     def post(self):

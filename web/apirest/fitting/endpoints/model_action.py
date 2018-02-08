@@ -3,6 +3,7 @@ import os
 
 from apirest.fitting.endpoints.scan_action import create_file
 from apirest.fitting.serializers import model
+from apirest.fitting.mixins import ListModelMixin
 from apirest.restplus import api
 from data.repositories import ProductRepository
 from data.repositories import ModelRepository
@@ -10,6 +11,7 @@ from data.repositories import ModelTypeRepository
 from data.repositories import SizeRepository
 from data.repositories import BrandRepository
 from data.repositories import ComparisonRuleRepository
+from data.models import Model
 from flask import request
 from flask import abort
 from flask_restplus import Resource
@@ -35,19 +37,12 @@ upload_parser.add_argument('file', location='json', type=FileStorage, required=T
 
 
 @ns.route('',)
-class Models(Resource):
-    @api.marshal_with(model)
+class Models(Resource, ListModelMixin):
+    model = Model
+    serializer = model
+
     def get(self):
-        """
-        Returns a models list.
-        """
-        request_data = dict(request.args)
-        page_start = int(request_data.get('_start')[0]) if request_data.get('_start', None) else None
-        page_end = int(request_data.get('_end')[0]) if request_data.get('_end', None) else None
-
-        model_obj = _modelRep.get({})
-
-        return (model_obj[page_start:page_end], 200, {'X-Total-Count': len(model_obj)}) if model_obj else ([], 200, {'X-Total-Count': 0})
+        return super().get()
 
     @api.expect(model)
     def post(self):
