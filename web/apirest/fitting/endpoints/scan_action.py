@@ -206,7 +206,7 @@ def update_scan(user, scanner, scan_id, scan_model_type, is_scan_default, scan_p
         scan_type = _modelTypeRep.add(dict(name=scan_model_type))
     else: scan_type = scan_type[0]
 
-    scan = _scanRep.get(dict(user=user, model_type=scan_type, scan_id=scan_id, is_default=is_scan_default))
+    scan = _scanRep.get(dict(user=user, model_type=scan_type, scan_id=scan_id))
     if not scan:
         scan = _scanRep.add(dict(user=user, model_type=scan_type, scan_id=scan_id, scanner=scanner, creation_time=datetime.now(), is_default=is_scan_default))
     else: scan = scan[0]
@@ -225,7 +225,7 @@ def update_scan(user, scanner, scan_id, scan_model_type, is_scan_default, scan_p
     attachment_path = create_file(attachment_name)
     Path(attachment_path).write_bytes(foot_attachment_content)
     print('Path', attachment_path)
-    scan = _scanRep.update(dict(user=user, model_type=scan_type, scan_id=scan_id), dict(stl_path=attachment_name))[0]
+    scan = _scanRep.update(dict(user=user, model_type=scan_type, scan_id=scan_id), dict(stl_path=attachment_name, is_default=is_scan_default))[0]
 
     _scanMetricValueRep.delete(dict(scan=scan))
 
