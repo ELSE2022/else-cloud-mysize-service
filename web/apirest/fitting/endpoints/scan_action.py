@@ -160,8 +160,8 @@ def str2bool(in_str):
     return in_str in ['true', 'True', 'yes']
 
 
-def get_last_scan_id(user, scanner, interval):
-    url = f'{user.base_url}{scanner}/?C=M;O=D'
+def get_last_scan_id(scanner, interval):
+    url = f'{scanner.base_url}{scanner.name}/?C=M;O=D'
     request = requests.get(
         url=url,
     )
@@ -275,7 +275,7 @@ class ScanItem(Resource):
         else: scanner = scanner[0]
 
         if interval:
-            scan_id = get_last_scan_id(user, scanner, int(interval[0]))
+            scan_id = get_last_scan_id(scanner, int(interval[0]))
             if scan_id is None:
                 return abort(400)
         scans = update_foot_scans(user, scanner, scan_id, scan_type_dict[scan_type], is_scan_default)
