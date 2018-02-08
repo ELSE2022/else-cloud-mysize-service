@@ -264,7 +264,7 @@ class ScanItem(Resource):
         scan_type = request_data.get('type')[0].upper()
         is_scan_default = str2bool(request_data.get('is_default', 'false'))
         brand_id = request_data.get('brand', None)
-
+        print('isdefault', is_scan_default)
         user = _userRep.get(dict(uuid=user_uuid))
         if not user:
             user = _userRep.add(dict(uuid=user_uuid))
