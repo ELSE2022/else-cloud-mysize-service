@@ -147,10 +147,10 @@ def create_file(file_name):
     return file_path
 
 
-def update_scan_attributes(base_url, scan, scan_type):
+def update_scan_attributes(scan, scan_type):
     _graph = data_connection.get_graph()
     scanner_obj = _graph.element_from_link(scan.scanner)
-    path_to_csv = '{}{}/{}/{}_{}_mes.csv'.format(base_url, scanner_obj.name, scan.scan_id, scan.scan_id, attribute_urls_type[scan_type.name])
+    path_to_csv = '{}{}/{}/{}_{}_mes.csv'.format(scanner_obj.base_url, scanner_obj.name, scan.scan_id, scan.scan_id, attribute_urls_type[scan_type.name])
     request = requests.get(path_to_csv)
     profile = list(request.iter_lines(decode_unicode=True))[1:]
     request.raise_for_status()
@@ -242,7 +242,7 @@ def update_scan(user, scanner, scan_id, scan_model_type, scan_path):
     _scanMetricValueRep.delete(dict(scan=scan))
 
     try:
-        update_scan_attributes(user.base_url, scan, scan_type)
+        update_scan_attributes(scan, scan_type)
     except requests.HTTPError:
         print('HTTPError')
     return scan
