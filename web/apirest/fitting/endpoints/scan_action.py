@@ -220,7 +220,7 @@ def update_scan(user, scanner, scan_id, scan_model_type, scan_path):
 
     scan = _scanRep.get(dict(user=user, model_type=scan_type, scan_id=scan_id))
     if not scan:
-        scan = _scanRep.add(dict(user=user, model_type=scan_type, scan_id=scan_id, scanner=scanner))
+        scan = _scanRep.add(dict(user=user, model_type=scan_type, scan_id=scan_id, scanner=scanner, creation_time=datetime.now()))
     else: scan = scan[0]
 
     foot_attachment_content = upload(scan_path)
