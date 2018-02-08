@@ -2,7 +2,7 @@ import base64
 import os
 
 from apirest.fitting.endpoints.scan_action import create_file
-from apirest.fitting.serializers import model
+from apirest.fitting.serializers import model as model_serializer
 from apirest.fitting.mixins import ListModelMixin
 from apirest.restplus import api
 from data.repositories import ProductRepository
@@ -39,7 +39,7 @@ upload_parser.add_argument('file', location='json', type=FileStorage, required=T
 @ns.route('',)
 class Models(Resource, ListModelMixin):
     model = Model
-    serializer = model
+    serializer = model_serializer
 
     def get(self):
         return super().get()
@@ -84,7 +84,7 @@ class Models(Resource, ListModelMixin):
 
 @ns.route('/<string:id>')
 class ModelItem(Resource):
-    @api.expect(model)
+    @api.expect(model_serializer)
     def put(self, id):
         """
         Api method to update model.
@@ -115,7 +115,7 @@ class ModelItem(Resource):
         model_obj = _modelRep.update({'@rid': id}, data_dict)[0]
         return {'@rid': model_obj._id, 'name': model_obj.name}, 201
 
-    @api.marshal_with(model)
+    @api.marshal_with(model_serializer)
     def delete(self, id):
         """
         Api method to delete model.
