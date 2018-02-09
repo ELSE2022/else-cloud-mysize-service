@@ -1,6 +1,8 @@
 from apirest.fitting.serializers import scan_metric
+from apirest.fitting.mixins import ListModelMixin
 from apirest.restplus import api
 from data.repositories import ScanMetricRepository
+from data.models import ScanMetric
 from flask import request
 from flask_restplus import Resource
 
@@ -12,18 +14,12 @@ msg_object_does_not_exist = '{} object with id "{}" not found'
 
 
 @ns.route('',)
-class ScanMetrics(Resource):
-    @api.marshal_with(scan_metric)
-    def get(self):
-        """
-        Returns a scan metrics list.
-        """
-        request_data = dict(request.args)
-        page_start = int(request_data.get('_start')[0]) if request_data.get('_start', None) else None
-        page_end = int(request_data.get('_end')[0]) if request_data.get('_end', None) else None
+class ScanMetrics(Resource, ListModelMixin):
+    model = ScanMetric
+    serializer = scan_metric
 
-        scan_metric_obj = _scanMetricRep.get({})
-        return (scan_metric_obj[page_start:page_end], 200, {'X-Total-Count': len(scan_metric_obj)}) if scan_metric_obj else ([], 200, {'X-Total-Count': 0})
+    def get(self):
+        return super().get()
 
     @api.expect(scan_metric)
     def post(self):

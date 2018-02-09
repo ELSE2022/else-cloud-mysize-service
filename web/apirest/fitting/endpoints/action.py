@@ -284,6 +284,7 @@ class Size(Resource):
                 'size': size_object[0].get('_id'),
             })
             if not user_size_rep:
+                _userSizeRep.delete(dict(user=user, model_type=model_type_obj._id))
                 user_size_rep = _userSizeRep.add({
                     'user': user,
                     'size': size_object[0].get('_id'),
