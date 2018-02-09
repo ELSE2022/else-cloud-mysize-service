@@ -3,7 +3,7 @@
 version: '2'
 services:
   orientdb:
-    image: orientdb
+    image: orientdb:2.2.30
     ports:
       - "2434:2434"
       - "2480:2480"
