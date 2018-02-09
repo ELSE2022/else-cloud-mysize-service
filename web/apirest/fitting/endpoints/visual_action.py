@@ -1,5 +1,5 @@
 import requests
-
+from pathlib import Path
 from apirest.fitting.endpoints.action import get_user
 from apirest.restplus import api
 from data.repositories import ScannerRepository
@@ -70,7 +70,7 @@ class VisualizationItem(Resource):
                 return abort(400)
         else:
             scans = _scanRep.get_by_tree({'is_default': True, 'user': {'uuid': user_uuid}})
-        all_requests = []
+        all_requests = {}
         for scan in scans:
             scan_model_type = _graph.element_from_link(scan.model_type)
             last = _modelRep.get_by_tree(dict(product=dict(uuid=product_uuid),
@@ -81,21 +81,25 @@ class VisualizationItem(Resource):
             else: last = last[0]
             compare_visual = _compareVisualRep.get({'scan': scan, 'model': last})
             if not compare_visual:
-                files = {'last': open(last.stl_path, 'rb'), 'scan': open('attachments/' + scan.stl_path, 'rb')}
-                values = {'user_uuid': _graph.element_from_link(scan.user).uuid}
-                url = f'{ELSE_3D_SERVICE_URL}visualization/compare_visualization/'
-                if request_data.get('environment_uuid'):
-                    values['environment_uuid'] = request_data.get('environment_uuid')[0]
-                req = requests.post(url, files=files, data=values)
-                all_requests.append(req.json())
-                _compareVisualRep.add(dict(scan=scan, model=last,
-                                           output_model=req.json().get('output_model'),
-                                           output_model_3d=req.json().get('output_model_3d'),
-                                           creation_time=datetime.now()))
+                if last.stl_path and scan.stl_path:
+                    last_stl_file = Path(last.stl_path)
+                    scan_stl_file = Path(scan.stl_path)
+                    if last_stl_file.is_file() and scan_stl_file.is_file():
+                        files = {'last': open(last.stl_path, 'rb'), 'scan': open('attachments/' + scan.stl_path, 'rb')}
+                        values = {'user_uuid': _graph.element_from_link(scan.user).uuid}
+                        url = f'{ELSE_3D_SERVICE_URL}visualization/compare_visualization/'
+                        if request_data.get('environment_uuid'):
+                            values['environment_uuid'] = request_data.get('environment_uuid')[0]
+                        req = requests.post(url, files=files, data=values)
+                        all_requests[_graph.element_from_link(scan.model_type).name] = req.json()
+                        _compareVisualRep.add(dict(scan=scan, model=last,
+                                                   output_model=req.json().get('output_model'),
+                                                   output_model_3d=req.json().get('output_model_3d'),
+                                                   creation_time=datetime.now()))
             else:
                 compare_visual = compare_visual[0]
-                all_requests.append({'output_model': compare_visual.output_model,
-                                     'output_model_3d': compare_visual.output_model_3d})
+                all_requests[_graph.element_from_link(scan.model_type).name] = {'output_model': compare_visual.output_model,
+                                     'output_model_3d': compare_visual.output_model_3d}
         return all_requests
 
 
