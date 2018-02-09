@@ -284,14 +284,17 @@ class Size(Resource):
                 'size': size_object[0].get('_id'),
             })
             if not user_size_rep:
-                _userSizeRep.delete(dict(user=user, model_type=model_type_obj._id))
+                count_del = _userSizeRep.delete(dict(user=user, model_type=model_type_obj._id))
+                print('delete sizes', count_del)
                 user_size_rep = _userSizeRep.add({
                     'user': user,
                     'size': size_object[0].get('_id'),
                     'model_type': model_type_obj._id,
                     'creation_time': str(datetime.now()),
                 })
-            else: user_size_rep = user_size_rep[0]
+            else:
+                print('have sizes')
+                user_size_rep = user_size_rep[0]
         return {'user': user, 'size': size_object[0]}
 
 
