@@ -41,7 +41,7 @@ export const ModelEdit = (props) => (
             <ReferenceInput label="Size" source="size" reference="sizes" allowEmpty validation={{ required: true }}>
                 <SelectInput optionText="string_value" />
             </ReferenceInput>
-            <FileInput source="files" label="STL" accept=".stl" >
+            <FileInput source="stl_path" label="STL" accept=".stl" >
                 <FileField source="stl_path" title="STL" />
             </FileInput>
             {/*<UrlField label="STL file" source="stl_path"/>*/}
