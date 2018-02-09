@@ -139,7 +139,7 @@ class ProductGetMetricsItem(Resource):
 
             reader = csv.reader(iter_lines, delimiter=',')
 
-            product_obj = _productRep.get({'uuid': uuid})[0]
+            product_obj = _productRep.get({'@rid': uuid})[0]
             foot_types = _graph.element_from_link(product_obj.default_comparison_rule).model_types
             model_type_objects = []
             for t in foot_types:
@@ -161,7 +161,11 @@ class ProductGetMetricsItem(Resource):
         data_dict['brand'] = OrientRecordLink(request.json['brand'])
         data_dict['default_comparison_rule'] = OrientRecordLink(request.json['default_comparison_rule'])
 
-        product_obj = _productRep.update({'uuid': uuid}, data_dict)
+        product_obj = _productRep.get({'uuid': uuid})
+        if not product_obj:
+            product_obj = _productRep.update({'@rid': uuid}, data_dict)
+        else:
+            product_obj = _productRep.update({'uuid': uuid}, data_dict)
         if product_obj: product_obj = product_obj[0]
         return {'@rid': product_obj._id, 'name': product_obj.name}, 201
 
