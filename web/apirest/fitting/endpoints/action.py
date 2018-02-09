@@ -342,6 +342,7 @@ class BestStyle(Resource):
         args = best_style_arguments.parse_args()
         if not args.get('size'):
             user_size_obj = _userSizeRep.get(dict(user=user_obj))
+            print(user_size_obj)
             size_obj = None
             for s in user_size_obj:
                 _size = _graph.element_from_link(s.size)
