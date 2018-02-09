@@ -87,7 +87,7 @@ class VisualizationItem(Resource):
                     print(last.stl_path, scan.stl_path)
                     # last_stl_file = Path(last.stl_path)
                     # scan_stl_file = Path(scan.stl_path)
-                    if os.path.isfile(last.stl_path) and os.path.isfile(scan.stl_path):
+                    if os.path.isfile(last.stl_path) and os.path.isfile('attachments/' + scan.stl_path):
                         print('file exist')
                         files = {'last': open(last.stl_path, 'rb'), 'scan': open('attachments/' + scan.stl_path, 'rb')}
                         values = {'user_uuid': _graph.element_from_link(scan.user).uuid}

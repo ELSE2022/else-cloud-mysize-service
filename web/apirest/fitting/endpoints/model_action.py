@@ -49,7 +49,6 @@ class Models(Resource, ListModelMixin):
         """
         Api method to create model.
         """
-        print('POST MODEL', request.json)
         attachment_path = None
         product_obj = _productRep.get({'@rid': request.json['product']})
         if not product_obj:
