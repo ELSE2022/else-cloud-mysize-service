@@ -282,6 +282,7 @@ class Size(Resource):
             user_size_rep = _userSizeRep.get({
                 'user': user,
                 'size': size_object[0].get('_id'),
+                'model_type': model_type_obj._id,
             })
             if not user_size_rep:
                 count_del = _userSizeRep.delete(dict(user=user, model_type=model_type_obj._id))

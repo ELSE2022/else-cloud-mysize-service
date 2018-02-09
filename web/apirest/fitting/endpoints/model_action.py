@@ -44,7 +44,7 @@ class Models(Resource, ListModelMixin):
     def get(self):
         return super().get()
 
-    @api.expect(model)
+    @api.expect(model_serializer)
     def post(self):
         """
         Api method to create model.
