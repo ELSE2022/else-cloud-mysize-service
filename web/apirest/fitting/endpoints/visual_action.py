@@ -81,10 +81,13 @@ class VisualizationItem(Resource):
             else: last = last[0]
             compare_visual = _compareVisualRep.get({'scan': scan, 'model': last})
             if not compare_visual:
+                print('compare_visual')
                 if last.stl_path and scan.stl_path:
+                    print(last.stl_path, scan.stl_path)
                     last_stl_file = Path(last.stl_path)
                     scan_stl_file = Path(scan.stl_path)
                     if last_stl_file.is_file() and scan_stl_file.is_file():
+                        print('file exist')
                         files = {'last': open(last.stl_path, 'rb'), 'scan': open('attachments/' + scan.stl_path, 'rb')}
                         values = {'user_uuid': _graph.element_from_link(scan.user).uuid}
                         url = f'{ELSE_3D_SERVICE_URL}visualization/compare_visualization/'
