@@ -286,7 +286,6 @@ class Size(Resource):
             })
             if not user_size_rep:
                 count_del = _userSizeRep.delete(dict(user=user, model_type=model_type_obj._id))
-                print('delete sizes', count_del)
                 user_size_rep = _userSizeRep.add({
                     'user': user,
                     'size': size_object[0].get('_id'),
@@ -294,7 +293,6 @@ class Size(Resource):
                     'creation_time': str(datetime.now()),
                 })
             else:
-                print('have sizes')
                 user_size_rep = user_size_rep[0]
         return {'user': user, 'size': size_object[0]}
 
@@ -312,18 +310,14 @@ class BestSize(Resource):
         comparison_results = _comparisonResRep.get_by_tree({'scan': dict(user=user_obj, is_default=True),})
         if not comparison_results:
             comparison_results = get_foot_best_size(product_obj, model_types, scans)
-        print("Results")
-        print(comparison_results)
         dct = defaultdict(int)
         types = []
         for x in comparison_results:
             dct[x.size] += x.value
             if str(x.model_type) not in types:
                 types.append(str(x.model_type))
-        print(dct)
         results = {k: v / len(types) for k, v in dct.items()}
         max_result = max(results.items(), key=operator.itemgetter(1))
-        print(max_result)
         return {'best_size': {
             'score': round(max_result[1], 2),
             'output_model': '',
