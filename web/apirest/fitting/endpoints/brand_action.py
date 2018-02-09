@@ -41,12 +41,20 @@ class Brands(Resource, ListModelMixin):
         return brand_obj
 
 
-@ns.route('/<string:uuid>')
+@ns.route('/<string:id>')
 class BrandItem(Resource):
     @api.expect(brand)
-    def delete(self, uuid):
+    def delete(self, id):
         """
         Api method to delete brand.
         """
-        _brandRep.delete({'uuid': uuid})
+        _brandRep.delete({'@rid': id})
         return None, 204
+
+    @api.expect(brand)
+    def put(self, id):
+        """
+        Api method to update brand
+        """
+        brand_obj = _brandRep.update({'@rid': id}, request.json)
+        return {'@rid': brand_obj[0]._id, 'name': brand_obj[0].name}, 201
