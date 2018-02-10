@@ -1,5 +1,22 @@
 import React from 'react';
-import { List, Edit, Create, Datagrid, ReferenceArrayInput, SelectArrayInput, ReferenceArrayField, SingleFieldList, ChipField, TextField, EditButton, DisabledInput, SimpleForm, TextInput } from 'admin-on-rest';
+import { 
+    List,
+    Edit,
+    Create,
+    Datagrid,
+    ReferenceArrayInput,
+    SelectArrayInput,
+    ReferenceArrayField,
+    SingleFieldList,
+    ChipField,
+    TextField,
+    NumberField,
+    EditButton,
+    DisabledInput,
+    SimpleForm,
+    TextInput,
+    NumberInput 
+} from 'admin-on-rest';
 
 export const SizeList = (props) => (
     <List {...props} perPage={10}>
@@ -11,6 +28,7 @@ export const SizeList = (props) => (
                 </SingleFieldList>
             </ReferenceArrayField>
             <TextField source="string_value" />
+            <NumberField source="order" />
             <EditButton />
         </Datagrid>
     </List>
@@ -28,6 +46,7 @@ export const SizeEdit = (props) => (
                 <SelectArrayInput optionText="name" />
             </ReferenceArrayInput>
             <TextInput source="string_value" />
+            <NumberInput source="order" />
         </SimpleForm>
     </Edit>
 );
@@ -39,6 +58,7 @@ export const SizeCreate = (props) => (
                 <SelectArrayInput optionText="name" optionValue="id" />
             </ReferenceArrayInput>
             <TextInput source="string_value" />
+            <NumberInput source="order" />
         </SimpleForm>
     </Create>
 );

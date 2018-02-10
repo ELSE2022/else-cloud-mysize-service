@@ -66,8 +66,8 @@ cloud_object_storage.connect_to_storage(dict(key="MfRt~2TyK~nacEY6",
 initial_drop = False
 # data_connection.connect_database('plocal://5.153.55.125:2424/test', 'root', '68f90924-cd63-4df1-a945-47bcd18d45d3', initial_drop)
 data_connection.connect_database('plocal://orientdb:2424/test', 'root', 'test', initial_drop)
-data_connection.refresh_models()
-# data_connection.attach_models()
+# data_connection.refresh_models()
+data_connection.attach_models()
 
 # Import data from postgress (if needed)
 if settings.IMPORT_DATA_FROM_POSTGRES:
