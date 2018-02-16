@@ -1,10 +1,10 @@
 from pyorient.ogm.property import DateTime, Link, String
-from orientdb_data_layer.data_connection import NodeBase
+from .BaseModel import BaseNode, BaseModel
 from .Scan import Scan
 from .Model import Model
 
 
-class CompareVisualization(NodeBase):
+class CompareVisualization(BaseNode, BaseModel):
     element_plural = 'compare_visualization'
     scan = Link(mandatory=True, nullable=False, linked_to=Scan)
     model = Link(mandatory=True, nullable=False, linked_to=Model)

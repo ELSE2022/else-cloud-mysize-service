@@ -23,7 +23,7 @@ from data.repositories import ScanMetricRepository
 from data.repositories import ScanMetricValueRepository
 from data.repositories import ProductRepository
 from data.repositories import ComparisonResultRepository
-from data.models import User
+from data.models import User, Model, Size as _Size, ComparisonResult
 from datetime import datetime
 from flask import request
 from flask import abort
@@ -31,9 +31,14 @@ from flask_restplus import Resource
 from flask_restplus import reqparse
 from orientdb_data_layer import data_connection
 from pyorient import OrientRecordLink
+from data.models.Model import Model
 
 from settings import SCANNER_STORAGE_BASE_URL
 
+import logging
+
+logger = logging.getLogger('rest_api_demo')
+    
 ns = api.namespace('fitting_users', path='/fitting/users', description='Operations related to User')
 
 _userRep = UserRepository()
@@ -72,6 +77,7 @@ def get_user(user_uuid):
 
 def get_objects(graph, user_uuid, product_uuid):
     user_obj = _userRep.get({'uuid': user_uuid})
+    logger.debug(Model.objects.query())
     if not user_obj:
         abort(400, msg_object_does_not_exist.format('User', user_uuid))
 
@@ -311,13 +317,11 @@ class BestSize(Resource):
         if not comparison_results:
             comparison_results = get_foot_best_size(product_obj, model_types, scans)
         dct = defaultdict(int)
-        types = []
         for x in comparison_results:
-            dct[x.size] += x.value
-            if str(x.model_type) not in types:
-                types.append(str(x.model_type))
-        results = {k: v / len(types) for k, v in dct.items()}
-        max_result = max(results.items(), key=operator.itemgetter(1))
+            model = Model.query_set.filter_by(**{'@rid': x.model}).first()
+            size = _Size.query_set.filter_by(**{'@rid': model.size}).first()
+            dct[model.size] += x.value / len(size.model_types)
+        max_result = max(dct.items(), key=operator.itemgetter(1))
         return {'best_size': {
             'score': round(max_result[1], 2),
             'output_model': '',
@@ -328,11 +332,13 @@ class BestSize(Resource):
 
 @ns.route('/<string:user_uuid>/products/<string:product_uuid>/best_style')
 class BestStyle(Resource):
+    
     @api.expect(best_style_arguments, validate=True)
     def get(self, user_uuid, product_uuid):
         """
         Api method to get best user style.
         """
+        logger.debug('best_style')
         _graph = data_connection.get_graph()
 
         user_obj, product_obj, model_types, scans = get_objects(_graph, user_uuid, product_uuid)

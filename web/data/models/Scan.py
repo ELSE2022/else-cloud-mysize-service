@@ -1,11 +1,11 @@
 from pyorient.ogm.property import String, DateTime, Link, Boolean, Integer
-from orientdb_data_layer.data_connection import NodeBase
+from .BaseModel import BaseNode, BaseModel
 from .User import User
 from .Scanner import Scanner
 from .ModelType import ModelType
 
 
-class Scan(NodeBase):
+class Scan(BaseNode, BaseModel):
     element_plural = 'scans'
     user = Link(mandatory=True, nullable=False, linked_to=User)
     scanner = Link(mandatory=True, nullable=False, linked_to=Scanner)

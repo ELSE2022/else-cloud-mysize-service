@@ -4,10 +4,13 @@ from ..authentication import requires_auth
 from data.repositories import ProductRepository, UserRepository, UserSizeRepository, ScanRepository, ComparisonRuleMetricRepository, ScanMetricValueRepository, ModelMetricValueRepository
 from data.repositories import ComparisonResultRepository
 from data.repositories import SizeRepository
+from data.repositories import ModelRepository
 from orientdb_data_layer import data_connection
 from calculations.fitting_algorithms.get_metrics_by_sizes import get_metrics_by_sizes
 
-logger = logging.getLogger(__name__)
+from data.models import ComparisonRule, Size, Model, ComparisonResult
+
+logger = logging.getLogger('rest_api_demo')
 _productRep = ProductRepository()
 _userRep = UserRepository()
 _userSizeRep = UserSizeRepository()
@@ -17,27 +20,22 @@ _compRuleMetricRep = ComparisonRuleMetricRepository()
 _scanMetrValueRep = ScanMetricValueRepository()
 _modelMetrValueRep = ModelMetricValueRepository()
 _comparisonResRep = ComparisonResultRepository()
+_modelResRep = ModelRepository()
 
 
 def get_foot_best_size(product, model_types, scans):
     _graph = data_connection.get_graph()
-    rule = _graph.element_from_link(product.default_comparison_rule)
-    print('get foot best size')
+    rule = ComparisonRule.query_set.filter_by(**{'@rid': product.default_comparison_rule}).first()
     all_results = {}
     comparison_results = []
-    print(model_types)
     for ty in model_types:
         references = [dict(scan=_graph.get_element(ref['scan']), model=_graph.get_element(ref['model']))
                       for ref in _compRuleMetricRep.get_distinct_reference_ids(rule.name, product.uuid, ty)]
 
         scan = [scan for scan in scans if str(scan.model_type) == ty._id]
-        print('qqqqs')
-        print(scans)
         if len(references) > 0 and len(scan) > 0:
-            print('ssss')
             scan = scan[0]
             scan_data = [float(_scanMetrValueRep.get(dict(scan=scan, metric=ref['scan']))[0].value) for ref in references]
-            print(scan_data)
             lasts_data = []
             config = _compRuleMetricRep.get_config_by_product(rule.name, product.uuid, ty)
             values = _modelMetrValueRep.get_values_for_comparison(_graph.element_from_link(product.default_comparison_rule).name, product.uuid, ty)
@@ -59,13 +57,14 @@ def get_foot_best_size(product, model_types, scans):
             metrics = get_metrics_by_sizes(scan_data, lasts_data)
             all_results[ty.name] = metrics
             for res in metrics:
-                size_obj = _sizeRep.get({'string_value': res[0]})
-                comparison_results.append(_comparisonResRep.add({'scan': scan,
-                                                                 'model_type': ty,
-                                                                 'size': size_obj[0],
-                                                                 'value': res[1]}))
-            print(all_results[ty.name])
-
+                size = Size.query_set.filter_by(string_value=res[0]).first()
+                model = Model.query_set.filter_by(product=product, model_type=ty, size=size).first()
+                created = ComparisonResult.objects.create(**{'scan': scan,
+                                                                 'model': model,
+                                                                 'value': res[1]})
+                logger.debug(created.model)
+                comparison_results.append(created)
+    
     return comparison_results
 
 
@@ -73,7 +72,6 @@ def generate_result(data, user_size=None):
     sizes = []
     avg_result = []
     count_typ = 0
-    print(data)
     for typ in data:
         for size in data[typ]:
             if size[0] not in sizes:

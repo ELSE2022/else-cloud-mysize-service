@@ -1,9 +1,9 @@
 from settings import SCANNER_STORAGE_BASE_URL
 from pyorient.ogm.property import String, Integer, LinkSet
-from orientdb_data_layer.data_connection import NodeBase
+from .BaseModel import BaseNode, BaseModel
 
 
-class User(NodeBase):
+class User(BaseNode, BaseModel):
     element_plural = 'users'
     uuid = String(unique=True, mandatory=True, nullable=False)
     num_id = Integer()

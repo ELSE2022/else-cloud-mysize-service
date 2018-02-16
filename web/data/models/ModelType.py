@@ -1,7 +1,7 @@
 from pyorient.ogm.property import String
-from orientdb_data_layer.data_connection import NodeBase
+from .BaseModel import BaseNode, BaseModel
 
 
-class ModelType(NodeBase):
+class ModelType(BaseNode, BaseModel):
     element_plural = 'model_types'
     name = String()

@@ -1,10 +1,10 @@
 from pyorient.ogm.property import String, Link, LinkSet
-from orientdb_data_layer.data_connection import NodeBase
+from .BaseModel import BaseNode, BaseModel
 from .ModelType import ModelType
 from .ScannerModel import ScannerModel
 
 
-class ComparisonRule(NodeBase):
+class ComparisonRule(BaseNode, BaseModel):
     element_plural = 'comparison_rules'
     model_types = LinkSet(mandatory=True, nullable=False, linked_to=ModelType)
     scanner_model = Link(mandatory=True, nullable=False, linked_to=ScannerModel)

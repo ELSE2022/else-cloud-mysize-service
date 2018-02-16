@@ -1,9 +1,9 @@
 from pyorient.ogm.property import DateTime, Link, String
-from orientdb_data_layer.data_connection import NodeBase
+from .BaseModel import BaseNode, BaseModel
 from .Scan import Scan
 
 
-class ScanVisualization(NodeBase):
+class ScanVisualization(BaseNode, BaseModel):
     element_plural = 'scan_visualization'
     scan = Link(mandatory=True, nullable=False, linked_to=Scan)
     output_model = String()

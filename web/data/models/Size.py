@@ -1,9 +1,9 @@
 from pyorient.ogm.property import String, Integer, LinkSet
-from orientdb_data_layer.data_connection import NodeBase
+from .BaseModel import BaseNode, BaseModel
 from .ModelType import ModelType
 
 
-class Size(NodeBase):
+class Size(BaseNode, BaseModel):
     element_plural = 'sizes'
     model_types = LinkSet(mandatory=True, nullable=False, linked_to=ModelType)
     string_value = String()
