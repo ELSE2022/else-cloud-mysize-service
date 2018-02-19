@@ -43,7 +43,8 @@ def get_compare_result(scan, lasts, comparision_rule):
                 break;
         else:
             scan_data.append(float(scan_metric_value.value))
-
+    logger.debug(scan._id)
+    logger.debug(scan_data)
     return get_metrics_by_sizes(scan_data, lasts_data)
 
 
@@ -51,11 +52,13 @@ def get_foot_best_size(product, model_types, scans):
     comparision_rule = ComparisonRule.query_set.filter_by(**{'@rid': product.default_comparison_rule}).first()
     all_results = {}
     comparison_results = []
-    for ty in model_types:
-        lasts = Model.query_set.filter_by(product=product, model_type=ty)
-        scan = scans.filter_by(model_type=ty).first()
+    for scan in scans:
+        lasts = Model.query_set.filter_by(product=product, model_type=scan.model_type)
+        
         results = get_compare_result(scan, lasts, comparision_rule)
         for res in results:
+            model = Model.query_set.filter_by(**{'@rid': res[0]}).first()
+            size = Size.query_set.filter_by(**{'@rid': model.size}).first()
             created = ComparisonResult.objects.create(**{'scan': scan,
                                                              'model': res[0],
                                                              'value': res[1]})
