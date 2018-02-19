@@ -8,7 +8,7 @@ from data.repositories import ModelRepository
 from orientdb_data_layer import data_connection
 from calculations.fitting_algorithms.get_metrics_by_sizes import get_metrics_by_sizes
 
-from data.models import ComparisonRule, Size, Model, ComparisonResult
+from data.models import ComparisonRule, Size, Model, ComparisonResult, ComparisonRuleMetric, ScanMetricValue, ModelMetricValue, ScanMetric, ModelTypeMetric
 
 logger = logging.getLogger('rest_api_demo')
 _productRep = ProductRepository()
@@ -23,47 +23,43 @@ _comparisonResRep = ComparisonResultRepository()
 _modelResRep = ModelRepository()
 
 
+def get_compare_result(scan, lasts, comparision_rule):
+
+    scan_data = []
+    lasts_data = []
+    for last in lasts:
+        lasts_data.append((last._id, [], []))
+    scan_metric_values = ScanMetricValue.query_set.filter_by(scan=scan)
+    for scan_metric_value in scan_metric_values:
+        scan_metric_name = ScanMetric.query_set.filter_by(**{'@rid': scan_metric_value.metric}).first().name
+        for last_data in lasts_data:
+            comparision_rule_metric = ComparisonRuleMetric.query_set.filter_by(scan_metric=scan_metric_value.metric, model=last_data[0]).first()
+            if comparision_rule_metric:
+                last_metric = ModelMetricValue.query_set.filter_by(metric=comparision_rule_metric.model_metric, model=last_data[0]).first()
+                last_metric_name = ModelTypeMetric.query_set.filter_by(**{'@rid': last_metric.metric}).first().name
+                last_data[1].append(float(last_metric.value))
+                last_data[2].append((comparision_rule_metric.f1, comparision_rule_metric.shift, comparision_rule_metric.f2))
+            else:
+                break;
+        else:
+            scan_data.append(float(scan_metric_value.value))
+
+    return get_metrics_by_sizes(scan_data, lasts_data)
+
+
 def get_foot_best_size(product, model_types, scans):
-    _graph = data_connection.get_graph()
-    rule = ComparisonRule.query_set.filter_by(**{'@rid': product.default_comparison_rule}).first()
+    comparision_rule = ComparisonRule.query_set.filter_by(**{'@rid': product.default_comparison_rule}).first()
     all_results = {}
     comparison_results = []
     for ty in model_types:
-        references = [dict(scan=_graph.get_element(ref['scan']), model=_graph.get_element(ref['model']))
-                      for ref in _compRuleMetricRep.get_distinct_reference_ids(rule.name, product.uuid, ty)]
-
-        scan = [scan for scan in scans if str(scan.model_type) == ty._id]
-        if len(references) > 0 and len(scan) > 0:
-            scan = scan[0]
-            scan_data = [float(_scanMetrValueRep.get(dict(scan=scan, metric=ref['scan']))[0].value) for ref in references]
-            lasts_data = []
-            config = _compRuleMetricRep.get_config_by_product(rule.name, product.uuid, ty)
-            values = _modelMetrValueRep.get_values_for_comparison(_graph.element_from_link(product.default_comparison_rule).name, product.uuid, ty)
-
-            last_values = []
-            last_ranges = []
-            curr_size = ''
-            for val in zip(values, config):
-                if curr_size == '':
-                    curr_size = val[0]['size']
-                elif val[0]['size'] != curr_size:
-                    lasts_data.append((curr_size, last_values, last_ranges))
-                    last_values = []
-                    last_ranges = []
-                    curr_size = val[0]['size']
-                last_values.append(float(val[0]['value']))
-                last_ranges.append((val[1]['f1'], val[1]['shift'], val[1]['f2']))
-            lasts_data.append((curr_size, last_values, last_ranges))
-            metrics = get_metrics_by_sizes(scan_data, lasts_data)
-            all_results[ty.name] = metrics
-            for res in metrics:
-                size = Size.query_set.filter_by(string_value=res[0]).first()
-                model = Model.query_set.filter_by(product=product, model_type=ty, size=size).first()
-                created = ComparisonResult.objects.create(**{'scan': scan,
-                                                                 'model': model,
-                                                                 'value': res[1]})
-                logger.debug(created.model)
-                comparison_results.append(created)
+        lasts = Model.query_set.filter_by(product=product, model_type=ty)
+        scan = scans.filter_by(model_type=ty).first()
+        results = get_compare_result(scan, lasts, comparision_rule)
+        for res in results:
+            created = ComparisonResult.objects.create(**{'scan': scan,
+                                                             'model': res[0],
+                                                             'value': res[1]})
+            comparison_results.append(created)
     
     return comparison_results
 

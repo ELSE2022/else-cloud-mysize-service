@@ -23,7 +23,7 @@ from data.repositories import ScanMetricRepository
 from data.repositories import ScanMetricValueRepository
 from data.repositories import ProductRepository
 from data.repositories import ComparisonResultRepository
-from data.models import User, Model, Size as _Size, ComparisonResult
+from data.models import User, Model, Size as _Size, ComparisonResult, Scan, Product, UserSize
 from datetime import datetime
 from flask import request
 from flask import abort
@@ -31,7 +31,6 @@ from flask_restplus import Resource
 from flask_restplus import reqparse
 from orientdb_data_layer import data_connection
 from pyorient import OrientRecordLink
-from data.models.Model import Model
 
 from settings import SCANNER_STORAGE_BASE_URL
 
@@ -76,24 +75,21 @@ def get_user(user_uuid):
 
 
 def get_objects(graph, user_uuid, product_uuid):
-    user_obj = _userRep.get({'uuid': user_uuid})
-    logger.debug(Model.objects.query())
+    user_obj = User.query_set.filter_by(uuid=user_uuid).first()
     if not user_obj:
         abort(400, msg_object_does_not_exist.format('User', user_uuid))
 
-    product_obj = _productRep.get({'uuid': product_uuid})
+    product_obj = Product.query_set.filter_by(uuid=product_uuid).first()
     if not product_obj:
         abort(400, msg_object_does_not_exist.format('Product', product_uuid))
 
     model_types = graph.elements_from_links(
-        graph.element_from_link(product_obj[0].default_comparison_rule).model_types)
+        graph.element_from_link(product_obj.default_comparison_rule).model_types)
 
-    scans = []
-    for ty in model_types:
-        scans += _scanRep.get(dict(user=user_obj[0], is_default=True, model_type=ty))
+    scans = Scan.query_set.filter_by(user=user_obj)
     if not scans:
         abort(400, 'User with uuid {} does not have any scans'.format(user_uuid))
-    return user_obj[0], product_obj[0], model_types, scans
+    return user_obj, product_obj, model_types, scans
 
 
 @ns.route('',)
@@ -310,6 +306,7 @@ class BestSize(Resource):
         Api method to get best user size.
         """
         _graph = data_connection.get_graph()
+        # _comparisonResRep.delete({})
 
         user_obj, product_obj, model_types, scans = get_objects(_graph, user_uuid, product_uuid)
 
@@ -320,12 +317,13 @@ class BestSize(Resource):
         for x in comparison_results:
             model = Model.query_set.filter_by(**{'@rid': x.model}).first()
             size = _Size.query_set.filter_by(**{'@rid': model.size}).first()
-            dct[model.size] += x.value / len(size.model_types)
+            dct[size.string_value] += x.value / len(size.model_types)
+
         max_result = max(dct.items(), key=operator.itemgetter(1))
         return {'best_size': {
             'score': round(max_result[1], 2),
             'output_model': '',
-            'size': _graph.element_from_link(max_result[0]).string_value,
+            'size': max_result[0],
             'size_type': 'FOOT'
         }}
 
@@ -345,24 +343,29 @@ class BestStyle(Resource):
 
         args = best_style_arguments.parse_args()
         if not args.get('size'):
-            user_size_obj = _userSizeRep.get(dict(user=user_obj))
+            user_size_obj = UserSize.query_set.filter_by(user=user_obj)
             print(user_size_obj)
             size_obj = None
             for s in user_size_obj:
-                _size = _graph.element_from_link(s.size)
+                _size = _Size.query_set.filter_by(**{'@rid': s.size})
                 if _graph.elements_from_links(_size.model_types) == model_types:
                     size_obj = _size
             if size_obj is None:
                 abort(404, 'user\'s size not found')
         else:
-            size_obj = _sizeRep.get(dict(string_value=args.get('size')))[0]
-        comparison_results = _comparisonResRep.get_by_tree({'scan': dict(user=user_obj, is_default=True),
+            size_obj = _Size.query_set.filter_by(string_value=args.get('size')).first()
+        
+        results = _comparisonResRep.get_by_tree({'scan': dict(user=user_obj, is_default=True),
                                                             'size': size_obj})
-        if not comparison_results:
+        avg_res = 0
+        if not results:
             results = get_foot_best_size(product_obj, model_types, scans)
-            comparison_results = [x for x in results if str(x.size) == size_obj._id]
+        for x in results:
+            model = Model.query_set.filter_by(**{'@rid': x.model}).first()
+            size = _Size.query_set.filter_by(**{'@rid': model.size}).first()
+            if size.string_value == size_obj.string_value:
+                avg_res += x.value / len(size.model_types)
 
-        avg_res = sum(c.value for c in comparison_results) / float(len(comparison_results))
         return {'best_style': {
             'score': round(avg_res, 2),
             'output_model': '',
