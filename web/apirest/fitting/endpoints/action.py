@@ -315,6 +315,7 @@ class BestSize(Resource):
             comparison_results = get_foot_best_size(product_obj, model_types, scans)
         dct = defaultdict(int)
         for x in comparison_results:
+            logger.debug(x.model)
             model = Model.query_set.filter_by(**{'@rid': x.model}).first()
             size = _Size.query_set.filter_by(**{'@rid': model.size}).first()
             dct[size.string_value] += x.value / len(size.model_types)
