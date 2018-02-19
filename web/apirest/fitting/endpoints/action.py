@@ -347,7 +347,7 @@ class BestStyle(Resource):
             print(user_size_obj)
             size_obj = None
             for s in user_size_obj:
-                _size = _Size.query_set.filter_by(**{'@rid': s.size})
+                _size = _Size.query_set.filter_by(**{'@rid': s.size}).first()
                 if _graph.elements_from_links(_size.model_types) == model_types:
                     size_obj = _size
             if size_obj is None:
