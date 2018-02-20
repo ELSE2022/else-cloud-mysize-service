@@ -312,14 +312,17 @@ class BestSize(Resource):
         logger.debug(scans)
 
         comparison_results = _comparisonResRep.get_by_tree({'scan': dict(user=user_obj, is_default=True),})
+        logger.debug(comparison_results)
         if not comparison_results:
             comparison_results = get_foot_best_size(product_obj, model_types, scans)
+            logger.debug('generate_result')
         dct = defaultdict(int)
         for x in comparison_results:
             model = Model.query_set.filter_by(**{'@rid': x.model}).first()
             size = _Size.query_set.filter_by(**{'@rid': model.size}).first()
+            logger.debug(size.string_value + ' ' + str(x.value))
             dct[size.string_value] += x.value / len(size.model_types)
-
+            logger.debug(size.string_value + ' ' + str(x.value))
         max_result = max(dct.items(), key=operator.itemgetter(1))
         logger.debug(max_result[0])
         return {'best_size': {
