@@ -44,6 +44,7 @@ def get_compare_result(scan, lasts, comparision_rule):
         else:
             scan_data.append(float(scan_metric_value.value))
     logger.debug(scan._id)
+    logger.debug(scan.is_default)
     logger.debug(scan_data)
     return get_metrics_by_sizes(scan_data, lasts_data)
 
