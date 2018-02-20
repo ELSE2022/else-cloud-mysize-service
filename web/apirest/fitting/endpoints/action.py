@@ -307,7 +307,7 @@ class BestSize(Resource):
         Api method to get best user size.
         """
         _graph = data_connection.get_graph()
-        # _comparisonResRep.delete({})
+        _comparisonResRep.delete({})
 
         user_obj, product_obj, model_types, scans = get_objects(_graph, user_uuid, product_uuid)
         logger.debug(scans)
@@ -347,6 +347,7 @@ class BestStyle(Resource):
 
         user_obj, product_obj, model_types, scans = get_objects(_graph, user_uuid, product_uuid)
 
+        _comparisonResRep.delete({})
         args = best_style_arguments.parse_args()
         if not args.get('size'):
             user_size_obj = UserSize.query_set.filter_by(user=user_obj)
