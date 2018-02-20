@@ -86,7 +86,7 @@ def get_objects(graph, user_uuid, product_uuid):
     model_types = graph.elements_from_links(
         graph.element_from_link(product_obj.default_comparison_rule).model_types)
 
-    scans = Scan.query_set.filter_by(user=user_obj)
+    scans = Scan.query_set.filter_by(user=user_obj, is_default=True)
     if not scans:
         abort(400, 'User with uuid {} does not have any scans'.format(user_uuid))
     return user_obj, product_obj, model_types, scans
