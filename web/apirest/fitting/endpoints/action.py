@@ -239,6 +239,7 @@ class DefaultScan(Resource):
         """
         scan_id = request.args.get('scan')
         user = get_user(uuid)
+        scans = _scanRep.update({'user': user}, {'is_default': False})
         scans = _scanRep.update({'user': user, 'scan_id': scan_id}, {'is_default': True})
 
         return scans

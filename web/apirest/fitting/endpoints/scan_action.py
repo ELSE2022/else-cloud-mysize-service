@@ -224,6 +224,9 @@ def update_scan(user, scanner, scan_id, scan_model_type, is_scan_default, scan_p
         scan = _scanRep.add(dict(user=user, model_type=scan_type, scan_id=scan_id, scanner=scanner, stl_path=attachment_name, creation_time=datetime.now(), is_default=is_scan_default))
     else:
         scan = _scanRep.update(dict(user=user, model_type=scan_type, scan_id=scan_id), dict(stl_path=attachment_name, is_default=is_scan_default))[0]
+    if is_scan_default:
+        _scanRep.update({'user': user}, {'is_default': False})
+        _scanRep.update({'user': user, 'scan_id': scan_id}, {'is_default': True})
 
     _scanMetricValueRep.delete(dict(scan=scan))
 
