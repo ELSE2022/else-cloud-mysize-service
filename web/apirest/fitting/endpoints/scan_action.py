@@ -133,7 +133,10 @@ def update_scan_attributes(scan, scan_type):
     scanner_obj = _graph.element_from_link(scan.scanner)
     path_to_csv = '{}{}/{}/{}_{}_mes.csv'.format(scanner_obj.base_url, scanner_obj.name, scan.scan_id, scan.scan_id, attribute_urls_type[scan_type.name])
     request = requests.get(path_to_csv)
-    profile = list(request.iter_lines(decode_unicode=True))[1:]
+    first_row = next(request.iter_lines(decode_unicode=True))
+    profile = request.iter_lines(decode_unicode=True)
+    if first_row.startswith('DOMESCAN'):
+        next(profile)
     request.raise_for_status()
     for row in csv.DictReader(profile, delimiter=';'):
         for key, value in row.items():
