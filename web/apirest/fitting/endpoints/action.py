@@ -83,13 +83,10 @@ def get_objects(graph, user_uuid, product_uuid):
     if not product_obj:
         abort(400, msg_object_does_not_exist.format('Product', product_uuid))
 
-    model_types = graph.elements_from_links(
-        graph.element_from_link(product_obj.default_comparison_rule).model_types)
-
     scans = Scan.query_set.filter_by(user=user_obj, is_default=True)
     if not scans:
         abort(400, 'User with uuid {} does not have any scans'.format(user_uuid))
-    return user_obj, product_obj, model_types, scans
+    return user_obj, product_obj, scans
 
 
 @ns.route('',)
@@ -307,25 +304,19 @@ class BestSize(Resource):
         Api method to get best user size.
         """
         _graph = data_connection.get_graph()
-        _comparisonResRep.delete({})
+        # _comparisonResRep.delete({})
 
-        user_obj, product_obj, model_types, scans = get_objects(_graph, user_uuid, product_uuid)
-        logger.debug(scans)
-
+        user_obj, product_obj, scans = get_objects(_graph, user_uuid, product_uuid)
+        
         comparison_results = _comparisonResRep.get_by_tree({'scan': dict(user=user_obj, is_default=True),})
-        logger.debug(comparison_results)
         if not comparison_results:
-            comparison_results = get_foot_best_size(product_obj, model_types, scans)
-            logger.debug('generate_result')
+            comparison_results = get_foot_best_size(product_obj, scans)
         dct = defaultdict(int)
         for x in comparison_results:
             model = Model.query_set.filter_by(**{'@rid': x.model}).first()
             size = _Size.query_set.filter_by(**{'@rid': model.size}).first()
-            # logger.debug(size.string_value + ' ' + str(x.value))
             dct[size.string_value] += x.value / len(size.model_types)
-            # logger.debug(size.string_value + ' ' + str(x.value))
         max_result = max(dct.items(), key=operator.itemgetter(1))
-        logger.debug(max_result[0])
         return {'best_size': {
             'score': round(max_result[1], 2),
             'output_model': '',
@@ -342,20 +333,18 @@ class BestStyle(Resource):
         """
         Api method to get best user style.
         """
-        logger.debug('best_style')
         _graph = data_connection.get_graph()
 
-        user_obj, product_obj, model_types, scans = get_objects(_graph, user_uuid, product_uuid)
-
-        _comparisonResRep.delete({})
+        user_obj, product_obj, scans = get_objects(_graph, user_uuid, product_uuid)
+        model_types = product_obj.get_model_types()
+        # _comparisonResRep.delete({})
         args = best_style_arguments.parse_args()
         if not args.get('size'):
             user_size_obj = UserSize.query_set.filter_by(user=user_obj)
-            print(user_size_obj)
             size_obj = None
             for s in user_size_obj:
                 _size = _Size.query_set.filter_by(**{'@rid': s.size}).first()
-                if _graph.elements_from_links(_size.model_types) == model_types:
+                if _graph.elements_from_links(_size.model_types) == _graph.elements_from_links(model_types):
                     size_obj = _size
             if size_obj is None:
                 abort(404, 'user\'s size not found')
@@ -366,7 +355,7 @@ class BestStyle(Resource):
                                                             'size': size_obj})
         avg_res = 0
         if not results:
-            results = get_foot_best_size(product_obj, model_types, scans)
+            results = get_foot_best_size(product_obj, scans)
         for x in results:
             model = Model.query_set.filter_by(**{'@rid': x.model}).first()
             size = _Size.query_set.filter_by(**{'@rid': model.size}).first()

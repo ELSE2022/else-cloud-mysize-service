@@ -49,7 +49,7 @@ def get_compare_result(scan, lasts, comparision_rule):
     return get_metrics_by_sizes(scan_data, lasts_data)
 
 
-def get_foot_best_size(product, model_types, scans):
+def get_foot_best_size(product, scans):
     comparision_rule = ComparisonRule.query_set.filter_by(**{'@rid': product.default_comparison_rule}).first()
     all_results = {}
     comparison_results = []
