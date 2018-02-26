@@ -17,4 +17,4 @@ class User(BaseNode, BaseModel):
         return Scan.query_set.filter_by(user=self, is_default=True)
 
     def get_scans(self, model_types=[]):
-        return Scan.query_set.filter_by(user=self, is_default=True)
+        return Scan.query_set.filter_by(user=self)
