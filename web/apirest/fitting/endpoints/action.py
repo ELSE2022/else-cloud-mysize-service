@@ -303,7 +303,7 @@ class BestSize(Resource):
 
         user_obj, product_obj, scans = get_objects(_graph, user_uuid, product_uuid)
         
-        comparison_results = _comparisonResRep.get_by_tree({'scan': dict(user=user_obj, is_default=True),})
+        comparison_results = _comparisonResRep.get_by_tree({'scan': dict(user=user_obj, is_default=True), 'model': dict(product=product_obj)})
         if not comparison_results:
             comparison_results = get_foot_best_size(product_obj, scans)
         dct = defaultdict(int)
@@ -347,7 +347,7 @@ class BestStyle(Resource):
             size_obj = _Size.query_set.filter_by(string_value=args.get('size')).first()
         
         results = _comparisonResRep.get_by_tree({'scan': dict(user=user_obj, is_default=True),
-                                                            'model': dict(size=size_obj._id)})
+                                                            'model': dict(size=size_obj, product=product_obj)})
         avg_res = 0
         if not results:
             results = get_foot_best_size(product_obj, scans)
