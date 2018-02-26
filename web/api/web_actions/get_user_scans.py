@@ -5,6 +5,7 @@ from ..authentication import requires_auth
 from data.repositories import UserRepository
 from data.repositories import ScanRepository
 from orientdb_data_layer import data_connection
+from data.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -30,14 +31,12 @@ def get_foot_scans(scans):
 @requires_auth
 def get_user_scans():
     user_uuid = request.args.get('user')
-    user = _userRep.get(dict(uuid=user_uuid))
+    user = User.query_set.filter_by(uuid=user_uuid).first()
 
-    if len(user):
-        user = user[0]
-    else:
+    if user is None:
         abort(404, 'User not found')
 
-    scans = _scanRep.get(dict(user=user))
+    scans = user.get_scans()
     user_scans = list(get_foot_scans(scans))
 
     return jsonify({'user_scans': user_scans})

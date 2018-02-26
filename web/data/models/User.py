@@ -13,8 +13,8 @@ class User(BaseNode, BaseModel):
     def __str__(self):
         return f'<User: {self.uuid}>'
 
-    def get_default_scans(self, model_types=[]):
+    def get_default_scans(self):
         return Scan.query_set.filter_by(user=self, is_default=True)
 
-    def get_scans(self, model_types=[]):
+    def get_scans(self):
         return Scan.query_set.filter_by(user=self)

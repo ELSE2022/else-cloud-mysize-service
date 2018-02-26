@@ -213,16 +213,11 @@ class Scans(Resource):
         """
         Api method to get user scans.
         """
-        # scans_list = []
-        # user = _userRep.get({'uuid': uuid})
-        scans = _scanRep.get_by_tree({'user': {'uuid': uuid}})
-        # for sc in scans:
-        #     metric = _scanMetricValueRep.get({
-        #         'scan': sc,
-        #     })
-        #     scans_with_metrics = sc._props
-        #     scans_with_metrics['metric'] = metric
-        #     scans_list.append(scans_with_metrics)
+        user = User.query_set.filter_by(uuid=uuid).first()
+        if user is None:
+            abort(404, 'User not found')
+
+        scans = user.get_scans().all()
         return scans
 
 
@@ -352,7 +347,7 @@ class BestStyle(Resource):
             size_obj = _Size.query_set.filter_by(string_value=args.get('size')).first()
         
         results = _comparisonResRep.get_by_tree({'scan': dict(user=user_obj, is_default=True),
-                                                            'size': size_obj})
+                                                            'model': dict(size=size_obj._id)})
         avg_res = 0
         if not results:
             results = get_foot_best_size(product_obj, scans)
