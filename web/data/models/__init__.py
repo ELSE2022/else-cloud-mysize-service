@@ -18,6 +18,7 @@ from .ScanMetricValue import ScanMetricValue
 from .ComparisonRule import ComparisonRule
 from .ComparisonRuleMetric import ComparisonRuleMetric
 from .UserSize import UserSize
+from .CompareVisualization import CompareVisualization
 
 # Edges
 from .ModelToScanComparison import ModelToScanComparison

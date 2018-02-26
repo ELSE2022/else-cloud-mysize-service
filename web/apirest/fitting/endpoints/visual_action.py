@@ -21,6 +21,7 @@ from flask_restplus import Resource
 from flask_restplus import reqparse
 from settings import ELSE_3D_SERVICE_URL
 from orientdb_data_layer import data_connection
+from data.models import User, CompareVisualization
 
 ns = api.namespace('fitting_visualization', path='/fitting/visualization', description='Operations related to Visualization')
 
@@ -65,12 +66,17 @@ class VisualizationItem(Resource):
         size = request_data.get('size')[0]
         scan_id = request_data.get('scan_id', None)
 
+        user = User.query_set.filter_by(uuid=user_uuid).first()
+
+        if user is None:
+            abort(404, 'User not found')
+
         if scan_id:
-            scans = _scanRep.get(dict(scan_id=scan_id))
-            if not scans:
-                return abort(400)
+            scans = user.get_scans_by_id(scan_id)
         else:
-            scans = _scanRep.get_by_tree({'is_default': True, 'user': {'uuid': user_uuid}})
+            scans = user.get_default_scans()
+        if scans.count() == 0:
+            return abort(400)
         all_requests = {}
         for scan in scans:
             scan_model_type = _graph.element_from_link(scan.model_type)
@@ -80,8 +86,8 @@ class VisualizationItem(Resource):
             if not last:
                 return abort(400)
             else: last = last[0]
-            compare_visual = _compareVisualRep.get({'scan': scan, 'model': last})
-            if not compare_visual:
+            compare_visual = CompareVisualization.query_set.filter_by(scan=scan, model=last).first()
+            if compare_visual is None:
                 if last.stl_path and scan.stl_path:
                     if os.path.isfile(last.stl_path) and os.path.isfile('attachments/' + scan.stl_path):
                         files = {'last': open(last.stl_path, 'rb'), 'scan': open('attachments/' + scan.stl_path, 'rb')}
@@ -96,7 +102,6 @@ class VisualizationItem(Resource):
                                                    output_model_3d=req.json().get('output_model_3d'),
                                                    creation_time=datetime.now()))
             else:
-                compare_visual = compare_visual[0]
                 all_requests[_graph.element_from_link(scan.model_type).name] = {'output_model': compare_visual.output_model,
                                      'output_model_3d': compare_visual.output_model_3d}
         return all_requests
