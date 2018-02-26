@@ -309,6 +309,7 @@ class BestSize(Resource):
         dct = defaultdict(int)
         for x in comparison_results:
             model = Model.query_set.filter_by(**{'@rid': x.model}).first()
+            logger.debug(model.product)
             size = _Size.query_set.filter_by(**{'@rid': model.size}).first()
             dct[size.string_value] += x.value / len(size.model_types)
         max_result = max(dct.items(), key=operator.itemgetter(1))
