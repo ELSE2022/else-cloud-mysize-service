@@ -4,7 +4,7 @@ import requests
 import settings
 import json
 import ast
-from apirest.fitting.serializers import scan
+from apirest.fitting.serializers import scan as scan_serializer
 from apirest.fitting.mixins import ListModelMixin
 from apirest.restplus import api
 from bs4 import BeautifulSoup
@@ -57,13 +57,13 @@ update_scan_arguments.add_argument('time', type=int, required=False)
 @ns.route('')
 class Scans(Resource, ListModelMixin):
     model = Scan
-    serializer = scan
+    serializer = scan_serializer
     filter_field = 'scan_id'
 
     def get(self):
         return super().get()
 
-    @api.expect(scan)
+    @api.expect(scan_serializer)
     def post(self):
         """
         Api method to create scan.
@@ -90,7 +90,7 @@ class Scans(Resource, ListModelMixin):
 
 @ns.route('/<string:id>')
 class ScanItem(Resource):
-    @api.expect(scan)
+    @api.expect(scan_serializer)
     def put(self, id):
         """
         Api method to update scan.
@@ -99,7 +99,7 @@ class ScanItem(Resource):
         return {'@rid': scan_obj._id, 'name': scan_obj.name}, 201
 
     @api.response(204, 'Scan successfully deleted.')
-    @api.marshal_with(scan)
+    @api.marshal_with(scan_serializer)
     def delete(self, id):
         """
         Api method to delete scan.

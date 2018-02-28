@@ -1,9 +1,15 @@
 import React from 'react';
-import { List, Edit, FileInput, FileField, Create, ReferenceInput, SelectInput, Datagrid, ReferenceField, TextField, EditButton, DisabledInput, LongTextInput, SimpleForm, TextInput } from 'admin-on-rest';
+import { List, Edit, FileInput, FileField, Filter, Create, ReferenceInput, SelectInput, Datagrid, ReferenceField, TextField, EditButton, DisabledInput, LongTextInput, SimpleForm, TextInput } from 'admin-on-rest';
 import ProductEditActions from './ProductEditActions'
 
+const ProductFilter = (props) => (
+    <Filter {...props} >
+        <TextInput label="Search" source="q" alwaysOn />
+    </Filter>
+);
+
 export const ProductList = (props) => (
-    <List {...props}>
+    <List {...props} filters={<ProductFilter />}>
         <Datagrid>
             <TextField source="id" />
             <TextField source="uuid" />

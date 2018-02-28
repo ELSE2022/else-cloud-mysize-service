@@ -87,6 +87,7 @@ def add_comp_rule_metric(modeltype_metr, scan_metric, value, f1, shift, f2, prod
 class Products(Resource, ListModelMixin):
     model = Product
     serializer = product
+    filter_field = 'uuid'
 
     def get(self):
         return super().get()
@@ -96,8 +97,6 @@ class Products(Resource, ListModelMixin):
         """
         Api method to create product.
         """
-        print('POST')
-        print(request.json)
         brand_obj = _brandRep.get({'@rid': request.json['brand']})
         if not brand_obj:
             abort(400, msg_object_does_not_exist.format('Brand', request.json['brand']))
