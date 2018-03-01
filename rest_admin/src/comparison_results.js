@@ -17,10 +17,7 @@ export const ComparisonResultsList = (props) => (
                 <TextField source="name" />
             </ReferenceField>
             <ReferenceField label="Scan" source="scan" reference="scans">
-                <TextField source="name" />
-            </ReferenceField>
-            <ReferenceField label="Size" source="size" reference="sizes">
-                <TextField source="string_value" />
+                <TextField source="scan_id" />
             </ReferenceField>
             <TextField source="value" />
             <EditButton />
