@@ -13,7 +13,7 @@ export const ComparisonResultsList = (props) => (
     <List {...props} filters={<UserFilter />}>
         <Datagrid>
             <TextField source="id" />
-            <ReferenceField label="Model type" source="model_type" reference="modeltypes">
+            <ReferenceField label="Model" source="model" reference="models">
                 <TextField source="name" />
             </ReferenceField>
             <ReferenceField label="Scan" source="scan" reference="scans">

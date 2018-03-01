@@ -128,9 +128,9 @@ scanner = api.model('Scanner', {
 
 comparison_result = api.model('Comparison result', {
     'id': fields.String(description='Id', attribute='_id'),
-    'model_type': fields.String(required=True, description='Model type'),
+    'model': fields.String(required=True, description='Model'),
     'scan': fields.String(required=True, description='Scan'),
-    'size': fields.String(required=True, description='Size'),
+    # 'size': fields.String(required=True, description='Size'),
     'creation_time': fields.DateTime(description='Comparison time'),
     'value': fields.Float(required=True, description='Value'),
 })
