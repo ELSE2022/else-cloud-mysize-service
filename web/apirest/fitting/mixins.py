@@ -24,8 +24,8 @@ class ListModelMixin(object):
             if query_string:
                 objects = self.get_objects().filter(getattr(self.model, self.filter_field).like('%{}%'.format(query_string)))
             else:
-                print(search_query.get('id', ''))
-                objects = self.get_objects()
+                objects = self.model.objects.query(**{'@rid': x for x in search_query.get('id', [])})
+                print(objects)
         else:
             objects = self.get_objects()
         if request.args.get('sort_field', None) != 'id' and request.args.get('sort_field', None):
