@@ -2,7 +2,7 @@ import React from 'react';
 import Dashboard from './Dashboard';
 import authClient from './authClient';
 import { Admin, Resource, Delete } from 'admin-on-rest';
-import myApiRestClient from './restClient';
+import ApiRestClient from './restClient';
 import { ProductList, ProductCreate, ProductEdit } from './products';
 import { BrandList, BrandCreate, BrandEdit } from './brands';
 import { UserList, UserCreate, UserEdit } from './users';
@@ -21,7 +21,7 @@ import { ComparisonRulesList, ComparisonRulesCreate, ComparisonRulesEdit } from 
 import addUploadFeature from './addUploadFeature';
 // import addUploadFile from './addUploadFile';
 
-const restClient = myApiRestClient;
+const restClient = ApiRestClient;
 const uploadCapableClient = addUploadFeature(restClient);
 
 const App = () => (
