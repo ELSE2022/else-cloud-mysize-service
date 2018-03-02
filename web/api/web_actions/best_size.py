@@ -30,6 +30,8 @@ def get_compare_result(scan, lasts, comparision_rule):
     for last in lasts:
         lasts_data.append((last._id, [], []))
     scan_metric_values = ScanMetricValue.query_set.filter_by(scan=scan)
+    logger.debug('scan_metric_values')
+    logger.debug(scan_metric_values)
     for scan_metric_value in scan_metric_values:
         scan_metric_name = ScanMetric.query_set.filter_by(**{'@rid': scan_metric_value.metric}).first().name
         for last_data in lasts_data:
