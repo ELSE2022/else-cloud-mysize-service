@@ -50,13 +50,13 @@ class Sizes(Resource, ListModelMixin):
 
 @ns.route('/<string:id>')
 class SizeItem(Resource):
-    @api.expect(size)
+    @api.marshal_with(size)
     def delete(self, id):
         """
         Api method to delete size
         """
         _sizeRep.delete({'@rid': id})
-        return None, 204
+        return {}, 200
 
     @api.expect(size)
     def put(self, id):

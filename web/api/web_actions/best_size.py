@@ -34,9 +34,12 @@ def get_compare_result(scan, lasts, comparision_rule):
         scan_metric_name = ScanMetric.query_set.filter_by(**{'@rid': scan_metric_value.metric}).first().name
         for last_data in lasts_data:
             comparision_rule_metric = ComparisonRuleMetric.query_set.filter_by(scan_metric=scan_metric_value.metric, model=last_data[0]).first()
+            logger.debug('comparision_rule_metric')
+            logger.debug(comparision_rule_metric)
             if comparision_rule_metric:
                 last_metric = ModelMetricValue.query_set.filter_by(metric=comparision_rule_metric.model_metric, model=last_data[0]).first()
                 last_metric_name = ModelTypeMetric.query_set.filter_by(**{'@rid': last_metric.metric}).first().name
+                logger.debug(last_metric)
                 last_data[1].append(float(last_metric.value))
                 last_data[2].append((comparision_rule_metric.f1, comparision_rule_metric.shift, comparision_rule_metric.f2))
             else:
