@@ -217,7 +217,7 @@ class Scans(Resource):
         if user is None:
             abort(404, 'User not found')
 
-        scans = user.get_scans().all()
+        scans = Scan.query_set.filter_by(user=user).all()
         return scans
 
 

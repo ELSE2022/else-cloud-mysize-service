@@ -6,6 +6,7 @@ from data.repositories import UserRepository
 from data.repositories import ScanRepository
 from orientdb_data_layer import data_connection
 from data.models import User
+from data.models import Scan
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ def get_user_scans():
     if user is None:
         abort(404, 'User not found')
 
-    scans = user.get_scans()
+    scans = Scan.query_set.filter_by(user=user)
     user_scans = list(get_foot_scans(scans))
 
     return jsonify({'user_scans': user_scans})

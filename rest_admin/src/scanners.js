@@ -1,5 +1,5 @@
 import React from 'react';
-import { List, Edit, Create, Datagrid, TextField, ReferenceInput, EditButton, SelectInput, ReferenceField, DisabledInput, SimpleForm, TextInput } from 'admin-on-rest';
+import { List, Edit, Create, Datagrid, TextField, ReferenceInput, EditButton, SelectInput, ReferenceField, DisabledInput, SimpleForm, TextInput, required } from 'admin-on-rest';
 
 export const ScannerList = (props) => (
     <List {...props}>
@@ -23,11 +23,13 @@ export const ScannerEdit = (props) => (
     <Edit title={<ScannerTitle />} {...props}>
         <SimpleForm>
             <DisabledInput source="id" />
-            <ReferenceInput label="Scanner model" source="model" reference="scannermodels" allowEmpty validation={{ required: true }}>
+            <ReferenceInput label="Scanner model" source="model" reference="scannermodels" allowEmpty validate={required}>
                 <SelectInput optionText="name" />
             </ReferenceInput>
-            <TextInput source="name" />
-            <TextInput source="base_url" />
+            <TextInput source="name" validate={required}/>
+            {/*<TextInput source="base_url" />*/}
+            <TextInput source="login" validate={required}/>
+            <TextInput source="password" validate={required}/>
         </SimpleForm>
     </Edit>
 );
@@ -35,11 +37,13 @@ export const ScannerEdit = (props) => (
 export const ScannerCreate = (props) => (
     <Create {...props}>
         <SimpleForm>
-            <ReferenceInput label="Scanner model" source="model" reference="scannermodels" allowEmpty validation={{ required: true }}>
+            <ReferenceInput label="Scanner model" source="model" reference="scannermodels" allowEmpty validate={required}>
                 <SelectInput optionText="name" />
             </ReferenceInput>
-            <TextInput source="name" />
-            <TextInput source="base_url" />
+            <TextInput source="name" validate={required}/>
+            {/*<TextInput source="base_url" />*/}
+            <TextInput source="login" validate={required}/>
+            <TextInput source="password" validate={required}/>
         </SimpleForm>
     </Create>
 );

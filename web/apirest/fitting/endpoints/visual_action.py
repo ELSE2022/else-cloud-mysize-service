@@ -21,7 +21,9 @@ from flask_restplus import Resource
 from flask_restplus import reqparse
 from settings import ELSE_3D_SERVICE_URL
 from orientdb_data_layer import data_connection
-from data.models import User, CompareVisualization
+from data.models import User
+from data.models import CompareVisualization
+from data.models import Scan
 
 ns = api.namespace('fitting_visualization', path='/fitting/visualization', description='Operations related to Visualization')
 
@@ -72,9 +74,9 @@ class VisualizationItem(Resource):
             abort(404, 'User not found')
 
         if scan_id:
-            scans = user.get_scans_by_id(scan_id)
+            scans = Scan.query_set.filter_by(user=user, scan_id=scan_id)
         else:
-            scans = user.get_default_scans()
+            scans = Scan.query_set.filter_by(user=user, is_default=True)
         if scans.count() == 0:
             return abort(400)
         all_requests = {}

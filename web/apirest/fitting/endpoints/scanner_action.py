@@ -1,3 +1,5 @@
+from flask import json
+
 from apirest.fitting.serializers import scanner
 from apirest.fitting.mixins import ListModelMixin
 from apirest.restplus import api
@@ -29,13 +31,9 @@ class Scanners(Resource, ListModelMixin):
     @api.expect(scanner)
     def post(self):
         """
-        Api method to create scanner
+        Api method to create scanner.
         """
-        data_dict = request.json
-        scanner_model_obj = _scannerModelRep.get({'@rid': request.json['model']})
-        if not scanner_model_obj:
-            abort(400, msg_object_does_not_exist.format('Scanner model', request.json['model']))
-        scanner_obj = _scannerRep.add(data_dict, result_JSON=True)
+        scanner_obj = Scanner.add(request.json, result_as_json=True)
         return scanner_obj
 
 
@@ -56,11 +54,13 @@ class ScannerItem(Resource):
         """
         Api method to update scanner.
         """
-        data_dict = request.json
-        data_dict['model'] = OrientRecordLink(request.json.get('model'))
-
-        scanner_obj = _scannerRep.update({'@rid': id}, data_dict)[0]
-        return {'@rid': scanner_obj._id, 'name': scanner_obj.name}, 201
+        # data_dict = request.json
+        # data_dict['model'] = OrientRecordLink(request.json.get('model'))
+        # print(data_dict)
+        scanner_obj = Scanner.update(id, request.json)
+        print(scanner_obj)
+        # scanner_obj = _scannerRep.update({'@rid': id}, data_dict)[0]
+        return {'@rid': id}, 201
 
     @api.response(204, 'Scanner successfully deleted.')
     @api.marshal_with(scanner)
@@ -69,4 +69,4 @@ class ScannerItem(Resource):
         Api method to delete scanner.
         """
         _scannerRep.delete({'@rid': id})
-        return None, 204
+        return None, 200

@@ -17,3 +17,6 @@ SCANNER_STORAGE_BASE_URL = 'https://else:7kjfWVWcRN@avatar3d.ibv.org:8443/webdav
 ELSE_3D_SERVICE_URL = u"http://else-3d-service.cloudapp.net/"
 
 IMPORT_DATA_FROM_POSTGRES = False
+
+DEFAULT_STORAGE_LOGIN = 'else'
+DEFAULT_STORAGE_PASSWORD = '7kjfWVWcRN'
