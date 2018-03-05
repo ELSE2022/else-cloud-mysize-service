@@ -39,4 +39,13 @@ class BaseModel:
     def update(cls, elem_id, prop_dict):
         return cls.objects.g.save_element(cls, prop_dict, elem_id)
 
+    @classmethod
+    def get(cls, elem_id):
+        return cls.objects.g.get_element(elem_id)
+
+    @classmethod
+    def delete(cls, elem_id):
+        cluster, id = (int(val) for val in elem_id.replace('#', '').split(':'))
+        return cls.objects.g.client.record_delete(cluster, id)
+
 BaseNode = data_connection.NodeBase

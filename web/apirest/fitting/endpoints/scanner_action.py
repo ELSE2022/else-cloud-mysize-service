@@ -2,6 +2,9 @@ from flask import json
 
 from apirest.fitting.serializers import scanner
 from apirest.fitting.mixins import ListModelMixin
+from apirest.fitting.mixins import CreateModelMixin
+from apirest.fitting.mixins import RetrieveModelMixin
+from apirest.fitting.mixins import DestroyModelMixin
 from apirest.restplus import api
 from data.repositories import ScannerRepository
 from data.repositories import ScannerModelRepository
@@ -21,33 +24,44 @@ msg_object_does_not_exist = '{} object with id "{}" not found'
 
 
 @ns.route('')
-class Scanners(Resource, ListModelMixin):
+class Scanners(Resource, ListModelMixin, CreateModelMixin):
     model = Scanner
     serializer = scanner
 
     def get(self):
         return super().get()
 
+    # @api.expect(scanner)
+    # def post(self):
+    #     """
+    #     Api method to create scanner.
+    #     """
+    #     scanner_obj = Scanner.add(request.json, result_as_json=True)
+    #     return scanner_obj
+
     @api.expect(scanner)
     def post(self):
         """
         Api method to create scanner.
         """
-        scanner_obj = Scanner.add(request.json, result_as_json=True)
-        return scanner_obj
+        return super().post()
 
 
 @ns.route('/<string:id>')
 @api.response(404, 'Scanner not found.')
-class ScannerItem(Resource):
+class ScannerItem(Resource, RetrieveModelMixin, DestroyModelMixin):
+    model = Scanner
+    serializer = scanner
 
-    @api.marshal_with(scanner)
+    # @api.marshal_with(scanner)
+    # def get(self, id):
+    #     """
+    #     Returns a scanner object.
+    #     """
+    #     scanner_obj = _scannerRep.get({'@rid': id})
+    #     return scanner_obj[0] if scanner_obj else (None, 404)
     def get(self, id):
-        """
-        Returns a scanner object.
-        """
-        scanner_obj = _scannerRep.get({'@rid': id})
-        return scanner_obj[0] if scanner_obj else (None, 404)
+        return super().get(id)
 
     @api.expect(scanner)
     def put(self, id):
@@ -62,11 +76,14 @@ class ScannerItem(Resource):
         # scanner_obj = _scannerRep.update({'@rid': id}, data_dict)[0]
         return {'@rid': id}, 201
 
-    @api.response(204, 'Scanner successfully deleted.')
-    @api.marshal_with(scanner)
     def delete(self, id):
-        """
-        Api method to delete scanner.
-        """
-        _scannerRep.delete({'@rid': id})
-        return None, 200
+        return super().delete(id)
+
+    # @api.response(204, 'Scanner successfully deleted.')
+    # @api.marshal_with(scanner)
+    # def delete(self, id):
+    #     """
+    #     Api method to delete scanner.
+    #     """
+    #     _scannerRep.delete({'@rid': id})
+    #     return None, 200
