@@ -305,14 +305,12 @@ class BestSize(Resource):
         """
         _graph = data_connection.get_graph()
         # _comparisonResRep.delete({})
-        args = best_style_arguments.parse_args()
+        args = best_size_arguments.parse_args()
         user_obj, product_obj, scans = get_objects(_graph, user_uuid, product_uuid)
         if args.get('scan_id'):
-            logger.debug("SCAN ID")
             scans = Scan.query_set.filter_by(user=user_obj, scan_id=args.get('scan_id'))
             comparison_results = _comparisonResRep.get_by_tree(
                 {'scan': dict(user=user_obj, scan_id=args.get('scan_id')), 'model': dict(product=product_obj)})
-            logger.debug(comparison_results)
         else:
             comparison_results = _comparisonResRep.get_by_tree({'scan': dict(user=user_obj, is_default=True),
                                                                 'model': dict(product=product_obj)})
