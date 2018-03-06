@@ -56,6 +56,9 @@ default_size_arguments.add_argument('type', type=str, required=False)
 best_style_arguments = reqparse.RequestParser()
 best_style_arguments.add_argument('size', type=str, required=False)
 
+best_size_arguments = reqparse.RequestParser()
+best_size_arguments.add_argument('scan_id', type=str, required=False)
+
 default_scan_arguments = reqparse.RequestParser()
 default_scan_arguments.add_argument('scan', type=str, required=True)
 
@@ -294,16 +297,23 @@ class Size(Resource):
 
 @ns.route('/<string:user_uuid>/products/<string:product_uuid>/best_size')
 class BestSize(Resource):
+
+    @api.expect(best_size_arguments, validate=True)
     def get(self, user_uuid, product_uuid):
         """
         Api method to get best user size.
         """
         _graph = data_connection.get_graph()
         # _comparisonResRep.delete({})
-
+        args = best_style_arguments.parse_args()
         user_obj, product_obj, scans = get_objects(_graph, user_uuid, product_uuid)
-        
-        comparison_results = _comparisonResRep.get_by_tree({'scan': dict(user=user_obj, is_default=True), 'model': dict(product=product_obj)})
+        if args.get('scan_id'):
+            scans = Scan.query_set.filter_by(user=user_obj, scan_id=args.get('scan_id'))
+            comparison_results = _comparisonResRep.get_by_tree(
+                {'scan': dict(user=user_obj, scan_id=args.get('scan_id')), 'model': dict(product=product_obj)})
+        else:
+            comparison_results = _comparisonResRep.get_by_tree({'scan': dict(user=user_obj, is_default=True),
+                                                                'model': dict(product=product_obj)})
         if not comparison_results:
             comparison_results = get_foot_best_size(product_obj, scans)
         dct = defaultdict(int)
