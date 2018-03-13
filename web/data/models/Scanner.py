@@ -16,7 +16,7 @@ class Scanner(BaseNode, BaseModel):
 
     @classmethod
     def add(cls, prop_dict, result_as_json=False):
-        prop_dict['base_url'] = 'https://{}:{}@avatar3d.ibv.org:8443/webdev/{}/'.format(prop_dict.get('login'),
+        prop_dict['base_url'] = 'https://{}:{}@avatar3d.ibv.org:8443/webdav/{}/'.format(prop_dict.get('login'),
                                                                                         prop_dict.get('password'),
                                                                                         prop_dict.get('login').upper())
         return super().add(prop_dict, result_as_json)

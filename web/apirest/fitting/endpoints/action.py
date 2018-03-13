@@ -24,6 +24,7 @@ from data.repositories import ScanMetricValueRepository
 from data.repositories import ProductRepository
 from data.repositories import ComparisonResultRepository
 from data.models import User, Model, Size as _Size, ComparisonResult, Scan, Product, UserSize
+from data.models import ModelType
 from datetime import datetime
 from flask import request
 from flask import abort
@@ -317,18 +318,43 @@ class BestSize(Resource):
         if not comparison_results:
             comparison_results = get_foot_best_size(product_obj, scans)
         dct = defaultdict(int)
+        dict_mt = dict()
         for x in comparison_results:
             model = Model.query_set.filter_by(**{'@rid': x.model}).first()
-            logger.debug(model.product)
+            model_type = ModelType.query_set.filter_by(**{'@rid': model.model_type}).first()
             size = _Size.query_set.filter_by(**{'@rid': model.size}).first()
-            dct[size.string_value] += x.value / len(size.model_types)
+            if size:
+                dct[size.string_value] += x.value / len(size.model_types)
+                if not dict_mt.get(size.string_value, None):
+                    dict_mt[size.string_value] = dict()
+                dict_mt[size.string_value][model_type.name] = x.value
         max_result = max(dct.items(), key=operator.itemgetter(1))
-        return {'best_size': {
-            'score': round(max_result[1], 2),
-            'output_model': '',
-            'size': max_result[0],
-            'size_type': 'FOOT'
-        }}
+
+        inverse_left_foot = [(value['LEFT_FOOT'], key) for key, value in dict_mt.items()]
+        inverse_right_foot = [(value['RIGHT_FOOT'], key) for key, value in dict_mt.items()]
+
+        max_result_left_foot = max(inverse_left_foot)
+        max_result_right_foot = max(inverse_right_foot)
+        return {
+            'best_size': {
+                'score': round(max_result[1], 2),
+                'output_model': '',
+                'size': max_result[0],
+                'size_type': 'FOOT'
+            },
+            'LEFT_FOOT': {
+                'score': round(max_result_left_foot[0], 2),
+                'output_model': '',
+                'size': max_result_left_foot[1],
+                'size_type': 'FOOT'
+            },
+            'RIGHT_FOOT': {
+                'score': round(max_result_right_foot[0], 2),
+                'output_model': '',
+                'size': max_result_right_foot[1],
+                'size_type': 'FOOT'
+            }
+        }
 
 
 @ns.route('/<string:user_uuid>/products/<string:product_uuid>/best_style')
@@ -358,19 +384,29 @@ class BestStyle(Resource):
             size_obj = _Size.query_set.filter_by(string_value=args.get('size')).first()
         
         results = _comparisonResRep.get_by_tree({'scan': dict(user=user_obj, is_default=True),
-                                                            'model': dict(size=size_obj, product=product_obj)})
+                                                 'model': dict(size=size_obj, product=product_obj)})
         avg_res = 0
+        dict_mt = dict()
         if not results:
             results = get_foot_best_size(product_obj, scans)
         for x in results:
             model = Model.query_set.filter_by(**{'@rid': x.model}).first()
             size = _Size.query_set.filter_by(**{'@rid': model.size}).first()
             if size.string_value == size_obj.string_value:
+                model_type = ModelType.query_set.filter_by(**{'@rid': model.model_type}).first()
+                dict_mt[model_type.name] = {
+                    'score': round(x.value, 2),
+                    'output_model': '',
+                    'size': size.string_value,
+                    'size_type': 'FOOT'
+                }
                 avg_res += x.value / len(size.model_types)
-
-        return {'best_style': {
-            'score': round(avg_res, 2),
-            'output_model': '',
-            'size': size_obj.string_value,
-            'size_type': 'FOOT'
-        }}
+        return {
+            'best_style': {
+                'score': round(avg_res, 2),
+                'output_model': '',
+                'size': size_obj.string_value,
+                'size_type': 'FOOT'
+            },
+            **dict_mt
+        }
