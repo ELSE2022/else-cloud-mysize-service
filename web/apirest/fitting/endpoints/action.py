@@ -340,20 +340,20 @@ class BestSize(Resource):
                 'score': round(max_result[1], 2),
                 'output_model': '',
                 'size': max_result[0],
-                'size_type': 'FOOT'
+                'size_type': 'FOOT',
+                'LEFT_FOOT': {
+                    'score': round(max_result_left_foot[0], 2),
+                    'output_model': '',
+                    'size': max_result_left_foot[1],
+                    'size_type': 'FOOT'
+                },
+                'RIGHT_FOOT': {
+                    'score': round(max_result_right_foot[0], 2),
+                    'output_model': '',
+                    'size': max_result_right_foot[1],
+                    'size_type': 'FOOT'
+                }
             },
-            'LEFT_FOOT': {
-                'score': round(max_result_left_foot[0], 2),
-                'output_model': '',
-                'size': max_result_left_foot[1],
-                'size_type': 'FOOT'
-            },
-            'RIGHT_FOOT': {
-                'score': round(max_result_right_foot[0], 2),
-                'output_model': '',
-                'size': max_result_right_foot[1],
-                'size_type': 'FOOT'
-            }
         }
 
 
@@ -406,7 +406,7 @@ class BestStyle(Resource):
                 'score': round(avg_res, 2),
                 'output_model': '',
                 'size': size_obj.string_value,
-                'size_type': 'FOOT'
+                'size_type': 'FOOT',
+                **dict_mt
             },
-            **dict_mt
         }
