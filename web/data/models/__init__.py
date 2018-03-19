@@ -19,6 +19,7 @@ from .ComparisonRule import ComparisonRule
 from .ComparisonRuleMetric import ComparisonRuleMetric
 from .UserSize import UserSize
 from .CompareVisualization import CompareVisualization
+from .Benchmark import Benchmark
 
 # Edges
 from .ModelToScanComparison import ModelToScanComparison

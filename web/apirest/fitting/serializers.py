@@ -101,6 +101,14 @@ model = api.model('Model', {
     'stl_path': fields.String(required=False, description='Model stl path', default=''),
 })
 
+benchmark = api.model('Model', {
+    'id': fields.String(description='Id', attribute='_id'),
+    'product': fields.String(required=True, description='Product'),
+    'size': fields.String(required=True, description='Size'),
+    'scan': fields.String(required=True, description='Scan'),
+    'user': fields.String(required=True, description='User'),
+})
+
 model_type_metric = api.model('Model type metric', {
     'id': fields.String(required=False, readOnly=True, description='Id', attribute='_id'),
     'model_type': fields.String(required=True, description='Model type'),

@@ -42,6 +42,7 @@ from apirest.fitting.endpoints.scan_metric_action import ns as scan_metric_names
 from apirest.fitting.endpoints.comparison_rule_metric_action import ns as comparison_rule_metric_namespace
 from apirest.fitting.endpoints.model_metric_value_action import ns as model_metric_value_namespace
 from apirest.fitting.endpoints.visual_action import ns as visual_namespace
+from apirest.fitting.endpoints.benchmark_action import ns as benchmark_namespace
 from apirest.restplus import api as api_rest
 
 
@@ -76,15 +77,6 @@ if settings.IMPORT_DATA_FROM_POSTGRES:
 # Register API controllers (/api/)
 api.register_controllers(app)
 
-
-# @app.after_request
-# def after_request(response):
-#     # response.headers.add('Access-Control-Allow-Origin', '*')
-#     # response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-#     # response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE')
-#     # response.headers.add('Access-Control-Expose-Headers', 'X-Total-Count')
-#
-#     return response
 
 @app.route('/fitting/authenticate', methods=('POST',))
 def index():
@@ -138,6 +130,7 @@ def initialize_app(flask_app):
     api_rest.add_namespace(comparison_rule_metric_namespace)
     api_rest.add_namespace(model_metric_value_namespace)
     api_rest.add_namespace(visual_namespace)
+    api_rest.add_namespace(benchmark_namespace)
     flask_app.register_blueprint(blueprint)
 
 

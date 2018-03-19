@@ -9,6 +9,7 @@ import { UserList, UserCreate, UserEdit } from './users';
 import { ModelTypeList, ModelTypeCreate, ModelTypeEdit } from './model_types';
 import { SizeList, SizeCreate, SizeEdit } from './sizes';
 import { ModelList, ModelCreate, ModelEdit } from './models';
+import { BenchmarkList, BenchmarkCreate, BenchmarkEdit } from './benchmarks';
 import { ScannerModelList, ScannerModelCreate, ScannerModelEdit } from './scanner_models';
 import { ScannerList, ScannerCreate, ScannerEdit } from './scanners';
 import { ScanList, ScanCreate, ScanEdit } from './scans';
@@ -41,6 +42,7 @@ const App = () => (
         <Resource name="scanmetrics" options={{ label: 'Scan metrics' }} list={ScanMetricList} edit={ScanMetricEdit} create={ScanMetricCreate} remove={Delete}/>
         <Resource name="comparisonresults" options={{ label: 'Comparison results' }} list={ComparisonResultsList} remove={Delete}/>
         <Resource name="comparisonrulemetric" options={{ label: 'Comparison rule metric' }} list={ComparisonRuleMetricList} remove={Delete}/>
+        <Resource name="benchmarks" options={{ label: 'Benchmarks' }} list={BenchmarkList} edit={BenchmarkEdit} create={BenchmarkCreate} remove={Delete}/>
     </Admin>
 );
 
