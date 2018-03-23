@@ -23,7 +23,7 @@ from data.repositories import ScanMetricRepository
 from data.repositories import ScanMetricValueRepository
 from data.repositories import ProductRepository
 from data.repositories import ComparisonResultRepository
-from data.models import User, Model, Size as _Size, ComparisonResult, Scan, Product, UserSize
+from data.models import User, Model, Size as _Size, ComparisonResult, Scan, Product, UserSize, Benchmark
 from data.models import ModelType
 from datetime import datetime
 from flask import request
@@ -62,6 +62,12 @@ best_size_arguments.add_argument('scan_id', type=str, required=False)
 
 default_scan_arguments = reqparse.RequestParser()
 default_scan_arguments.add_argument('scan', type=str, required=True)
+
+benchmark_argument = reqparse.RequestParser()
+benchmark_argument.add_argument('scan', type=str, required=True)
+benchmark_argument.add_argument('size', type=str, required=True)
+benchmark_argument.add_argument('product', type=str, required=True)
+benchmark_argument.add_argument('model_type', type=str, required=True)
 
 
 def get_user(user_uuid):
@@ -410,3 +416,57 @@ class BestStyle(Resource):
                 **dict_mt
             },
         }
+
+
+@ns.route('/<string:user_uuid>/benchmarks')
+class Benchmarks(Resource):
+    @api.expect(benchmark_argument, validate=True)
+    def post(self, user_uuid):
+        """
+        Api method to add user benchmark.
+        """
+        args = benchmark_argument.parse_args()
+
+        user_obj = User.query_set.filter_by(uuid=user_uuid)
+        product_obj = Product.query_set.filter_by(uuid=args.get('product'))
+        mt_obj = ModelType.query_set.filter_by(name=args.get('model_type'))
+        scan_obj = Scan.query_set.filter_by(scan_id=args.get('scan'), model_type=mt_obj._id)
+        size_obj = _Size.query_set.filter_by(string_value=args.get('size'), model_types=mt_obj._id)
+        model_obj = Model.query_set.filter_by(product=product_obj, size=size_obj)
+
+        benchmark_obj = Benchmark.add({'user': user_obj._id,
+                                       'scan': scan_obj._id,
+                                       'product': product_obj._id,
+                                       'size': size_obj._id, })
+
+        all_comparison_results = ComparisonResult.query_set.filter_by(scan=scan_obj, model=model_obj)
+        for x in all_comparison_results:
+            ComparisonResult.delete(x._id)
+
+        return benchmark_obj
+
+
+@ns.route('/<string:user_uuid>/fitting_recalculate')
+class Recalculate(Resource):
+    @api.expect(benchmark_argument, validate=True)
+    def post(self, user_uuid):
+        """
+        Api method to recalculate fitting factor.
+        """
+        args = benchmark_argument.parse_args()
+
+        user_obj = User.query_set.filter_by(uuid=user_uuid)
+        product_obj = Product.query_set.filter_by(uuid=args.get('product'))
+        mt_obj = ModelType.query_set.filter_by(name=args.get('model_type'))
+        scan_obj = Scan.query_set.filter_by(scan_id=args.get('scan'), model_type=mt_obj._id)
+        size_obj = _Size.query_set.filter_by(string_value=args.get('size'), model_types=mt_obj._id)
+        model_obj = Model.query_set.filter_by(product=product_obj, size=size_obj)
+
+        # all_comparison_results = ComparisonResult.query_set.filter_by(scan=scan_obj, model=model_obj)
+        # for x in all_comparison_results:
+        #     ComparisonResult.delete(x._id)
+        #
+        # if not results:
+        #     results = get_foot_best_size(product_obj, scans)
+
+        return {}

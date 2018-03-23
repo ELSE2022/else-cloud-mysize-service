@@ -31,7 +31,7 @@ export const ModelEdit = (props) => (
     <Edit title={<ModelTitle />} {...props}>
         <SimpleForm>
             <DisabledInput source="id" />
-            <TextInput source="name" />
+            <TextInput source="name" allowEmpty validation={{ required: true }}/>
             <ReferenceInput label="Model type" source="model_type" reference="modeltypes" allowEmpty validation={{ required: true }}>
                 <SelectInput optionText="name" />
             </ReferenceInput>
