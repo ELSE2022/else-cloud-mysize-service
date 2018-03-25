@@ -2,7 +2,7 @@ import operator
 from collections import defaultdict
 
 from api.web_actions.best_size import get_foot_best_size
-from api.web_actions.best_size import generate_result
+from api.web_actions.best_size import get_compare_result
 from apirest.fitting.serializers import fitting_user
 from apirest.fitting.serializers import profile_user
 from apirest.fitting.serializers import scan_metric
@@ -458,15 +458,20 @@ class Recalculate(Resource):
         user_obj = User.query_set.filter_by(uuid=user_uuid)
         product_obj = Product.query_set.filter_by(uuid=args.get('product'))
         mt_obj = ModelType.query_set.filter_by(name=args.get('model_type'))
-        scan_obj = Scan.query_set.filter_by(scan_id=args.get('scan'), model_type=mt_obj._id)
+        scan_obj = Scan.query_set.filter_by(scan_id=args.get('scan'), model_type=mt_obj._id, user=user_obj._id)
         size_obj = _Size.query_set.filter_by(string_value=args.get('size'), model_types=mt_obj._id)
         model_obj = Model.query_set.filter_by(product=product_obj, size=size_obj)
 
-        # all_comparison_results = ComparisonResult.query_set.filter_by(scan=scan_obj, model=model_obj)
-        # for x in all_comparison_results:
-        #     ComparisonResult.delete(x._id)
-        #
-        # if not results:
-        #     results = get_foot_best_size(product_obj, scans)
+        all_comparison_results = ComparisonResult.query_set.filter_by(scan=scan_obj, model=model_obj)
+        for x in all_comparison_results:
+            ComparisonResult.delete(x._id)
+
+        comparison_results = []
+        results = get_compare_result(scan_obj, model_obj, None)
+        for res in results:
+            created = ComparisonResult.objects.create(**{'scan': scan_obj,
+                                                         'model': res[0],
+                                                         'value': res[1]})
+            comparison_results.append(created)
 
         return {}
