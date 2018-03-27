@@ -4,7 +4,7 @@ from collections import defaultdict
 from api.web_actions.best_size import get_foot_best_size
 from api.web_actions.best_size import get_compare_result
 from apirest.fitting.serializers import fitting_user
-from apirest.fitting.serializers import profile_user
+from apirest.fitting.serializers import comparison_result
 from apirest.fitting.serializers import scan_metric
 from apirest.fitting.serializers import size
 from apirest.fitting.serializers import user_scans
@@ -68,6 +68,9 @@ benchmark_argument.add_argument('scan', type=str, required=True)
 benchmark_argument.add_argument('size', type=str, required=True)
 benchmark_argument.add_argument('product', type=str, required=True)
 benchmark_argument.add_argument('model_type', type=str, required=True)
+
+recalculate_argument = benchmark_argument.copy()
+recalculate_argument.remove_argument('size')
 
 
 def get_user(user_uuid):
@@ -448,23 +451,27 @@ class Benchmarks(Resource):
 
 @ns.route('/<string:user_uuid>/fitting_recalculate')
 class Recalculate(Resource):
-    @api.expect(benchmark_argument, validate=True)
-    def post(self, user_uuid):
+
+    @api.expect(recalculate_argument, validate=True)
+    @api.marshal_with(comparison_result)
+    def get(self, user_uuid):
         """
         Api method to recalculate fitting factor.
         """
-        args = benchmark_argument.parse_args()
+        args = recalculate_argument.parse_args()
+        user_obj = User.query_set.filter_by(uuid=user_uuid).first()
+        product_obj = Product.query_set.filter_by(uuid=args.get('product')).first()
+        mt_obj = ModelType.query_set.filter_by(name=args.get('model_type')).first()
 
-        user_obj = User.query_set.filter_by(uuid=user_uuid)
-        product_obj = Product.query_set.filter_by(uuid=args.get('product'))
-        mt_obj = ModelType.query_set.filter_by(name=args.get('model_type'))
-        scan_obj = Scan.query_set.filter_by(scan_id=args.get('scan'), model_type=mt_obj._id, user=user_obj._id)
-        size_obj = _Size.query_set.filter_by(string_value=args.get('size'), model_types=mt_obj._id)
-        model_obj = Model.query_set.filter_by(product=product_obj, size=size_obj)
+        scan_obj = Scan.query_set.filter_by(scan_id=args.get('scan'), model_type=mt_obj._id, user=user_obj._id).first()
+        # size_obj = _Size.query_set.filter_by(string_value=args.get('size'), model_types=mt_obj)
+        # size_obj = _Size.query_set.filter_by(string_value=args.get('size')).filter(_Size.model_types.contains(mt_obj)).first()
+        model_obj = Model.query_set.filter_by(product=product_obj._id, model_type=mt_obj._id).all()
 
-        all_comparison_results = ComparisonResult.query_set.filter_by(scan=scan_obj, model=model_obj)
-        for x in all_comparison_results:
-            ComparisonResult.delete(x._id)
+        for m in model_obj:
+            all_comparison_results = ComparisonResult.query_set.filter_by(scan=scan_obj, model=m)
+            for x in all_comparison_results:
+                ComparisonResult.delete(x._id)
 
         comparison_results = []
         results = get_compare_result(scan_obj, model_obj, None)
@@ -474,4 +481,4 @@ class Recalculate(Resource):
                                                          'value': res[1]})
             comparison_results.append(created)
 
-        return {}
+        return comparison_results
