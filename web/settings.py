@@ -14,7 +14,7 @@ RESTPLUS_ERROR_404_HELP = False
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MEDIA_ROOT = os.path.join(BASE_DIR, "attachments")
 SCANNER_STORAGE_BASE_URL = 'https://else:7kjfWVWcRN@avatar3d.ibv.org:8443/webdav/ELSE/'
-ELSE_3D_SERVICE_URL = u"http://else-3d-service.cloudapp.net/"
+ELSE_3D_SERVICE_URL = os.getenv('ELSE_3D_SERVICE', 'https://3d.else.shoes')
 
 IMPORT_DATA_FROM_POSTGRES = False
 

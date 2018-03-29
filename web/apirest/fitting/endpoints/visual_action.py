@@ -94,7 +94,7 @@ class VisualizationItem(Resource):
                     if os.path.isfile(last.stl_path) and os.path.isfile('attachments/' + scan.stl_path):
                         files = {'last': open(last.stl_path, 'rb'), 'scan': open('attachments/' + scan.stl_path, 'rb')}
                         values = {'user_uuid': _graph.element_from_link(scan.user).uuid}
-                        url = f'{ELSE_3D_SERVICE_URL}visualization/compare_visualization/'
+                        url = f'{ELSE_3D_SERVICE_URL}/visualization/compare_visualization/'
                         if request_data.get('environment_uuid'):
                             values['environment_uuid'] = request_data.get('environment_uuid')[0]
                         req = requests.post(url, files=files, data=values)
@@ -135,7 +135,7 @@ class VisualizationItem(Resource):
                 if scan.stl_path and os.path.isfile('attachments/' + scan.stl_path):
                     files = {'scan': open('attachments/' + scan.stl_path, 'rb')}
                     values = {'user_uuid': _graph.element_from_link(scan.user).uuid}
-                    url = f'{ELSE_3D_SERVICE_URL}visualization/scan/'
+                    url = f'{ELSE_3D_SERVICE_URL}/visualization/scan/'
                     req = requests.post(url, files=files, data=values)
                     all_requests[_graph.element_from_link(scan.model_type).name] = req.json()
                     _scanVisualRep.add(dict(scan=scan,
