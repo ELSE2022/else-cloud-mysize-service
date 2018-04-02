@@ -287,21 +287,24 @@ class Size(Resource):
             model_type_objects.append(model_type_obj._id)
 
             size_object = _sizeRep.sql_command("select @rid as _id, string_value, model_types from size where {0} IN model_types AND string_value={1}".format(model_type_obj._id, request.json['string_value']), result_as_dict=True)
-            user_size_rep = _userSizeRep.get({
-                'user': user,
-                'size': size_object[0].get('_id'),
-                'model_type': model_type_obj._id,
-            })
-            if not user_size_rep:
-                count_del = _userSizeRep.delete(dict(user=user, model_type=model_type_obj._id))
-                user_size_rep = _userSizeRep.add({
+            if size_object:
+                user_size_rep = _userSizeRep.get({
                     'user': user,
                     'size': size_object[0].get('_id'),
                     'model_type': model_type_obj._id,
-                    'creation_time': str(datetime.now()),
                 })
+                if not user_size_rep:
+                    count_del = _userSizeRep.delete(dict(user=user, model_type=model_type_obj._id))
+                    user_size_rep = _userSizeRep.add({
+                        'user': user,
+                        'size': size_object[0].get('_id'),
+                        'model_type': model_type_obj._id,
+                        'creation_time': str(datetime.now()),
+                    })
+                else:
+                    user_size_rep = user_size_rep[0]
             else:
-                user_size_rep = user_size_rep[0]
+                abort(400)
         return {'user': user, 'size': size_object[0]}
 
 
