@@ -276,6 +276,7 @@ class Size(Resource):
         """
         Api method to set default user size.
         """
+        _graph = data_connection.get_graph()
         model_type_objects = []
         user = get_user(uuid)
         print(request.json)
@@ -304,7 +305,8 @@ class Size(Resource):
                 else:
                     user_size_rep = user_size_rep[0]
             else:
-                abort(400)
+                user_size_obj = _userSizeRep.get_by_tree(dict(user=user, model_type=model_type_obj))
+                return {'user': user, 'size': _graph.element_from_link(user_size_obj[0].size)}
         return {'user': user, 'size': size_object[0]}
 
 
