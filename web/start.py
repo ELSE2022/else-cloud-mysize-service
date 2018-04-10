@@ -135,8 +135,9 @@ def initialize_app(flask_app):
 
 
 # local debug config
+initialize_app(app)
+
 port = os.getenv('PORT', '5000')
 if __name__ == "__main__":
     log.debug('START APP 111')
-    initialize_app(app)
     app.run(host='0.0.0.0', port=int(port), debug=settings.FLASK_DEBUG)
