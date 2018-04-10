@@ -46,7 +46,7 @@ from apirest.fitting.endpoints.benchmark_action import ns as benchmark_namespace
 from apirest.restplus import api as api_rest
 
 
-app = Flask(__name__)
+application = Flask(__name__)
 logging.config.fileConfig('logging.conf')
 log = logging.getLogger(__name__)
 
@@ -75,10 +75,10 @@ if settings.IMPORT_DATA_FROM_POSTGRES:
     posgresql_import.import_sql('postgresql://postgres:postgres@else-fitting-service.cloudapp.net:54321/else')
 
 # Register API controllers (/api/)
-api.register_controllers(app)
+api.register_controllers(application)
 
 
-@app.route('/fitting/authenticate', methods=('POST',))
+@application.route('/fitting/authenticate', methods=('POST',))
 def index():
     username = request.json.get('username')
     password = request.json.get('password')
@@ -135,9 +135,9 @@ def initialize_app(flask_app):
 
 
 # local debug config
-initialize_app(app)
+initialize_app(application)
 
 port = os.getenv('PORT', '5000')
 if __name__ == "__main__":
     log.debug('START APP 111')
-    app.run(host='0.0.0.0', port=int(port), debug=settings.FLASK_DEBUG)
+    application.run(host='0.0.0.0', port=int(port), debug=settings.FLASK_DEBUG)
