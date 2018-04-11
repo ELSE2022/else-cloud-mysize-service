@@ -127,6 +127,7 @@ class VisualizationItem(Resource):
         """
         _graph = data_connection.get_graph()
         request_data = dict(request.args)
+        args = update_scan_arguments.parse_args()
         if request_data.get('env') == 'stage':
             service_url = ELSE_STAGE_3D_SERVICE_URL
         else:
@@ -134,6 +135,7 @@ class VisualizationItem(Resource):
         logger.debug('VISUAL SCAN')
         logger.debug(service_url)
         logger.debug(request_data.get('env'))
+        logger.debug(args)
         user = get_user(request_data.get('user')[0])
         scan_id = request_data.get('scan_id', None)
 
