@@ -25,6 +25,9 @@ from orientdb_data_layer import data_connection
 from data.models import User
 from data.models import CompareVisualization
 from data.models import Scan
+import logging
+
+logger = logging.getLogger('rest_api_demo')
 
 ns = api.namespace('fitting_visualization', path='/fitting/visualization', description='Operations related to Visualization')
 
@@ -128,7 +131,9 @@ class VisualizationItem(Resource):
             service_url = ELSE_STAGE_3D_SERVICE_URL
         else:
             service_url = ELSE_3D_SERVICE_URL
-
+        logger.debug('VISUAL SCAN')
+        logger.debug(service_url)
+        logger.debug(request_data.get('env'))
         user = get_user(request_data.get('user')[0])
         scan_id = request_data.get('scan_id', None)
 
