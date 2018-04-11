@@ -20,6 +20,7 @@ from flask import abort
 from flask_restplus import Resource
 from flask_restplus import reqparse
 from settings import ELSE_3D_SERVICE_URL
+from settings import ELSE_STAGE_3D_SERVICE_URL
 from orientdb_data_layer import data_connection
 from data.models import User
 from data.models import CompareVisualization
@@ -70,6 +71,11 @@ class VisualizationItem(Resource):
 
         user = User.query_set.filter_by(uuid=user_uuid).first()
 
+        if request_data.get('env') == 'stage':
+            service_url = ELSE_STAGE_3D_SERVICE_URL
+        else:
+            service_url = ELSE_3D_SERVICE_URL
+
         if user is None:
             abort(404, 'User not found')
 
@@ -94,7 +100,7 @@ class VisualizationItem(Resource):
                     if os.path.isfile(last.stl_path) and os.path.isfile('attachments/' + scan.stl_path):
                         files = {'last': open(last.stl_path, 'rb'), 'scan': open('attachments/' + scan.stl_path, 'rb')}
                         values = {'user_uuid': _graph.element_from_link(scan.user).uuid}
-                        url = f'{ELSE_3D_SERVICE_URL}/visualization/compare_visualization/'
+                        url = f'{service_url}/visualization/compare_visualization/'
                         if request_data.get('environment_uuid'):
                             values['environment_uuid'] = request_data.get('environment_uuid')[0]
                         req = requests.post(url, files=files, data=values)
@@ -118,6 +124,10 @@ class VisualizationItem(Resource):
         """
         _graph = data_connection.get_graph()
         request_data = dict(request.args)
+        if request_data.get('env') == 'stage':
+            service_url = ELSE_STAGE_3D_SERVICE_URL
+        else:
+            service_url = ELSE_3D_SERVICE_URL
 
         user = get_user(request_data.get('user')[0])
         scan_id = request_data.get('scan_id', None)
@@ -135,7 +145,7 @@ class VisualizationItem(Resource):
                 if scan.stl_path and os.path.isfile('attachments/' + scan.stl_path):
                     files = {'scan': open('attachments/' + scan.stl_path, 'rb')}
                     values = {'user_uuid': _graph.element_from_link(scan.user).uuid}
-                    url = f'{ELSE_3D_SERVICE_URL}/visualization/scan/'
+                    url = f'{service_url}/visualization/scan/'
                     req = requests.post(url, files=files, data=values)
                     all_requests[_graph.element_from_link(scan.model_type).name] = req.json()
                     _scanVisualRep.add(dict(scan=scan,
