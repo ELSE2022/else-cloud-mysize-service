@@ -51,10 +51,12 @@ update_compare_arguments.add_argument('size', type=str, required=True)
 update_compare_arguments.add_argument('user', type=str, required=True)
 update_compare_arguments.add_argument('scan_id', type=str, required=False)
 update_compare_arguments.add_argument('environment_uuid', type=str, required=False)
+update_compare_arguments.add_argument('env', type=str, required=False)
 
 update_scan_arguments = reqparse.RequestParser()
 update_scan_arguments.add_argument('user', type=str, required=True)
 update_scan_arguments.add_argument('scan_id', type=str, required=False)
+update_scan_arguments.add_argument('env', type=str, required=False)
 
 
 @ns.route('/compare')
@@ -67,6 +69,7 @@ class VisualizationItem(Resource):
         _graph = data_connection.get_graph()
 
         request_data = dict(request.args)
+        args = update_compare_arguments.parse_args()
         product_uuid = request_data.get('product_uuid')[0]
         user_uuid = request_data.get('user')[0]
         size = request_data.get('size')[0]
@@ -74,7 +77,7 @@ class VisualizationItem(Resource):
 
         user = User.query_set.filter_by(uuid=user_uuid).first()
 
-        if request_data.get('env') == 'stage':
+        if args.get('env') == 'stage':
             service_url = ELSE_STAGE_3D_SERVICE_URL
         else:
             service_url = ELSE_3D_SERVICE_URL
@@ -128,14 +131,11 @@ class VisualizationItem(Resource):
         _graph = data_connection.get_graph()
         request_data = dict(request.args)
         args = update_scan_arguments.parse_args()
-        if request_data.get('env') == 'stage':
+        if args.get('env') == 'stage':
             service_url = ELSE_STAGE_3D_SERVICE_URL
         else:
             service_url = ELSE_3D_SERVICE_URL
-        logger.debug('VISUAL SCAN')
-        logger.debug(service_url)
-        logger.debug(request_data.get('env'))
-        logger.debug(args)
+
         user = get_user(request_data.get('user')[0])
         scan_id = request_data.get('scan_id', None)
 
