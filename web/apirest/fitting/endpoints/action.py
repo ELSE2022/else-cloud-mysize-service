@@ -140,7 +140,12 @@ class Users(Resource, ListModelMixin):
                 size_obj = _sizeRep.add(dict(string_value=size_value, model_types=foot_types))
             else: size_obj = size_obj[0]
             for mt in foot_types:
-                _userSizeRep.add({'user': user_obj, 'model_type': mt, 'size': size_obj, 'creation_time': str(datetime.now())})
+                user_size_obj = UserSize.query_set.filter_by(user=user_obj._id, model_type=mt._id).first()
+                if not user_size_obj:
+                    _userSizeRep.add({'user': user_obj,
+                                      'model_type': mt,
+                                      'size': size_obj,
+                                      'creation_time': str(datetime.now())})
 
         return user_obj
 
