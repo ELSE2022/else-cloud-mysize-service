@@ -388,17 +388,13 @@ class BestStyle(Resource):
 
         user_obj, product_obj, scans = get_objects(_graph, user_uuid, product_uuid)
         model_types = product_obj.get_model_types()
-        # _comparisonResRep.delete({})
+
         args = best_style_arguments.parse_args()
         if not args.get('size'):
-            user_size_obj = UserSize.query_set.filter_by(user=user_obj)
-            size_obj = None
-            for s in user_size_obj:
-                _size = _Size.query_set.filter_by(**{'@rid': s.size}).first()
-                if _graph.elements_from_links(_size.model_types) == _graph.elements_from_links(model_types):
-                    size_obj = _size
-            if size_obj is None:
+            user_size_obj = UserSize.query_set.filter_by(user=user_obj, model_type=model_types[0]).first()
+            if not user_size_obj:
                 abort(404, 'user\'s size not found')
+            size_obj = _Size.query_set.filter_by(**{'@rid': user_size_obj.size}).first()
         else:
             size_obj = _Size.query_set.filter_by(string_value=args.get('size')).first()
         
