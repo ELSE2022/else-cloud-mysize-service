@@ -27,7 +27,7 @@ const uploadCapableClient = addUploadFeature(restClient);
 
 const App = () => (
     <Admin authClient={authClient} dashboard={Dashboard} restClient={uploadCapableClient}>
-        <Resource name="products" list={ProductList} edit={ProductEdit} create={ProductCreate} />
+        <Resource name="products" list={ProductList} edit={ProductEdit} create={ProductCreate} remove={Delete}/>
         <Resource name="brands" options={{ label: 'Brands' }} list={BrandList} edit={BrandEdit} create={BrandCreate} />
         <Resource name="comparisonrules" options={{ label: 'Comparison rule' }} list={ComparisonRulesList} edit={ComparisonRulesEdit} create={ComparisonRulesCreate} />
         <Resource name="users" options={{ label: 'Users' }} list={UserList} edit={UserEdit} create={UserCreate} />

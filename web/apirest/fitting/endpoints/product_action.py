@@ -122,7 +122,7 @@ class ProductGetMetricsItem(Resource):
         Api method to delete product.
         """
         _productRep.delete({'uuid': uuid})
-        return None, 204
+        return None, 200
 
     @api.expect(product)
     def put(self, uuid):
@@ -185,22 +185,24 @@ class ProductGetMetricsItem(Resource):
         model_objects = _modelRep.get({'product': product_obj, 'model_type': model_type_obj})
         for m in model_objects:
             comp_rule_metric = _compRuleMetricRep.get({'rule': product_obj.default_comparison_rule, 'model': m})
-            size_obj = _sizeRep.get({'@rid': m.size})[0]
-            right_model_obj = _modelRep.get({'product': product_obj, 'model_type': model_type_r_obj, 'size': size_obj})
-            for rule_metric in comp_rule_metric:
-                model_metric_value_obj = _modelMetricValueRep.get({'model': m, 'metric': rule_metric.model_metric})
-                rule_metric_r = _compRuleMetricRep.get_by_tree({'rule': product_obj.default_comparison_rule,
-                                                                'model': right_model_obj[0],
-                                                                'model_metric': {'name': _graph.element_from_link(rule_metric.model_metric).name, 'model_type': model_type_r_obj},
-                                                                'scan_metric': rule_metric.scan_metric})
-                rule_metric_r = rule_metric_r[0]
+            size_obj = _sizeRep.get({'@rid': m.size})
+            if size_obj:
+                size_obj = size_obj[0]
+                right_model_obj = _modelRep.get({'product': product_obj, 'model_type': model_type_r_obj, 'size': size_obj})
+                for rule_metric in comp_rule_metric:
+                    model_metric_value_obj = _modelMetricValueRep.get({'model': m, 'metric': rule_metric.model_metric})
+                    rule_metric_r = _compRuleMetricRep.get_by_tree({'rule': product_obj.default_comparison_rule,
+                                                                    'model': right_model_obj[0],
+                                                                    'model_metric': {'name': _graph.element_from_link(rule_metric.model_metric).name, 'model_type': model_type_r_obj},
+                                                                    'scan_metric': rule_metric.scan_metric})
+                    rule_metric_r = rule_metric_r[0]
 
-                data.append("{}, {}, {}, {}, {}, {}, {}, {}, {}, {}\n".format(_graph.element_from_link(m.size).string_value,
-                                                                              _graph.element_from_link(rule_metric.model_metric).name,
-                                                                              _graph.element_from_link(rule_metric.scan_metric).name,
-                                                                              model_metric_value_obj[0].value,
-                                                                              rule_metric.f1, rule_metric.shift, rule_metric.f2,
-                                                                              rule_metric_r.f1, rule_metric_r.shift, rule_metric_r.f2))
+                    data.append("{}, {}, {}, {}, {}, {}, {}, {}, {}, {}\n".format(_graph.element_from_link(m.size).string_value,
+                                                                                  _graph.element_from_link(rule_metric.model_metric).name,
+                                                                                  _graph.element_from_link(rule_metric.scan_metric).name,
+                                                                                  model_metric_value_obj[0].value,
+                                                                                  rule_metric.f1, rule_metric.shift, rule_metric.f2,
+                                                                                  rule_metric_r.f1, rule_metric_r.shift, rule_metric_r.f2))
 
         return Response(data,
                         mimetype='text/csv',

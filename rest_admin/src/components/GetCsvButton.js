@@ -9,16 +9,16 @@ class GetCsvButton extends Component {
     handleClick = () => {
         console.log(this.props);
         const { record, showNotification } = this.props;
-        window.open(`http://127.0.0.1:5000/fitting/products/${record.uuid}/get_metrics`);
-        fetch(`http://127.0.0.1:5000/fitting/products/${record.uuid}/get_metrics`, { method: 'GET' })
-            .then((response) => {
-                showNotification('Download...');
-                return response.blob();
-            })
-            .catch((e) => {
-                console.error(e);
-                showNotification('Error: download not finished', 'warning')
-            });
+        window.open(`/fitting/products/${record.uuid}/get_metrics`);
+        // fetch(`/fitting/products/${record.uuid}/get_metrics`, { method: 'GET' })
+        //     .then((response) => {
+        //         showNotification('Download...');
+        //         return response.blob();
+        //     })
+        //     .catch((e) => {
+        //         console.error(e);
+        //         showNotification('Error: download not finished', 'warning')
+        //     });
     };
 
     render() {
