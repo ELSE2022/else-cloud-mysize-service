@@ -1,9 +1,11 @@
 import logging
 import traceback
+import os
 
 from flask_restplus import Api
 from flask import request
 from flask import abort
+from flask import url_for
 import settings
 from sqlalchemy.orm.exc import NoResultFound
 
@@ -15,6 +17,14 @@ authorizations = {
         'name': 'X-API-KEY'
     }
 }
+
+if os.environ.get('HTTPS'):
+    @property
+    def specs_url(self):
+        """Monkey patch for HTTPS"""
+        return url_for(self.endpoint('specs'), _external=True, _scheme='https')
+
+    Api.specs_url = specs_url
 api = Api(version='1.0', title='Fitting Service', doc='/docs/')
 
 
