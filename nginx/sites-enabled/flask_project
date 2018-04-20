@@ -29,6 +29,10 @@ server {
         proxy_temp_file_write_size 64k;
     }
 
+    location ~ ^/docs/ {
+        rewrite ^/(.*)/$ /$1 permanent;
+    }
+
     location ~ ^/(docs|fitting|swaggerui|swagger.json) {
         if ($request_method = 'OPTIONS') {
             add_header 'Access-Control-Allow-Origin' '$http_origin';
