@@ -17,14 +17,13 @@ authorizations = {
         'name': 'X-API-KEY'
     }
 }
+print('HTTPS', os.environ.get('HTTPS'))
+@property
+def specs_url(self):
+    """Monkey patch for HTTPS"""
+    return url_for(self.endpoint('specs'), _external=True, _scheme='https')
 
-if os.environ.get('HTTPS'):
-    @property
-    def specs_url(self):
-        """Monkey patch for HTTPS"""
-        return url_for(self.endpoint('specs'), _external=True, _scheme='https')
-
-    Api.specs_url = specs_url
+Api.specs_url = specs_url
 api = Api(version='1.0', title='Fitting Service', doc='/docs/')
 
 
