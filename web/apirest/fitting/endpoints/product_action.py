@@ -16,6 +16,11 @@ from data.repositories import ScanMetricRepository
 from data.repositories import ScannerModelRepository
 from data.repositories import ModelMetricValueRepository
 from data.models import Product
+from data.models import Model
+from data.models import ModelMetricValue
+from data.models import ComparisonResult
+from data.models import CompareVisualization
+from data.models import ComparisonRuleMetric
 from flask import request
 from flask import Response
 from flask import abort
@@ -83,7 +88,7 @@ def add_comp_rule_metric(modeltype_metr, scan_metric, value, f1, shift, f2, prod
     return comp_rule_metr_obj
 
 
-@ns.route('',)
+@ns.route('', )
 class Products(Resource, ListModelMixin):
     model = Product
     serializer = product
@@ -112,20 +117,27 @@ class Products(Resource, ListModelMixin):
         return product_obj
 
 
-@ns.route('/<string:uuid>')
+@ns.route('/<string:id>')
 @api.response(404, 'Product not found.')
 class ProductGetMetricsItem(Resource):
     @api.response(204, 'Product successfully deleted.')
     @api.marshal_with(product)
-    def delete(self, uuid):
+    def delete(self, id):
         """
         Api method to delete product.
         """
-        _productRep.delete({'uuid': uuid})
+        product_obj = Product.get(id)
+        if product_obj:
+            for m in Model.query_set.filter_by(product=id):
+                for RelativeClass in [ModelMetricValue, CompareVisualization, ComparisonResult, ComparisonRuleMetric]:
+                    for x in RelativeClass.query_set.filter_by(model=m._id):
+                        RelativeClass.delete(x._id)
+                Model.delete(m._id)
+            Product.delete(product_obj._id)
         return None, 200
 
     @api.expect(product)
-    def put(self, uuid):
+    def put(self, id):
         """
         Api method to update product.
         """
@@ -138,7 +150,7 @@ class ProductGetMetricsItem(Resource):
 
             reader = csv.reader(iter_lines, delimiter=',')
 
-            product_obj = _productRep.get({'@rid': uuid})[0]
+            product_obj = _productRep.get({'@rid': id})[0]
             foot_types = _graph.element_from_link(product_obj.default_comparison_rule).model_types
             model_type_objects = []
             for t in foot_types:
@@ -152,7 +164,7 @@ class ProductGetMetricsItem(Resource):
                         size_obj = _sizeRep.add({'model_types': model_type_objects, 'string_value': i[0]})
                     else:
                         size_obj = size_obj[0]
-                    comp_rule_metric = add_comp_rule_metric(i[1], i[2], i[3], i[4+count], i[5+count], i[6+count],
+                    comp_rule_metric = add_comp_rule_metric(i[1], i[2], i[3], i[4 + count], i[5 + count], i[6 + count],
                                                             product_obj, foot_type, size_obj)
                     count += 3
 
@@ -160,11 +172,11 @@ class ProductGetMetricsItem(Resource):
         data_dict['brand'] = OrientRecordLink(request.json['brand'])
         data_dict['default_comparison_rule'] = OrientRecordLink(request.json['default_comparison_rule'])
 
-        product_obj = _productRep.get({'uuid': uuid})
+        product_obj = _productRep.get({'uuid': id})
         if not product_obj:
-            product_obj = _productRep.update({'@rid': uuid}, data_dict)
+            product_obj = _productRep.update({'@rid': id}, data_dict)
         else:
-            product_obj = _productRep.update({'uuid': uuid}, data_dict)
+            product_obj = _productRep.update({'uuid': id}, data_dict)
         if product_obj: product_obj = product_obj[0]
         return {'@rid': product_obj._id, 'name': product_obj.name}, 201
 
@@ -188,21 +200,29 @@ class ProductGetMetricsItem(Resource):
             size_obj = _sizeRep.get({'@rid': m.size})
             if size_obj:
                 size_obj = size_obj[0]
-                right_model_obj = _modelRep.get({'product': product_obj, 'model_type': model_type_r_obj, 'size': size_obj})
+                right_model_obj = _modelRep.get(
+                    {'product': product_obj, 'model_type': model_type_r_obj, 'size': size_obj})
                 for rule_metric in comp_rule_metric:
                     model_metric_value_obj = _modelMetricValueRep.get({'model': m, 'metric': rule_metric.model_metric})
                     rule_metric_r = _compRuleMetricRep.get_by_tree({'rule': product_obj.default_comparison_rule,
                                                                     'model': right_model_obj[0],
-                                                                    'model_metric': {'name': _graph.element_from_link(rule_metric.model_metric).name, 'model_type': model_type_r_obj},
+                                                                    'model_metric': {'name': _graph.element_from_link(
+                                                                        rule_metric.model_metric).name,
+                                                                                     'model_type': model_type_r_obj},
                                                                     'scan_metric': rule_metric.scan_metric})
                     rule_metric_r = rule_metric_r[0]
 
-                    data.append("{}, {}, {}, {}, {}, {}, {}, {}, {}, {}\n".format(_graph.element_from_link(m.size).string_value,
-                                                                                  _graph.element_from_link(rule_metric.model_metric).name,
-                                                                                  _graph.element_from_link(rule_metric.scan_metric).name,
-                                                                                  model_metric_value_obj[0].value,
-                                                                                  rule_metric.f1, rule_metric.shift, rule_metric.f2,
-                                                                                  rule_metric_r.f1, rule_metric_r.shift, rule_metric_r.f2))
+                    data.append(
+                        "{}, {}, {}, {}, {}, {}, {}, {}, {}, {}\n".format(_graph.element_from_link(m.size).string_value,
+                                                                          _graph.element_from_link(
+                                                                              rule_metric.model_metric).name,
+                                                                          _graph.element_from_link(
+                                                                              rule_metric.scan_metric).name,
+                                                                          model_metric_value_obj[0].value,
+                                                                          rule_metric.f1, rule_metric.shift,
+                                                                          rule_metric.f2,
+                                                                          rule_metric_r.f1, rule_metric_r.shift,
+                                                                          rule_metric_r.f2))
 
         return Response(data,
                         mimetype='text/csv',
