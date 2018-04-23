@@ -1,6 +1,7 @@
 import logging
 import traceback
 
+from flask import url_for
 from flask_restplus import Api
 from flask import request
 from flask import abort
@@ -15,7 +16,14 @@ authorizations = {
         'name': 'X-API-KEY'
     }
 }
-api = Api(version='1.0', title='Fitting Service', doc='/docs/')
+
+
+class CustomAPI(Api):
+    @property
+    def specs_url(self):
+        return url_for(self.endpoint('specs'), _external=False)
+
+api = CustomAPI(version='1.0', title='Fitting Service', doc='/docs/')
 
 
 def auth_required(func):
