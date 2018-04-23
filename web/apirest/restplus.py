@@ -23,7 +23,14 @@ class CustomAPI(Api):
     def specs_url(self):
         return url_for(self.endpoint('specs'), _external=False)
 
-api = CustomAPI(version='1.0', title='Fitting Service', doc='/docs/')
+    def _register_doc(self, app_or_blueprint):
+        if self._add_specs and self._doc:
+            # Register documentation before root if enabled
+            app_or_blueprint.add_url_rule(self._doc, 'doc', self.render_doc)
+            app_or_blueprint.add_url_rule(self._doc + '/', 'doc', self.render_doc)
+        app_or_blueprint.add_url_rule(self.prefix or '/', 'root', self.render_root)
+
+api = CustomAPI(version='1.0', title='Fitting Service', doc='/docs')
 
 
 def auth_required(func):
