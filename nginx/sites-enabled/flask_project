@@ -30,7 +30,7 @@ server {
     }
 
     location /docs {
-        rewrite ^(.*[^/])$ $1/ permanent;
+        return 301 $scheme://$http_host$request_uri/;
     }
 
     location ~ ^/(fitting|swaggerui|swagger.json|docs/) {
