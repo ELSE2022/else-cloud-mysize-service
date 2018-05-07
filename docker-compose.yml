@@ -13,7 +13,7 @@ services:
     volumes:
       - ./dockerfiles/orientdbdata/databases:/orientdb/databases
       - ./dockerfiles/orientdbdata/backup:/orientdb/backup
-      - ./dockerfiles/orientdbdata/config:/orientdb/config
+#      - ./dockerfiles/orientdbdata/config:/orientdb/config
 
   web:
     build: ./web
