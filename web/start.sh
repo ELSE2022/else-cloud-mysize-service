@@ -7,7 +7,7 @@ if [ $DEBUG = "true" ]; then
     python start.py
 else
     echo "[START] collect static resources"
-    gunicorn -w 20 -b 0.0.0.0:5000 wsgi
+    gunicorn -w 20 -t 60 -b 0.0.0.0:5000 wsgi
 fi
 
 
