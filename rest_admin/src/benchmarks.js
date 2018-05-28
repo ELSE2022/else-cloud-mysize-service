@@ -1,7 +1,6 @@
 import React from 'react';
 import { List, Edit, Create, Datagrid, ReferenceInput, TextField, ReferenceField, EditButton, DisabledInput,
-    SimpleForm, SelectInput, TextInput, FileInput, FileField } from 'admin-on-rest';
-import UrlField from './components/UrlField'
+    SimpleForm, SelectInput } from 'admin-on-rest';
 
 export const BenchmarkList = (props) => (
     <List {...props} title="List of Benchmarks">

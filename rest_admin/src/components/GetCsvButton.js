@@ -8,7 +8,7 @@ import { push as pushAction } from 'react-router-redux';
 class GetCsvButton extends Component {
     handleClick = () => {
         console.log(this.props);
-        const { record, showNotification } = this.props;
+        const { record } = this.props;
         window.open(`/fitting/products/${record.uuid}/get_metrics`);
         // fetch(`/fitting/products/${record.uuid}/get_metrics`, { method: 'GET' })
         //     .then((response) => {
