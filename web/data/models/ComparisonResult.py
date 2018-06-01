@@ -9,7 +9,7 @@ from .Model import Model
 
 class ComparisonResult(BaseNode, BaseModel):
     element_plural = 'comparison_result'
-    model= Link(mandatory=True, nullable=False, linked_to=Model)
+    model = Link(mandatory=True, nullable=False, linked_to=Model)
     scan = Link(mandatory=True, nullable=False, linked_to=Scan)
     creation_time = DateTime(mandatory=True, nullable=False, default=datetime.datetime.utcnow())
     value = Float()

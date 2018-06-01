@@ -14,6 +14,7 @@ from apirest.fitting.mixins import ListModelMixin
 from apirest.restplus import api
 from apirest.restplus import auth_required
 # from api.web_actions.get_user_profile import get_user
+from data.models.FittingHistory import BEST_SIZE
 from data.repositories import UserRepository
 from data.repositories import ScanRepository
 from data.repositories import ModelTypeRepository
@@ -23,7 +24,7 @@ from data.repositories import ScanMetricRepository
 from data.repositories import ScanMetricValueRepository
 from data.repositories import ProductRepository
 from data.repositories import ComparisonResultRepository
-from data.models import User, Model, Size as _Size, ComparisonResult, Scan, Product, UserSize, Benchmark
+from data.models import User, Model, Size as _Size, ComparisonResult, Scan, Product, UserSize, Benchmark, FittingHistory
 from data.models import ModelType
 from datetime import datetime
 from flask import request
@@ -335,6 +336,7 @@ class BestSize(Resource):
         if not comparison_results:
             comparison_results = get_foot_best_size(product_obj, scans)
         dct = defaultdict(int)
+        model_dict = dict()
         dict_mt = dict()
         for x in comparison_results:
             model = Model.query_set.filter_by(**{'@rid': x.model}).first()
@@ -342,6 +344,10 @@ class BestSize(Resource):
             size = _Size.query_set.filter_by(**{'@rid': model.size}).first()
             if size:
                 dct[size.string_value] += x.value / len(size.model_types)
+                if not model_dict.get(size.string_value, None):
+                    model_dict[size.string_value] = dict()
+
+                model_dict[size.string_value][model_type.name] = model
                 if not dict_mt.get(size.string_value, None):
                     dict_mt[size.string_value] = dict()
                 dict_mt[size.string_value][model_type.name] = x.value
@@ -351,7 +357,43 @@ class BestSize(Resource):
         inverse_right_foot = [(value['RIGHT_FOOT'], key) for key, value in dict_mt.items()]
 
         max_result_left_foot = max(inverse_left_foot)
+        max_left_model = model_dict.get(max_result_left_foot[1])['LEFT_FOOT']
         max_result_right_foot = max(inverse_right_foot)
+        max_right_model = model_dict.get(max_result_right_foot[1])['RIGHT_FOOT']
+        if not scans:
+            scan_left = Scan.query_set.filter_by(user=user_obj, is_default=True, model_type=max_left_model.model_type)
+            scan_right = Scan.query_set.filter_by(user=user_obj, is_default=True, model_type=max_right_model.model_type)
+        else:
+            scan_left = scans.filter_by(user=user_obj, is_default=True, model_type=max_left_model.model_type)
+            scan_right = scans.filter_by(user=user_obj, is_default=True, model_type=max_right_model.model_type)
+        scan_left = scan_left.first()
+        scan_right = scan_right.first()
+
+        fitting_history_left = FittingHistory.add(
+            {
+                'creation_time': str(datetime.now()),
+                'operation_type': BEST_SIZE,
+                'brand': product_obj.brand,
+                'model': max_left_model,
+                'scan': scan_left,
+                'user': user_obj,
+                'recommended_size_value': max_left_model.size,
+                'fitting_factor_value': round(max_result_left_foot[0], 2),
+            }
+        )
+        fitting_history_right = FittingHistory.add(
+            {
+                'creation_time': str(datetime.now()),
+                'operation_type': BEST_SIZE,
+                'brand': product_obj.brand,
+                'model': max_right_model,
+                'scan': scan_right,
+                'user': user_obj,
+                'recommended_size_value': max_right_model.size,
+                'fitting_factor_value': round(max_result_right_foot[0], 2),
+            }
+        )
+
         return {
             'best_size': {
                 'score': round(max_result[1], 2),
