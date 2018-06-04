@@ -8,7 +8,8 @@ from data.repositories import ModelRepository
 from orientdb_data_layer import data_connection
 from calculations.fitting_algorithms.get_metrics_by_sizes import get_metrics_by_sizes
 
-from data.models import ComparisonRule, Size, Model, ComparisonResult, ComparisonRuleMetric, ScanMetricValue, ModelMetricValue, ScanMetric, ModelTypeMetric
+from data.models import ComparisonRule, Size, Model, ComparisonResult, ComparisonRuleMetric, ScanMetricValue, \
+    ModelMetricValue, ModelTypeMetric
 
 logger = logging.getLogger('rest_api_demo')
 _productRep = ProductRepository()
@@ -33,19 +34,18 @@ def get_compare_result(scan, lasts, comparision_rule):
     logger.debug('scan_metric_values')
     logger.debug(scan_metric_values)
     for scan_metric_value in scan_metric_values:
-        scan_metric_name = ScanMetric.query_set.filter_by(**{'@rid': scan_metric_value.metric}).first().name
         for last_data in lasts_data:
             comparision_rule_metric = ComparisonRuleMetric.query_set.filter_by(scan_metric=scan_metric_value.metric, model=last_data[0]).first()
             logger.debug('comparision_rule_metric')
             logger.debug(comparision_rule_metric)
             if comparision_rule_metric:
                 last_metric = ModelMetricValue.query_set.filter_by(metric=comparision_rule_metric.model_metric, model=last_data[0]).first()
-                last_metric_name = ModelTypeMetric.query_set.filter_by(**{'@rid': last_metric.metric}).first().name
+                ModelTypeMetric.query_set.filter_by(**{'@rid': last_metric.metric}).first().name
                 logger.debug(last_metric)
                 last_data[1].append(float(last_metric.value))
                 last_data[2].append((comparision_rule_metric.f1, comparision_rule_metric.shift, comparision_rule_metric.f2))
             else:
-                break;
+                break
         else:
             scan_data.append(float(scan_metric_value.value))
     logger.debug(scan._id)
@@ -56,20 +56,19 @@ def get_compare_result(scan, lasts, comparision_rule):
 
 def get_foot_best_size(product, scans):
     comparision_rule = ComparisonRule.query_set.filter_by(**{'@rid': product.default_comparison_rule}).first()
-    all_results = {}
     comparison_results = []
     for scan in scans:
         lasts = Model.query_set.filter_by(product=product, model_type=scan.model_type)
-        
+
         results = get_compare_result(scan, lasts, comparision_rule)
         for res in results:
             model = Model.query_set.filter_by(**{'@rid': res[0]}).first()
-            size = Size.query_set.filter_by(**{'@rid': model.size}).first()
+            Size.query_set.filter_by(**{'@rid': model.size}).first()
             created = ComparisonResult.objects.create(**{'scan': scan,
                                                          'model': res[0],
                                                          'value': res[1]})
             comparison_results.append(created)
-    
+
     return comparison_results
 
 
@@ -94,10 +93,10 @@ def generate_result(data, user_size=None):
     def result(i):
         if i < len(avg_result):
             return {
-            'score': round(avg_result[i], 2),
-            'output_model': '',
-            'size': sizes[i],
-            'size_type': 'FOOT'
+                'score': round(avg_result[i], 2),
+                'output_model': '',
+                'size': sizes[i],
+                'size_type': 'FOOT'
             }
 
     if user_size is None:
@@ -110,7 +109,6 @@ def generate_result(data, user_size=None):
         return {
             'best_style': result(sizes.index(user_size.string_value))
         }
-
 
 
 best_size_action = Blueprint('best_size_action', __name__)
@@ -145,6 +143,7 @@ def best_size():
     result = get_foot_best_size(product, model_types, scans)
 
     return jsonify(generate_result(result))
+
 
 best_style_action = Blueprint('best_style_action', __name__)
 

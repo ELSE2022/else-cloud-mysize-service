@@ -3,6 +3,7 @@ from .BaseModel import BaseNode, BaseModel
 from .Brand import Brand
 from .ComparisonRule import ComparisonRule
 
+
 class Product(BaseNode, BaseModel):
     element_plural = 'products'
     uuid = String(unique=True, mandatory=True, nullable=False)

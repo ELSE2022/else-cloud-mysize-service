@@ -91,7 +91,8 @@ class VisualizationItem(Resource):
                                               model_type=scan_model_type._id))
             if not last:
                 return abort(400)
-            else: last = last[0]
+            else:
+                last = last[0]
             compare_visual = CompareVisualization.query_set.filter_by(scan=scan, model=last).first()
             if compare_visual is None:
                 if last.stl_path and scan.stl_path:
@@ -109,8 +110,8 @@ class VisualizationItem(Resource):
                                                    output_model_3d=result_json.get('output_model_3d'),
                                                    creation_time=datetime.now()))
             else:
-                all_requests[_graph.element_from_link(scan.model_type).name] = {'output_model': compare_visual.output_model,
-                                     'output_model_3d': compare_visual.output_model_3d}
+                all_requests[_graph.element_from_link(scan.model_type).name] = {
+                    'output_model': compare_visual.output_model, 'output_model_3d': compare_visual.output_model_3d}
         return all_requests
 
 
@@ -151,6 +152,7 @@ class VisualizationItem(Resource):
                                             creation_time=datetime.now()))
             else:
                 scan_visual = scan_visual[0]
-                all_requests[_graph.element_from_link(scan.model_type).name] = {'output_model': scan_visual.output_model,
-                                                                                'output_model_3d': scan_visual.output_model_3d}
+                all_requests[_graph.element_from_link(scan.model_type).name] = {
+                    'output_model': scan_visual.output_model,
+                    'output_model_3d': scan_visual.output_model_3d}
         return all_requests

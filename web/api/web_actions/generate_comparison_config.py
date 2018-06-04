@@ -1,7 +1,8 @@
 import logging
 from flask import Blueprint, jsonify, request, abort
 from ..authentication import requires_auth
-from data.repositories import ProductRepository, ComparisonRuleRepository, ComparisonRuleMetricRepository, UserRepository, ScanRepository, ScanMetricRepository
+from data.repositories import ProductRepository, ComparisonRuleRepository, ComparisonRuleMetricRepository, \
+    UserRepository, ScanRepository, ScanMetricRepository
 from .best_scan import get_best_foot_scan, extract_calculation_attributes
 from orientdb_data_layer import data_connection
 from calculations.fitting_algorithms import metrics_comparison_config
@@ -36,7 +37,7 @@ def get_foot_metrics_config(product, comparison_rule):
 
         size = float(scan[0])
 
-        if not size in scans_by_size:
+        if size not in scans_by_size:
             scans_by_size[size] = {}
             scans_by_size[size][scan[1]] = {}
 
@@ -50,7 +51,7 @@ def get_foot_metrics_config(product, comparison_rule):
 
     lasts_data = _productRep.sql_command("select model.size.string_value as size, metric.name as name, value\
                                           from modelmetricvalue where model.product = {0} and model.model_type.name = 'LEFT_FOOT'\
-                                          order by size, name".format(product._id),result_as_dict=True)
+                                          order by size, name".format(product._id), result_as_dict=True)
 
     lasts_by_size = {}
 
@@ -64,10 +65,11 @@ def get_foot_metrics_config(product, comparison_rule):
 
     references = {}
     for ref in _productRep.sql_command("select distinct(scan_metric.name) as scan, distinct(model_metric.name) as model\
-                                        from comparisonrulemetric where rule = {0}".format(comparison_rule._id),result_as_dict=True):
+                                        from comparisonrulemetric where rule = {0}".format(comparison_rule._id), result_as_dict=True):
         references[ref['scan']] = ref['model']
 
     return metrics_comparison_config.generate_config(references, scans_by_size, lasts_by_size)
+
 
 generate_comparison_config_action = Blueprint('generate_comparison_config_action', __name__)
 

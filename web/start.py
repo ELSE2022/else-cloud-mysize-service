@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os, urllib
+import os
 
 import logging.config
 from flask import Blueprint
@@ -58,10 +58,10 @@ cloud_object_storage.connect_to_storage(dict(key="MfRt~2TyK~nacEY6",
                                              authurl="https://lon-identity.open.softlayer.com/v3",
                                              auth_version='3',
                                              os_options={
-                                                'project_id': "ba3612943bd34a1eac2d1e2630bd824b",
-                                                'user_id': "a9ba56b9ad794a87aa93ee817890db2d",
-                                                'region_name': "london"
-                                                }))
+                                                 'project_id': "ba3612943bd34a1eac2d1e2630bd824b",
+                                                 'user_id': "a9ba56b9ad794a87aa93ee817890db2d",
+                                                 'region_name': "london"
+                                             }))
 
 # Connect database
 initial_drop = False

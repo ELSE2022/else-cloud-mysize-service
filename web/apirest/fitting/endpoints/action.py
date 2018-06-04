@@ -12,7 +12,6 @@ from apirest.fitting.serializers import user_size
 from apirest.fitting.endpoints.product_action import msg_object_does_not_exist
 from apirest.fitting.mixins import ListModelMixin
 from apirest.restplus import api
-from apirest.restplus import auth_required
 # from api.web_actions.get_user_profile import get_user
 from data.models.FittingHistory import BEST_SIZE
 from data.repositories import UserRepository
@@ -32,14 +31,13 @@ from flask import abort
 from flask_restplus import Resource
 from flask_restplus import reqparse
 from orientdb_data_layer import data_connection
-from pyorient import OrientRecordLink
 
 from settings import SCANNER_STORAGE_BASE_URL
 
 import logging
 
 logger = logging.getLogger('rest_api_demo')
-    
+
 ns = api.namespace('fitting_users', path='/fitting/users', description='Operations related to User')
 
 _userRep = UserRepository()
@@ -83,8 +81,7 @@ def get_user(user_uuid):
     if len(user) == 0:
         abort(404, 'User not found')
     if len(user) > 1:
-        abort(400, 'Too many ({}) users with '
-            'the same user_uuid: {}'.format(len(user), user_uuid))
+        abort(400, 'Too many ({}) users with the same user_uuid: {}'.format(len(user), user_uuid))
     return user[0]
 
 
@@ -123,7 +120,8 @@ class Users(Resource, ListModelMixin):
         user_obj = _userRep.get({'uuid': user_uuid})
         if not user_obj:
             user_obj = _userRep.add({'uuid': user_uuid, 'base_url': base_url}, result_JSON=False)
-        else: user_obj = user_obj[0]
+        else:
+            user_obj = user_obj[0]
         if size_value:
             left_foot = _modelTypeRep.get(dict(name='LEFT_FOOT'))
             right_foot = _modelTypeRep.get(dict(name='RIGHT_FOOT'))
@@ -139,7 +137,8 @@ class Users(Resource, ListModelMixin):
             size_obj = _sizeRep.get({'string_value': size_value, 'model_types': foot_types})
             if not size_obj:
                 size_obj = _sizeRep.add(dict(string_value=size_value, model_types=foot_types))
-            else: size_obj = size_obj[0]
+            else:
+                size_obj = size_obj[0]
             for mt in foot_types:
                 user_size_obj = UserSize.query_set.filter_by(user=user_obj._id, model_type=mt._id).first()
                 if not user_size_obj:
@@ -288,7 +287,8 @@ class Size(Resource):
             model_type_obj = _modelTypeRep.get({'name': mt})
             if not model_type_obj:
                 abort(400)
-            else: model_type_obj = model_type_obj[0]
+            else:
+                model_type_obj = model_type_obj[0]
             model_type_objects.append(model_type_obj._id)
 
             size_object = _sizeRep.sql_command("select @rid as _id, string_value, model_types from size where {0} IN model_types AND string_value={1}".format(model_type_obj._id, request.json['string_value']), result_as_dict=True)
@@ -299,15 +299,13 @@ class Size(Resource):
                     'model_type': model_type_obj._id,
                 })
                 if not user_size_rep:
-                    count_del = _userSizeRep.delete(dict(user=user, model_type=model_type_obj._id))
-                    user_size_rep = _userSizeRep.add({
+                    _userSizeRep.delete(dict(user=user, model_type=model_type_obj._id))
+                    _userSizeRep.add({
                         'user': user,
                         'size': size_object[0].get('_id'),
                         'model_type': model_type_obj._id,
                         'creation_time': str(datetime.now()),
                     })
-                else:
-                    user_size_rep = user_size_rep[0]
             else:
                 user_size_obj = _userSizeRep.get_by_tree(dict(user=user, model_type=model_type_obj))
                 return {'user': user, 'size': _graph.element_from_link(user_size_obj[0].size)}
@@ -369,7 +367,7 @@ class BestSize(Resource):
         scan_left = scan_left.first()
         scan_right = scan_right.first()
 
-        fitting_history_left = FittingHistory.add(
+        FittingHistory.add(
             {
                 'creation_time': str(datetime.now()),
                 'operation_type': BEST_SIZE,
@@ -381,7 +379,7 @@ class BestSize(Resource):
                 'fitting_factor_value': round(max_result_left_foot[0], 2),
             }
         )
-        fitting_history_right = FittingHistory.add(
+        FittingHistory.add(
             {
                 'creation_time': str(datetime.now()),
                 'operation_type': BEST_SIZE,
@@ -418,7 +416,7 @@ class BestSize(Resource):
 
 @ns.route('/<string:user_uuid>/products/<string:product_uuid>/best_style')
 class BestStyle(Resource):
-    
+
     @api.expect(best_style_arguments, validate=True)
     def get(self, user_uuid, product_uuid):
         """
@@ -437,7 +435,7 @@ class BestStyle(Resource):
             size_obj = _Size.query_set.filter_by(**{'@rid': user_size_obj.size}).first()
         else:
             size_obj = _Size.query_set.filter_by(string_value=args.get('size')).first()
-        
+
         results = _comparisonResRep.get_by_tree({'scan': dict(user=user_obj, is_default=True),
                                                  'model': dict(size=size_obj, product=product_obj)})
         avg_res = 0
@@ -469,7 +467,7 @@ class BestStyle(Resource):
             scan_right = scans.filter_by(user=user_obj, is_default=True, model_type=max_right_model.model_type)
         scan_left = scan_left.first()
         scan_right = scan_right.first()
-        fitting_history_left = FittingHistory.add(
+        FittingHistory.add(
             {
                 'creation_time': str(datetime.now()),
                 'operation_type': BEST_SIZE,
@@ -482,7 +480,7 @@ class BestStyle(Resource):
             }
         )
 
-        fitting_history_right = FittingHistory.add(
+        FittingHistory.add(
             {
                 'creation_time': str(datetime.now()),
                 'operation_type': BEST_SIZE,

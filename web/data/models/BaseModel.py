@@ -31,9 +31,10 @@ class BaseModel:
         if not result_as_json:
             return cls.objects.create(**prop_dict)
         return cls.objects.g.client.command(
-                    "SELECT @this.toJson('rid,version,fetchPlan:*:-1') AS data FROM ({})".format("SELECT * FROM V WHERE @rid = {}"
-                                        .format(cls.objects.create(**prop_dict)))
-                )[0].oRecordData['data'] if hasattr(cls, 'objects') else None
+            "SELECT @this.toJson('rid,version,fetchPlan:*:-1') AS data FROM ({})"
+            .format("SELECT * FROM V WHERE @rid = {}"
+                    .format(cls.objects.create(**prop_dict)))
+        )[0].oRecordData['data'] if hasattr(cls, 'objects') else None
 
     @classmethod
     def update(cls, elem_id, prop_dict):
@@ -47,5 +48,6 @@ class BaseModel:
     def delete(cls, elem_id):
         cluster, id = (int(val) for val in elem_id.replace('#', '').split(':'))
         return cls.objects.g.client.record_delete(cluster, id)
+
 
 BaseNode = data_connection.NodeBase

@@ -5,6 +5,11 @@ import math
 name = "TEST5"
 
 
+def deviation_test(x, y, f1, corr, f2):
+    result = y - f1 <= x + corr <= y + f2
+    return result
+
+
 def get_distances_by_sizes(scan_data, lasts_data):
 
     lasts_distances = []  # list of (size, real_distance, out_of_range_distance, deviations_by_axis)
@@ -14,7 +19,7 @@ def get_distances_by_sizes(scan_data, lasts_data):
             sum(math.fabs(val[0] + val[2][1] - val[1])**2 for val in zip(scan_data, last[1], last[2]))
         )
 
-        deviation_test = lambda x, y, f1, corr, f2: (y - f1 <= x + corr <= y + f2)
+        # deviation_test = lambda x, y, f1, corr, f2: (y - f1 <= x + corr <= y + f2)
 
         out_of_range_distance = math.sqrt(
             sum(math.fabs(val[0] + val[2][1] - val[1])**2 if not deviation_test(val[0], val[1], val[2][0], val[2][1], val[2][2]) else 0

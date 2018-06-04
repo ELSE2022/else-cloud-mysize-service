@@ -5,8 +5,6 @@ from data.repositories import SizeRepository
 from data.repositories import UserSizeRepository
 from data.repositories import ModelTypeRepository
 
-from orientdb_data_layer import data_connection
-
 from datetime import datetime
 import logging
 
@@ -32,7 +30,7 @@ def set_default_size():
     size = get_size(size_value, model_types)
 
     remove_excess_sizes(user, model_types)
-    rid = add_user_size(user, size)
+    add_user_size(user, size)
 
     return jsonify({'default_size': 'FOOT - ' + size.string_value})
 
@@ -60,8 +58,7 @@ def get_user(user_uuid):
     if len(user) == 0:
         abort(404, 'User not found')
     if len(user) > 1:
-        abort(400, 'Too many ({}) users with '
-            'the same user_uuid: {}'.format(len(user), user_uuid))
+        abort(400, 'Too many ({}) users with the same user_uuid: {}'.format(len(user), user_uuid))
     return user[0]
 
 

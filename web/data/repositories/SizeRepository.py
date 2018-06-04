@@ -6,4 +6,3 @@ class SizeRepository(RepositoryBase):
 
     def __init__(self):
         super().__init__(Size)
-

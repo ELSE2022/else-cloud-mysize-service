@@ -30,6 +30,7 @@ class CustomAPI(Api):
             app_or_blueprint.add_url_rule(self._doc + '/', 'doc', self.render_doc)
         app_or_blueprint.add_url_rule(self.prefix or '/', 'root', self.render_root)
 
+
 api = CustomAPI(version='1.0', title='Fitting Service', doc='/docs')
 
 
@@ -39,7 +40,7 @@ def auth_required(func):
     def check_auth(*args, **kwargs):
         if 'X-API-KEY' not in request.headers:
             abort(401, 'API key required')
-        key = request.headers['X-API-KEY']
+        request.headers['X-API-KEY']
         return func(*args, **kwargs)
     return check_auth
 

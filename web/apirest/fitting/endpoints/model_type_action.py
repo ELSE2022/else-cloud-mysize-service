@@ -9,7 +9,7 @@ from data.repositories import ComparisonRuleRepository
 from flask import request, jsonify
 from flask_restplus import Resource
 
-ns = api.namespace('fitting_modeltypes', path='/fitting/modeltypes',  description='Operations related to Model Type')
+ns = api.namespace('fitting_modeltypes', path='/fitting/modeltypes', description='Operations related to Model Type')
 
 _productRep = ProductRepository()
 _modelRep = ModelRepository()
@@ -34,7 +34,8 @@ class ModelTypes(Resource):
 
         model_type_obj = _modelTypeRep.get({})
 
-        return (model_type_obj[pagination_start:pagination_end], 200, {'X-Total-Count': len(model_type_obj)}) if model_type_obj else ([], 200, {'X-Total-Count': 0})
+        return (model_type_obj[pagination_start:pagination_end], 200, {
+            'X-Total-Count': len(model_type_obj)}) if model_type_obj else ([], 200, {'X-Total-Count': 0})
 
     @api.expect(model_type)
     def post(self):

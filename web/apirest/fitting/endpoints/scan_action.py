@@ -146,7 +146,8 @@ def update_scan_attributes(scan, scan_type):
                 scan_metric = _scanMetricRep.get(dict(name=name, scanner_model=scanner_obj.model))
                 if not scan_metric:
                     scan_metric = _scanMetricRep.add(dict(name=name, scanner_model=_graph.element_from_link(scanner_obj.model)))
-                else: scan_metric = scan_metric[0]
+                else:
+                    scan_metric = scan_metric[0]
                 results = _scanMetricValueRep.update(dict(scan=scan, metric=scan_metric), dict(value=value))
                 if not results:
                     _scanMetricValueRep.add(dict(scan=scan, metric=scan_metric, value=value))
@@ -185,7 +186,7 @@ def get_last_scan_id(scanner, interval):
 
 def update_scan(user, scanner, scan_id, scan_model_type, is_scan_default, scan_path):
     print(user, scanner, scan_model_type, scan_id)
-    _graph = data_connection.get_graph()
+    data_connection.get_graph()
     # scanner_model = _scannerModelRep.get({})
     # if not scanner_model:
     #     scanner_model = _scannerModelRep.add(dict(name=scanner_name))
@@ -200,7 +201,8 @@ def update_scan(user, scanner, scan_id, scan_model_type, is_scan_default, scan_p
     scan_type = _modelTypeRep.get({'name': scan_model_type})
     if not scan_type:
         scan_type = _modelTypeRep.add(dict(name=scan_model_type))
-    else: scan_type = scan_type[0]
+    else:
+        scan_type = scan_type[0]
 
     # scan = _scanRep.get(dict(user=user, model_type=scan_type, scan_id=scan_id))
     # if not scan:
@@ -267,16 +269,18 @@ class ScanItem(Resource):
 
         scan_type = request_data.get('type')[0].upper()
         is_scan_default = str2bool(request.args.get('is_default', 'false'))
-        brand_id = request_data.get('brand', None)
+        request_data.get('brand', None)
         user = _userRep.get(dict(uuid=user_uuid))
         if not user:
             user = _userRep.add(dict(uuid=user_uuid))
-        else: user = user[0]
+        else:
+            user = user[0]
 
         scanner = _scannerRep.get(dict(name=scanner))
         if not scanner:
             abort(400, msg_object_does_not_exist.format('Scanner', scanner))
-        else: scanner = scanner[0]
+        else:
+            scanner = scanner[0]
 
         if interval:
             scan_id = get_last_scan_id(scanner, int(interval[0]))

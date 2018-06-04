@@ -173,7 +173,7 @@ def import_sql(connectionstring):
         i += 1
         print("Import Product, Size, Model, ModelMetric, ModelMetricValue: {0}/{1}".format(i, l))
 
-    #Scans import
+# Scans import
     data = call_sql("SELECT users.id as user_id, users.uuid as user_uuid, users.base_url as user_url, scan.id as scan_num_id, scan.scan_id, scan.scanner, scan.created_date, scan.attachment, scan.model_type, attr.name, attr.value\
                         FROM fitting_scan as scan\
                         left outer join fitting_scanattribute as attr\
