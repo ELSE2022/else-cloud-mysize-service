@@ -453,9 +453,48 @@ class BestStyle(Resource):
                     'score': round(x.value, 2),
                     'output_model': '',
                     'size': size.string_value,
-                    'size_type': 'FOOT'
+                    'size_type': 'FOOT',
+                    'model': model
                 }
                 avg_res += x.value / len(size.model_types)
+        max_result_left_foot = dict_mt.get('LEFT_FOOT').get('score')
+        max_left_model = dict_mt.get('LEFT_FOOT').pop('model')
+        max_result_right_foot = dict_mt.get('RIGHT_FOOT').get('score')
+        max_right_model = dict_mt.get('RIGHT_FOOT').pop('model')
+        if not scans:
+            scan_left = Scan.query_set.filter_by(user=user_obj, is_default=True, model_type=max_left_model.model_type)
+            scan_right = Scan.query_set.filter_by(user=user_obj, is_default=True, model_type=max_right_model.model_type)
+        else:
+            scan_left = scans.filter_by(user=user_obj, is_default=True, model_type=max_left_model.model_type)
+            scan_right = scans.filter_by(user=user_obj, is_default=True, model_type=max_right_model.model_type)
+        scan_left = scan_left.first()
+        scan_right = scan_right.first()
+        fitting_history_left = FittingHistory.add(
+            {
+                'creation_time': str(datetime.now()),
+                'operation_type': BEST_SIZE,
+                'brand': product_obj.brand,
+                'model': max_left_model,
+                'scan': scan_left,
+                'user': user_obj,
+                'recommended_size_value': max_left_model.size,
+                'fitting_factor_value': max_result_left_foot,
+            }
+        )
+
+        fitting_history_right = FittingHistory.add(
+            {
+                'creation_time': str(datetime.now()),
+                'operation_type': BEST_SIZE,
+                'brand': product_obj.brand,
+                'model': max_right_model,
+                'scan': scan_right,
+                'user': user_obj,
+                'recommended_size_value': max_right_model.size,
+                'fitting_factor_value': max_result_right_foot,
+            }
+        )
+
         return {
             'best_style': {
                 'score': round(avg_res, 2),
