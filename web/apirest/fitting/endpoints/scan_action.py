@@ -186,7 +186,6 @@ def get_last_scan_id(scanner, interval):
 
 def update_scan(user, scanner, scan_id, scan_model_type, is_scan_default, scan_path):
     print(user, scanner, scan_model_type, scan_id)
-    data_connection.get_graph()
     # scanner_model = _scannerModelRep.get({})
     # if not scanner_model:
     #     scanner_model = _scannerModelRep.add(dict(name=scanner_name))
