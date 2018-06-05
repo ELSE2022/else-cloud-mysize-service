@@ -12,7 +12,6 @@ from apirest.fitting.serializers import user_size
 from apirest.fitting.endpoints.product_action import msg_object_does_not_exist
 from apirest.fitting.mixins import ListModelMixin
 from apirest.restplus import api
-# from api.web_actions.get_user_profile import get_user
 from data.models.FittingHistory import BEST_SIZE
 from data.repositories import UserRepository
 from data.repositories import ScanRepository
@@ -321,11 +320,10 @@ class BestSize(Resource):
         Api method to get best user size.
         """
         _graph = data_connection.get_graph()
-        # _comparisonResRep.delete({})
         args = best_size_arguments.parse_args()
         user_obj, product_obj, scans = get_objects(_graph, user_uuid, product_uuid)
         if args.get('scan_id'):
-            scans = Scan.query_set.filter_by(user=user_obj, scan_id=args.get('scan_id'))
+            scans = Scan.query_set.filter_by(user=user_obj, scan_id=args.get('scan_id'), is_default=True)
             comparison_results = _comparisonResRep.get_by_tree(
                 {'scan': dict(user=user_obj, scan_id=args.get('scan_id')), 'model': dict(product=product_obj)})
         else:
@@ -334,7 +332,6 @@ class BestSize(Resource):
         if not comparison_results:
             comparison_results = get_foot_best_size(product_obj, scans)
         dct = defaultdict(int)
-        model_dict = dict()
         dict_mt = dict()
         for x in comparison_results:
             model = Model.query_set.filter_by(**{'@rid': x.model}).first()
@@ -342,55 +339,38 @@ class BestSize(Resource):
             size = _Size.query_set.filter_by(**{'@rid': model.size}).first()
             if size:
                 dct[size.string_value] += x.value / len(size.model_types)
-                if not model_dict.get(size.string_value, None):
-                    model_dict[size.string_value] = dict()
-
-                model_dict[size.string_value][model_type.name] = model
                 if not dict_mt.get(size.string_value, None):
                     dict_mt[size.string_value] = dict()
-                dict_mt[size.string_value][model_type.name] = x.value
+                dict_mt[size.string_value][model_type.name] = {'value': x.value, 'model': model}
         max_result = max(dct.items(), key=operator.itemgetter(1))
 
-        inverse_left_foot = [(value['LEFT_FOOT'], key) for key, value in dict_mt.items()]
-        inverse_right_foot = [(value['RIGHT_FOOT'], key) for key, value in dict_mt.items()]
-
-        max_result_left_foot = max(inverse_left_foot)
-        max_left_model = model_dict.get(max_result_left_foot[1])['LEFT_FOOT']
-        max_result_right_foot = max(inverse_right_foot)
-        max_right_model = model_dict.get(max_result_right_foot[1])['RIGHT_FOOT']
-        if not scans:
-            scan_left = Scan.query_set.filter_by(user=user_obj, is_default=True, model_type=max_left_model.model_type)
-            scan_right = Scan.query_set.filter_by(user=user_obj, is_default=True, model_type=max_right_model.model_type)
-        else:
-            scan_left = scans.filter_by(user=user_obj, is_default=True, model_type=max_left_model.model_type)
-            scan_right = scans.filter_by(user=user_obj, is_default=True, model_type=max_right_model.model_type)
-        scan_left = scan_left.first()
-        scan_right = scan_right.first()
-
-        FittingHistory.add(
-            {
-                'creation_time': str(datetime.now()),
-                'operation_type': BEST_SIZE,
-                'brand': product_obj.brand,
-                'model': max_left_model,
-                'scan': scan_left,
-                'user': user_obj,
-                'recommended_size_value': max_left_model.size,
-                'fitting_factor_value': round(max_result_left_foot[0], 2),
+        model_types = product_obj.get_model_types()
+        response_dict = dict()
+        for mt in model_types:
+            mt = _graph.element_from_link(mt)
+            inverse_foot = [(value[mt.name].get('value'), key) for key, value in dict_mt.items()]
+            max_result_foot = max(inverse_foot)
+            model = dict_mt.get(max_result_foot[1]).get(mt.name).get('model')
+            scan = scans.filter_by(model_type=mt)
+            scan = scan.first()
+            FittingHistory.add(
+                {
+                    'creation_time': str(datetime.now()),
+                    'operation_type': BEST_SIZE,
+                    'brand': product_obj.brand,
+                    'model': model,
+                    'scan': scan,
+                    'user': user_obj,
+                    'recommended_size_value': model.size,
+                    'fitting_factor_value': round(max_result_foot[0], 2),
+                }
+            )
+            response_dict[mt.name] = {
+                'score': round(max_result_foot[0], 2),
+                'output_model': '',
+                'size': max_result_foot[1],
+                'size_type': 'FOOT'
             }
-        )
-        FittingHistory.add(
-            {
-                'creation_time': str(datetime.now()),
-                'operation_type': BEST_SIZE,
-                'brand': product_obj.brand,
-                'model': max_right_model,
-                'scan': scan_right,
-                'user': user_obj,
-                'recommended_size_value': max_right_model.size,
-                'fitting_factor_value': round(max_result_right_foot[0], 2),
-            }
-        )
 
         return {
             'best_size': {
@@ -398,18 +378,7 @@ class BestSize(Resource):
                 'output_model': '',
                 'size': max_result[0],
                 'size_type': 'FOOT',
-                'LEFT_FOOT': {
-                    'score': round(max_result_left_foot[0], 2),
-                    'output_model': '',
-                    'size': max_result_left_foot[1],
-                    'size_type': 'FOOT'
-                },
-                'RIGHT_FOOT': {
-                    'score': round(max_result_right_foot[0], 2),
-                    'output_model': '',
-                    'size': max_result_right_foot[1],
-                    'size_type': 'FOOT'
-                }
+                **response_dict
             },
         }
 
@@ -455,43 +424,26 @@ class BestStyle(Resource):
                     'model': model
                 }
                 avg_res += x.value / len(size.model_types)
-        max_result_left_foot = dict_mt.get('LEFT_FOOT').get('score')
-        max_left_model = dict_mt.get('LEFT_FOOT').pop('model')
-        max_result_right_foot = dict_mt.get('RIGHT_FOOT').get('score')
-        max_right_model = dict_mt.get('RIGHT_FOOT').pop('model')
-        if not scans:
-            scan_left = Scan.query_set.filter_by(user=user_obj, is_default=True, model_type=max_left_model.model_type)
-            scan_right = Scan.query_set.filter_by(user=user_obj, is_default=True, model_type=max_right_model.model_type)
-        else:
-            scan_left = scans.filter_by(user=user_obj, is_default=True, model_type=max_left_model.model_type)
-            scan_right = scans.filter_by(user=user_obj, is_default=True, model_type=max_right_model.model_type)
-        scan_left = scan_left.first()
-        scan_right = scan_right.first()
-        FittingHistory.add(
-            {
-                'creation_time': str(datetime.now()),
-                'operation_type': BEST_SIZE,
-                'brand': product_obj.brand,
-                'model': max_left_model,
-                'scan': scan_left,
-                'user': user_obj,
-                'recommended_size_value': max_left_model.size,
-                'fitting_factor_value': max_result_left_foot,
-            }
-        )
 
-        FittingHistory.add(
-            {
-                'creation_time': str(datetime.now()),
-                'operation_type': BEST_SIZE,
-                'brand': product_obj.brand,
-                'model': max_right_model,
-                'scan': scan_right,
-                'user': user_obj,
-                'recommended_size_value': max_right_model.size,
-                'fitting_factor_value': max_result_right_foot,
-            }
-        )
+        for mt in model_types:
+            mt = _graph.element_from_link(mt)
+            max_result_foot = dict_mt.get(mt.name).get('score')
+            max_model = dict_mt.get(mt.name).pop('model')
+
+            scan = scans.filter_by(model_type=mt)
+            scan = scan.first()
+            FittingHistory.add(
+                {
+                    'creation_time': str(datetime.now()),
+                    'operation_type': BEST_SIZE,
+                    'brand': product_obj.brand,
+                    'model': max_model,
+                    'scan': scan,
+                    'user': user_obj,
+                    'recommended_size_value': max_model.size,
+                    'fitting_factor_value': max_result_foot,
+                }
+            )
 
         return {
             'best_style': {
