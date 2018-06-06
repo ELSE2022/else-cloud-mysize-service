@@ -40,7 +40,6 @@ def auth_required(func):
     def check_auth(*args, **kwargs):
         if 'X-API-KEY' not in request.headers:
             abort(401, 'API key required')
-        request.headers['X-API-KEY']
         return func(*args, **kwargs)
     return check_auth
 

@@ -61,8 +61,6 @@ def get_foot_best_size(product, scans):
 
         results = get_compare_result(scan, lasts, comparision_rule)
         for res in results:
-            model = Model.query_set.filter_by(**{'@rid': res[0]}).first()
-            Size.query_set.filter_by(**{'@rid': model.size}).first()
             created = ComparisonResult.objects.create(**{'scan': scan,
                                                          'model': res[0],
                                                          'value': res[1]})
