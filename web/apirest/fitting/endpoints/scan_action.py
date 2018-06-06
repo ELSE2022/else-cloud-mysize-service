@@ -185,28 +185,34 @@ def get_last_scan_id(scanner, interval):
 
 
 def update_scan(user, scanner, scan_id, scan_model_type, is_scan_default, scan_path):
-    print(user, scanner, scan_model_type, scan_id)
-    # scanner_model = _scannerModelRep.get({})
-    # if not scanner_model:
-    #     scanner_model = _scannerModelRep.add(dict(name=scanner_name))
-    # else: scanner_model = scanner_model[0]
-
-    # scanner = _scannerRep.get({'name': scanner_name})
-    # if not scanner:
-    #     scanner = _scannerRep.add(dict(name=scanner_name, model=scanner_model))
-    # else:
-    #     scanner = scanner[0]
+    """
+    Update scan data
+    
+    Parameters
+    ----------
+    user :  web.data.models.User.User
+        User whose scan will be updated
+    scanner : web.data.models.Scanner.Scanner
+        Scanner that has been set in request_data
+    scan_id : str or None
+        Id of last scan 
+    scan_model_type : str 
+        Name of a scan type that has been set in request_data
+    is_scan_default : bool
+        Boolean param that depends on request args
+    scan_path : str
+        String param that depends on scanner base_url and name, scan_id and stl name of scan_type 
+    Returns
+    -------
+    Scan: web.data.models.Scan.Scan
+        Updated scan object
+    """
 
     scan_type = _modelTypeRep.get({'name': scan_model_type})
     if not scan_type:
         scan_type = _modelTypeRep.add(dict(name=scan_model_type))
     else:
         scan_type = scan_type[0]
-
-    # scan = _scanRep.get(dict(user=user, model_type=scan_type, scan_id=scan_id))
-    # if not scan:
-    #     scan = _scanRep.add(dict(user=user, model_type=scan_type, scan_id=scan_id, scanner=scanner, creation_time=datetime.now(), is_default=is_scan_default))
-    # else: scan = scan[0]
 
     foot_attachment_content = upload(scan_path)
     attachment_name = os.path.sep.join(
@@ -218,11 +224,8 @@ def update_scan(user, scanner, scan_id, scan_model_type, is_scan_default, scan_p
         ]
     )
 
-    # attachment_name = gen_file_name(scan, '{}.{}'.format(scan_type, STL_EXTENSION))
     attachment_path = create_file(attachment_name)
     Path(attachment_path).write_bytes(foot_attachment_content)
-    print('Path', attachment_path)
-    # scan = _scanRep.update(dict(user=user, model_type=scan_type, scan_id=scan_id), dict(stl_path=attachment_name, is_default=is_scan_default))[0]
     scan = _scanRep.get(dict(user=user, model_type=scan_type, scan_id=scan_id))
     if not scan:
         scan = _scanRep.add(dict(user=user, model_type=scan_type, scan_id=scan_id, scanner=scanner, stl_path=attachment_name, creation_time=datetime.now(), is_default=is_scan_default))
@@ -245,7 +248,14 @@ def update_foot_scans(user, scanner, scan_id, scan_types, is_scan_default):
     scans = []
     for scan_type in scan_types:
         try:
-            scan = update_scan(user, scanner, scan_id, scan_type['name'], is_scan_default, '{}{}/{}/{}'.format(scanner.base_url, scanner.name, scan_id, scan_type['stl_name']))
+            scan = update_scan(
+                user,
+                scanner,
+                scan_id,
+                scan_type['name'],
+                is_scan_default,
+                '{}{}/{}/{}'.format(scanner.base_url, scanner.name, scan_id, scan_type['stl_name'])
+            )
         except requests.HTTPError:
             scan = None
         scans.append(scan) if scan else None
@@ -268,7 +278,6 @@ class ScanItem(Resource):
 
         scan_type = request_data.get('type')[0].upper()
         is_scan_default = str2bool(request.args.get('is_default', 'false'))
-        request_data.get('brand', None)
         user = _userRep.get(dict(uuid=user_uuid))
         if not user:
             user = _userRep.add(dict(uuid=user_uuid))

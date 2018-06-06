@@ -351,8 +351,7 @@ class BestSize(Resource):
             inverse_foot = [(value[mt.name].get('value'), key) for key, value in dict_mt.items()]
             max_result_foot = max(inverse_foot)
             model = dict_mt.get(max_result_foot[1]).get(mt.name).get('model')
-            scan = scans.filter_by(model_type=mt)
-            scan = scan.first()
+            scan = scans.filter_by(model_type=mt).first()
             FittingHistory.add(
                 {
                     'creation_time': str(datetime.now()),
@@ -430,8 +429,7 @@ class BestStyle(Resource):
             max_result_foot = dict_mt.get(mt.name).get('score')
             max_model = dict_mt.get(mt.name).pop('model')
 
-            scan = scans.filter_by(model_type=mt)
-            scan = scan.first()
+            scan = scans.filter_by(model_type=mt).first()
             FittingHistory.add(
                 {
                     'creation_time': str(datetime.now()),
