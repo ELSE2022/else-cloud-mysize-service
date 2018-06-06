@@ -7,6 +7,7 @@ from .Size import Size
 from .Model import Model
 from .ComparisonResult import ComparisonResult
 from .ModelMetricValue import ModelMetricValue
+from .FittingHistory import FittingHistory
 
 from .User import User
 from .ScannerModel import ScannerModel

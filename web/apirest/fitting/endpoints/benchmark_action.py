@@ -43,7 +43,7 @@ class BenchmarkItem(Resource, RetrieveModelMixin, DestroyModelMixin):
         """
         Api method to update benchmark.
         """
-        benchmark_obj = Benchmark.update(id, request.json)
+        Benchmark.update(id, request.json)
         return {'@rid': id}, 201
 
     def delete(self, id):

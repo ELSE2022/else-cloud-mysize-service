@@ -155,7 +155,7 @@ class ProductGetMetricsItem(Resource):
             model_type_objects = []
             for t in foot_types:
                 model_type_objects.append(_graph.element_from_link(t))
-            header = next(reader)
+            next(reader)
             for i in reader:
                 count = 0
                 for foot_type in foot_types:
@@ -164,8 +164,8 @@ class ProductGetMetricsItem(Resource):
                         size_obj = _sizeRep.add({'model_types': model_type_objects, 'string_value': i[0]})
                     else:
                         size_obj = size_obj[0]
-                    comp_rule_metric = add_comp_rule_metric(i[1], i[2], i[3], i[4 + count], i[5 + count], i[6 + count],
-                                                            product_obj, foot_type, size_obj)
+                    add_comp_rule_metric(i[1], i[2], i[3], i[4 + count], i[5 + count], i[6 + count],
+                                         product_obj, foot_type, size_obj)
                     count += 3
 
         data_dict = request.json
@@ -177,7 +177,8 @@ class ProductGetMetricsItem(Resource):
             product_obj = _productRep.update({'@rid': id}, data_dict)
         else:
             product_obj = _productRep.update({'uuid': id}, data_dict)
-        if product_obj: product_obj = product_obj[0]
+        if product_obj:
+            product_obj = product_obj[0]
         return {'@rid': product_obj._id, 'name': product_obj.name}, 201
 
 
@@ -204,12 +205,15 @@ class ProductGetMetricsItem(Resource):
                     {'product': product_obj, 'model_type': model_type_r_obj, 'size': size_obj})
                 for rule_metric in comp_rule_metric:
                     model_metric_value_obj = _modelMetricValueRep.get({'model': m, 'metric': rule_metric.model_metric})
-                    rule_metric_r = _compRuleMetricRep.get_by_tree({'rule': product_obj.default_comparison_rule,
-                                                                    'model': right_model_obj[0],
-                                                                    'model_metric': {'name': _graph.element_from_link(
-                                                                        rule_metric.model_metric).name,
-                                                                                     'model_type': model_type_r_obj},
-                                                                    'scan_metric': rule_metric.scan_metric})
+                    rule_metric_r = _compRuleMetricRep.get_by_tree({
+                        'rule': product_obj.default_comparison_rule,
+                        'model': right_model_obj[0],
+                        'model_metric': {
+                            'name': _graph.element_from_link(rule_metric.model_metric).name,
+                            'model_type': model_type_r_obj
+                        },
+                        'scan_metric': rule_metric.scan_metric
+                    })
                     rule_metric_r = rule_metric_r[0]
 
                     data.append(

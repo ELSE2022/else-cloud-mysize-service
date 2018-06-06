@@ -29,15 +29,15 @@ def create_user():
     size = get_size(size_value, model_type)
     check_user_sizes(user, size)
 
-    return jsonify({ 'default_size': 'FOOT - ' + size_value })
+    return jsonify({'default_size': 'FOOT - ' + size_value})
 
 
 def get_model_type(model):
     if model is not None:
-        return _modelTypeRep.get({ 'name': model })
+        return _modelTypeRep.get({'name': model})
     else:
-        left_foot = _modelTypeRep.get({ 'name': 'LEFT_FOOT' })
-        right_foot = _modelTypeRep.get({ 'name': 'RIGHT_FOOT' })
+        left_foot = _modelTypeRep.get({'name': 'LEFT_FOOT'})
+        right_foot = _modelTypeRep.get({'name': 'RIGHT_FOOT'})
         if len(left_foot) == 0:
             abort(404, 'ModelType \'LEFT_FOOT\' not exist')
         if len(right_foot) == 0:
@@ -68,7 +68,7 @@ def check_user_sizes(user, size):
     if len(user_sizes) != 0:
         return False
     else:
-        user_sizes = _userSizeRep.add({
+        _userSizeRep.add({
             'user': user,
             'size': size,
             'creation_time': str(datetime.now()),
@@ -80,9 +80,9 @@ def check_user(user_uuid):
     if user_uuid is None:
         abort(400, 'Request malformed: \'user\' argument not passed')
 
-    user = _userRep.get({ 'uuid': user_uuid })
+    user = _userRep.get({'uuid': user_uuid})
 
     if len(user) == 0:
-        return _userRep.add({ 'uuid': user_uuid  }, result_JSON=True)
+        return _userRep.add({'uuid': user_uuid}, result_JSON=True)
     else:
         abort(400, 'User with uuid=\'{}\' already exists'.format(user_uuid))

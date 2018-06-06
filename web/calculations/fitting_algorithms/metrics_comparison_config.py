@@ -43,10 +43,10 @@ def generate_config(references, scans_by_size, lasts_by_size):
             l_metric_ranges.append((l_median - min(l_metrics), l_shift, max(l_metrics) - l_median))
             r_metric_ranges.append((r_median - min(r_metrics), r_shift, max(r_metrics) - r_median))
 
-        l_range = max(get_median([val[0] for val in l_metric_ranges]), f1) \
-                  + max(get_median([val[2] for val in l_metric_ranges]), f2)
-        r_range = max(get_median([val[0] for val in r_metric_ranges]), f1) \
-                  + max(get_median([val[2] for val in r_metric_ranges]), f2)
+        l_range = max(get_median([val[0] for val in l_metric_ranges]), f1) + max(
+            get_median([val[2] for val in l_metric_ranges]), f2)
+        r_range = max(get_median([val[0] for val in r_metric_ranges]), f1) + max(
+            get_median([val[2] for val in r_metric_ranges]), f2)
 
         l_center = get_median([val[1] for val in l_metric_ranges])
         r_center = get_median([val[1] for val in r_metric_ranges])
@@ -59,7 +59,7 @@ def generate_config(references, scans_by_size, lasts_by_size):
                         round(r_range * 0.1, 2))
 
         for size in lasts_by_size:
-            if not size in result_config:
+            if size not in result_config:
                 result_config[size] = {}
 
             result_config[size][references[ref]] = {

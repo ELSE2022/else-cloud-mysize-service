@@ -37,8 +37,7 @@ def get_user(user_uuid):
     if len(user) == 0:
         abort(404, 'User not found')
     if len(user) > 1:
-        abort(400, 'Too many ({}) users with '
-            'the same user_uuid: {}'.format(len(user), user_uuid))
+        abort(400, 'Too many ({}) users with the same user_uuid: {}'.format(len(user), user_uuid))
     return user[0]
 
 
@@ -64,6 +63,5 @@ def scan_to_string(scan):
     scanner = graph.element_from_link(scan.scanner).name
     creation_time = str(scan.creation_time)
 
-    return 'scan_id: {}, user: {}, scanner: {}, type: {}, '\
-        'created_date: {}'.format(scan.scan_id,
-        user, scanner, model_type, creation_time)
+    return 'scan_id: {}, user: {}, scanner: {}, type: {}, created_date: {}'\
+        .format(scan.scan_id, user, scanner, model_type, creation_time)

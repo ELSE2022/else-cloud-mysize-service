@@ -42,7 +42,7 @@ def get_best_scan(scans):
                     scan_left_distance += math.fabs(scans[scan]['LEFT'][metr] - get_median(left_metrics)) ** 2
                     scan_right_distance += math.fabs(scans[scan]['RIGHT'][metr] - get_median(right_metrics)) ** 2
 
-            scan_zero_distance = math.sqrt(scan_left_distance + scan_right_distance) # sqr( (sqr(left) - 0) ** 2 + (sqr(right) - 0) ** 2)
+            scan_zero_distance = math.sqrt(scan_left_distance + scan_right_distance)
 
             if best_scan_distance > scan_zero_distance:
                 best_scan_id = scan

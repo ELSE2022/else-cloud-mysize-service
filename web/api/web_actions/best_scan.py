@@ -36,7 +36,7 @@ def get_best_foot_scan(user, scanner_model):
     metrics = _scanMetricRep.get(dict(scanner_model=scanner_model))
 
     for scan in scans:
-        if not scan.scan_id in scans_data:
+        if scan.scan_id not in scans_data:
             scans_data[scan.scan_id] = {}
 
         if _graph.element_from_link(scan.model_type).name == 'LEFT_FOOT':

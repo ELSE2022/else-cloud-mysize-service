@@ -1,5 +1,3 @@
-from flask import json
-
 from apirest.fitting.serializers import scanner
 from apirest.fitting.mixins import ListModelMixin
 from apirest.fitting.mixins import CreateModelMixin
@@ -10,10 +8,7 @@ from data.repositories import ScannerRepository
 from data.repositories import ScannerModelRepository
 from data.models import Scanner
 from flask import request
-from flask import abort
 from flask_restplus import Resource
-from pyorient import OrientRecordLink
-from settings import SCANNER_STORAGE_BASE_URL
 
 ns = api.namespace('fitting_scanners', path='/fitting/scanners', description='Operations related to Scanner')
 

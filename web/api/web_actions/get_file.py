@@ -5,6 +5,7 @@ from data import cloud_object_storage
 
 get_file_action = Blueprint('get_file_action', __name__)
 
+
 @get_file_action.route('/files/<container>/<filename>')
 def get_file(container, filename):
     cont = cloud_object_storage.get_container(container)

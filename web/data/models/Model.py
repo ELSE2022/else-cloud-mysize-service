@@ -14,5 +14,5 @@ class Model(BaseNode, BaseModel):
     stl_path = String()
 
     def __str__(self):
-        
+
         return f'<Model: {self._id}>'

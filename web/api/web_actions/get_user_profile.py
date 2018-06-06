@@ -38,8 +38,7 @@ def get_user(user_uuid):
     if len(user) == 0:
         abort(404, 'User not found')
     if len(user) > 1:
-        abort(400, 'Too many ({}) users with '
-            'the same user_uuid: {}'.format(len(user), user_uuid))
+        abort(400, 'Too many ({}) users with the same user_uuid: {}'.format(len(user), user_uuid))
     return user[0]
 
 
@@ -82,9 +81,9 @@ def get_metrics(scan):
 
 
 def get_metric_name(scan_metric):
-     graph = data_connection.get_graph()
-     metric = graph.element_from_link(scan_metric.metric)
-     return metric.name
+    graph = data_connection.get_graph()
+    metric = graph.element_from_link(scan_metric.metric)
+    return metric.name
 
 
 def get_model_type_name(scan):

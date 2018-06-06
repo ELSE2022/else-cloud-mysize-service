@@ -1,5 +1,4 @@
 from apirest.fitting.serializers import comparison_rule
-from apirest.fitting.serializers import model
 from apirest.restplus import api
 from data.repositories import ProductRepository
 from data.repositories import ModelRepository
