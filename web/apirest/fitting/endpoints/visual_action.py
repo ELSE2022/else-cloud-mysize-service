@@ -17,7 +17,7 @@ from datetime import datetime
 from flask import abort
 from flask_restplus import Resource
 from flask_restplus import reqparse
-from settings import ELSE_3D_SERVICE_URL
+from settings import ELSE_3D_SERVICE_FULL
 from orientdb_data_layer import data_connection
 from data.models import User
 from data.models import CompareVisualization
@@ -99,7 +99,7 @@ class VisualizationItem(Resource):
                     if os.path.isfile(last.stl_path) and os.path.isfile('attachments/' + scan.stl_path):
                         files = {'last': open(last.stl_path, 'rb'), 'scan': open('attachments/' + scan.stl_path, 'rb')}
                         values = {'user_uuid': _graph.element_from_link(scan.user).uuid}
-                        url = f'{ELSE_3D_SERVICE_URL}/visualization/compare_visualization/'
+                        url = f'{ELSE_3D_SERVICE_FULL}/visualization/compare_visualization/'
                         if environment_uuid:
                             values['environment_uuid'] = environment_uuid
                         req = requests.post(url, files=files, data=values)
@@ -142,7 +142,7 @@ class VisualizationItem(Resource):
                 if scan.stl_path and os.path.isfile('attachments/' + scan.stl_path):
                     files = {'scan': open('attachments/' + scan.stl_path, 'rb')}
                     values = {'user_uuid': _graph.element_from_link(scan.user).uuid}
-                    url = f'{ELSE_3D_SERVICE_URL}/visualization/scan/'
+                    url = f'{ELSE_3D_SERVICE_FULL}/visualization/scan/'
                     req = requests.post(url, files=files, data=values)
                     result_json = req.json()
                     all_requests[_graph.element_from_link(scan.model_type).name] = result_json

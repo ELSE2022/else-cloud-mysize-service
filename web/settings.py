@@ -16,6 +16,7 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "attachments")
 SCANNER_STORAGE_BASE_URL = 'https://else:7kjfWVWcRN@avatar3d.ibv.org:8443/webdav/ELSE/'
 ELSE_3D_SERVICE_URL = os.getenv('ELSE_3D_SERVICE', 'https://3d.else.shoes')
 ELSE_STAGE_3D_SERVICE_URL = os.getenv('STAGE_ELSE_3D_SERVICE', 'https://stage.3d.else.shoes')
+ELSE_3D_SERVICE_FULL = os.getenv('ELSE_3D_SERVICE_FULL', 'http://else-3d-service.cloudapp.net')
 IMPORT_DATA_FROM_POSTGRES = False
 
 DEFAULT_STORAGE_LOGIN = 'else'
