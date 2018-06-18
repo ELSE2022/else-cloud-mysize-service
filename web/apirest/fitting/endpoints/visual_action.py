@@ -64,7 +64,8 @@ class VisualizationItem(Resource):
         Compare visualization
         """
         _graph = data_connection.get_graph()
-
+        logger.info('VISUALIZATION COMPARE')
+        logger.debug('VISUALIZATION COMPARE DEBUG')
         args = update_compare_arguments.parse_args()
         product_uuid = args.get('product_uuid')
         user_uuid = args.get('user')
