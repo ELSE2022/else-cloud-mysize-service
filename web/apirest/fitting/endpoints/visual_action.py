@@ -97,13 +97,17 @@ class VisualizationItem(Resource):
             if compare_visual is None:
                 if last.stl_path and scan.stl_path:
                     if os.path.isfile(last.stl_path) and os.path.isfile('attachments/' + scan.stl_path):
-                        files = {'last': open(last.stl_path, 'rb'), 'scan': open('attachments/' + scan.stl_path, 'rb')}
+                        file_last = open(last.stl_path, 'rb')
+                        file_scan = open('attachments/' + scan.stl_path, 'rb')
+                        files = {'last': file_last, 'scan': file_scan}
                         values = {'user_uuid': _graph.element_from_link(scan.user).uuid}
                         url = f'{ELSE_3D_SERVICE_FULL}/visualization/compare_visualization/'
                         if environment_uuid:
                             values['environment_uuid'] = environment_uuid
                         req = requests.post(url, files=files, data=values)
                         result_json = req.json()
+                        file_last.close()
+                        file_scan.close()
                         all_requests[_graph.element_from_link(scan.model_type).name] = result_json
                         _compareVisualRep.add(dict(scan=scan, model=last,
                                                    output_model=result_json.get('output_model'),
