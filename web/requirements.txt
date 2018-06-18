@@ -3,6 +3,7 @@ flake8==3.5.0
 Flask==0.12.2
 flask-restplus==0.10.1
 pyorient==1.5.5
+requests==2.12.4
 orientdb_data_layer
 psycopg2==2.7.4
 SQLAlchemy==1.1.9
