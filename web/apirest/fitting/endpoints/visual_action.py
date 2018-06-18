@@ -64,8 +64,7 @@ class VisualizationItem(Resource):
         Compare visualization
         """
         _graph = data_connection.get_graph()
-        logger.info('VISUALIZATION COMPARE')
-        logger.debug('VISUALIZATION COMPARE DEBUG')
+        logger.debug('VISUALIZATION COMPARE')
         args = update_compare_arguments.parse_args()
         product_uuid = args.get('product_uuid')
         user_uuid = args.get('user')
@@ -106,7 +105,7 @@ class VisualizationItem(Resource):
                             url = f'{ELSE_3D_SERVICE_FULL}/visualization/compare_visualization/'
                             if environment_uuid:
                                 values['environment_uuid'] = environment_uuid
-                            logger.debug('LOG BEFORE REQUEST')
+                            logger.debug('LOG BEFORE REQUEST {}'.format(url))
                             req = requests.post(url, files=files, data=values)
                             logger.debug('LOG AFTER REQUEST')
                             result_json = req.json()
