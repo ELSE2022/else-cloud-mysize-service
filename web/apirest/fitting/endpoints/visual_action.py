@@ -112,10 +112,10 @@ class VisualizationItem(Resource):
                             # file_last.close()
                             # file_scan.close()
                             all_requests[_graph.element_from_link(scan.model_type).name] = result_json
-                            # _compareVisualRep.add(dict(scan=scan, model=last,
-                            #                            output_model=result_json.get('output_model'),
-                            #                            output_model_3d=result_json.get('output_model_3d'),
-                            #                            creation_time=datetime.now()))
+                            _compareVisualRep.add(dict(scan=scan, model=last,
+                                                       output_model=result_json.get('output_model'),
+                                                       output_model_3d=result_json.get('output_model_3d'),
+                                                       creation_time=datetime.now()))
             else:
                 all_requests[_graph.element_from_link(scan.model_type).name] = {
                     'output_model': compare_visual.output_model, 'output_model_3d': compare_visual.output_model_3d}
