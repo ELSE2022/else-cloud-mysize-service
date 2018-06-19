@@ -1,3 +1,4 @@
+aiohttp==3.3.2
 beautifulsoup4==4.6.0
 flake8==3.5.0
 Flask==0.12.2
