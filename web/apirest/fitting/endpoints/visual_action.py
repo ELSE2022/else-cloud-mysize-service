@@ -57,7 +57,7 @@ update_scan_arguments.add_argument('env', type=str, required=False)
 
 
 @ns.route('/compare')
-class VisualizationItem(Resource):
+class VisualizationCompareItem(Resource):
     @api.expect(update_compare_arguments, validate=True)
     def get(self):
         """
