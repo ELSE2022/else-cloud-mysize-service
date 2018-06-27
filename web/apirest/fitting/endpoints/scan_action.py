@@ -187,7 +187,7 @@ def get_last_scan_id(scanner, interval):
 def update_scan(user, scanner, scan_id, scan_model_type, is_scan_default, scan_path):
     """
     Update scan data
-    
+
     Parameters
     ----------
     user :  web.data.models.User.User
@@ -195,13 +195,14 @@ def update_scan(user, scanner, scan_id, scan_model_type, is_scan_default, scan_p
     scanner : web.data.models.Scanner.Scanner
         Scanner that has been set in request_data
     scan_id : str or None
-        Id of last scan 
-    scan_model_type : str 
+        Id of last scan
+    scan_model_type : str
         Name of a scan type that has been set in request_data
     is_scan_default : bool
         Boolean param that depends on request args
     scan_path : str
-        String param that depends on scanner base_url and name, scan_id and stl name of scan_type 
+        String param that depends on scanner base_url and name, scan_id and stl name of scan_type
+
     Returns
     -------
     Scan: web.data.models.Scan.Scan
