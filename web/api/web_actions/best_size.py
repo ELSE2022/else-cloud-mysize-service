@@ -1,4 +1,5 @@
 import logging
+import operator
 from flask import Blueprint, jsonify, request, abort
 from ..authentication import requires_auth
 from data.repositories import ProductRepository, UserRepository, UserSizeRepository, ScanRepository, ComparisonRuleMetricRepository, ScanMetricValueRepository, ModelMetricValueRepository
@@ -8,8 +9,9 @@ from data.repositories import ModelRepository
 from orientdb_data_layer import data_connection
 from calculations.fitting_algorithms.get_metrics_by_sizes import get_metrics_by_sizes
 
-from data.models import ComparisonRule, Size, Model, ComparisonResult, ComparisonRuleMetric, ScanMetricValue, \
-    ModelMetricValue, ModelTypeMetric
+from data.models import ComparisonRule, Size, Model, \
+    ComparisonResult, ComparisonRuleMetric, ScanMetricValue, \
+    ModelMetricValue, ModelTypeMetric, ScanMetric
 
 logger = logging.getLogger('rest_api_demo')
 _productRep = ProductRepository()
@@ -29,17 +31,30 @@ def get_compare_result(scan, lasts, comparision_rule):
     scan_data = []
     lasts_data = []
     for last in lasts:
-        lasts_data.append((last._id, [], []))
+        lasts_data.append((last, [], []))
     scan_metric_values = ScanMetricValue.query_set.filter_by(scan=scan).all()
     logger.debug('scan_metric_values')
-    logger.debug(scan_metric_values)
+    logger.debug(sorted(map(str, map(operator.attrgetter('metric'), scan_metric_values))))
+    logger.debug(sorted(map(str, map(operator.attrgetter('_id'), ScanMetric.query_set.all()))))
+    logger.debug(sorted(map(str, map(operator.attrgetter('scan'), ScanMetricValue.query_set.all()))))
+    logger.debug(sorted(map(str, map(operator.attrgetter('metric'), ScanMetricValue.query_set.all()))))
     for scan_metric_value in scan_metric_values:
         for last_data in lasts_data:
-            comparision_rule_metric = ComparisonRuleMetric.query_set.filter_by(scan_metric=scan_metric_value.metric, model=last_data[0]).first()
+            comparision_rule_metric = ComparisonRuleMetric.query_set.filter_by(
+                scan_metric=scan_metric_value.metric,
+                model=last_data[0],
+            ).first()
+            logger.debug(ComparisonRuleMetric.query_set.filter_by(
+                scan_metric=scan_metric_value.metric,
+                model=last_data[0],
+            ))
             logger.debug('comparision_rule_metric')
             logger.debug(comparision_rule_metric)
             if comparision_rule_metric:
-                last_metric = ModelMetricValue.query_set.filter_by(metric=comparision_rule_metric.model_metric, model=last_data[0]).first()
+                last_metric = ModelMetricValue.query_set.filter_by(
+                    metric=comparision_rule_metric.model_metric,
+                    model=last_data[0],
+                ).first()
                 logger.debug(last_metric)
                 last_data[1].append(float(last_metric.value))
                 last_data[2].append((comparision_rule_metric.f1, comparision_rule_metric.shift, comparision_rule_metric.f2))
@@ -47,7 +62,7 @@ def get_compare_result(scan, lasts, comparision_rule):
                 break
         else:
             scan_data.append(float(scan_metric_value.value))
-    logger.debug(scan._id)
+    logger.debug(scan)
     logger.debug(scan.is_default)
     logger.debug(scan_data)
     return get_metrics_by_sizes(scan_data, lasts_data)

@@ -12,4 +12,7 @@ python-swiftclient
 python-keystoneclient
 Flask-SQLAlchemy==2.1
 Flask-SuperAdmin==1.7.1
+python-slugify==1.2.5
+petl==1.1.1
+toolz==0.9.0
 gunicorn

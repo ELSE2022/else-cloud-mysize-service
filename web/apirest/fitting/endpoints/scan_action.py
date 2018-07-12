@@ -3,7 +3,6 @@ import os
 import requests
 import settings
 import json
-import ast
 from apirest.fitting.serializers import scan as scan_serializer
 from apirest.fitting.mixins import ListModelMixin
 from apirest.restplus import api
