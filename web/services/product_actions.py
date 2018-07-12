@@ -79,14 +79,20 @@ class ProductActionsService:
         return comp_rule_metr_obj
 
     @classmethod
+    def csv_field_converter(cls, fields, func, tbl):
+        return petl.convert(tbl, fields, func)
+
+    @classmethod
     def update_product(cls, product_id, product_data):
         _graph = data_connection.get_graph()
-
+        product_obj = _productRep.get({'@rid': product_id})[0]
         if 'files' in product_data:
             filecodestring = product_data['files'][0]['src']
             data = base64.b64decode(filecodestring.split(',')[1])
             file = tempfile.NamedTemporaryFile()
             file.write(data)
+            comparision_rule = _compRuleRep.get({'@rid': product_obj.default_comparison_rule})
+            scanner_model = comparision_rule.scanner_model
             float_columns = (
                 'value',
                 'f1_l',
@@ -99,11 +105,16 @@ class ProductActionsService:
             str_columns = (
                 'size',
                 'model_metric',
-                'size_metric',
+                'scan_metric',
             )
             table_creator = functoolz.compose(
-                lambda tbl: petl.convert(tbl, float_columns, float),
-                lambda tbl: petl.convert(tbl, str_columns, 'strip'),
+                partial(
+                    cls.csv_field_converter,
+                    'scan_metric',
+                    partial(_scanMetricRep.get_by_name_and_scanner_model, scanner_model)
+                ),
+                partial(cls.csv_field_converter, float_columns, float),
+                partial(cls.csv_field_converter, str_columns, 'strip'),
                 partial(petl.setheader, header=str_columns + float_columns),
                 partial(petl.fromcsv, delimiter=','),
             )
@@ -111,7 +122,6 @@ class ProductActionsService:
             for i in table:
                 print(i)
             #
-            # product_obj = _productRep.get({'@rid': id})[0]
             # foot_types = _graph.element_from_link(product_obj.default_comparison_rule).model_types
             # model_type_objects = []
             # for t in foot_types:
