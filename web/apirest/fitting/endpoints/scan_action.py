@@ -1,7 +1,4 @@
-import csv
-import os
 import requests
-import settings
 import json
 from apirest.fitting.serializers import scan as scan_serializer
 from apirest.fitting.mixins import ListModelMixin
@@ -22,8 +19,7 @@ from flask import request
 from flask import abort
 from flask_restplus import Resource
 from flask_restplus import reqparse
-from orientdb_data_layer import data_connection
-from pathlib import Path
+from services.scan_actions import ScanActionService
 
 ns = api.namespace('fitting_scans', path='/fitting/scans', description='Operations related to Scan')
 
@@ -107,51 +103,6 @@ class ScanItem(Resource):
         return None, 204
 
 
-def upload(url):
-    request = requests.get(
-        url=url,
-    )
-    request.raise_for_status()
-    return request.content
-
-
-def create_file(file_name):
-    print(settings.MEDIA_ROOT, file_name)
-    file_path = os.path.join(
-        # os.sep,
-        settings.MEDIA_ROOT.strip('/'),
-        file_name
-    )
-    os.makedirs(os.path.dirname(file_path), exist_ok=True)
-    Path(file_path).touch()
-    return file_path
-
-
-def update_scan_attributes(scan, scan_type):
-    _graph = data_connection.get_graph()
-    scanner_obj = _graph.element_from_link(scan.scanner)
-    path_to_csv = '{}{}/{}/{}_{}_mes.csv'.format(scanner_obj.base_url, scanner_obj.name, scan.scan_id, scan.scan_id, attribute_urls_type[scan_type.name])
-    request = requests.get(path_to_csv)
-    first_row = next(request.iter_lines(decode_unicode=True))
-    profile = request.iter_lines(decode_unicode=True)
-    if first_row.startswith('DOMESCAN'):
-        next(profile)
-    request.raise_for_status()
-    for row in csv.DictReader(profile, delimiter=';'):
-        for key, value in row.items():
-            if key != '':
-                name = key.strip()
-                print('PARSE METRIC1', name, value)
-                scan_metric = _scanMetricRep.get(dict(name=name, scanner_model=scanner_obj.model))
-                if not scan_metric:
-                    scan_metric = _scanMetricRep.add(dict(name=name, scanner_model=_graph.element_from_link(scanner_obj.model)))
-                else:
-                    scan_metric = scan_metric[0]
-                results = _scanMetricValueRep.update(dict(scan=scan, metric=scan_metric), dict(value=value))
-                if not results:
-                    _scanMetricValueRep.add(dict(scan=scan, metric=scan_metric, value=value))
-
-
 def str2bool(in_str):
     return in_str in ['true', 'True', 'yes']
 
@@ -183,72 +134,11 @@ def get_last_scan_id(scanner, interval):
     return scan_id
 
 
-def update_scan(user, scanner, scan_id, scan_model_type, is_scan_default, scan_path):
-    """
-    Update scan data
-
-    Parameters
-    ----------
-    user :  web.data.models.User.User
-        User whose scan will be updated
-    scanner : web.data.models.Scanner.Scanner
-        Scanner that has been set in request_data
-    scan_id : str or None
-        Id of last scan
-    scan_model_type : str
-        Name of a scan type that has been set in request_data
-    is_scan_default : bool
-        Boolean param that depends on request args
-    scan_path : str
-        String param that depends on scanner base_url and name, scan_id and stl name of scan_type
-
-    Returns
-    -------
-    Scan: web.data.models.Scan.Scan
-        Updated scan object
-    """
-
-    scan_type = _modelTypeRep.get({'name': scan_model_type})
-    if not scan_type:
-        scan_type = _modelTypeRep.add(dict(name=scan_model_type))
-    else:
-        scan_type = scan_type[0]
-
-    foot_attachment_content = upload(scan_path)
-    attachment_name = os.path.sep.join(
-        [
-            'Scan',
-            user.uuid,
-            '{}-{}-{}'.format(datetime.now().year, datetime.now().month, datetime.now().day),
-            '{}.{}'.format(scan_type.name, 'stl')
-        ]
-    )
-
-    attachment_path = create_file(attachment_name)
-    Path(attachment_path).write_bytes(foot_attachment_content)
-    scan = _scanRep.get(dict(user=user, model_type=scan_type, scan_id=scan_id))
-    if not scan:
-        scan = _scanRep.add(dict(user=user, model_type=scan_type, scan_id=scan_id, scanner=scanner, stl_path=attachment_name, creation_time=datetime.now(), is_default=is_scan_default))
-    else:
-        scan = _scanRep.update(dict(user=user, model_type=scan_type, scan_id=scan_id), dict(stl_path=attachment_name, is_default=is_scan_default))[0]
-    if is_scan_default:
-        _scanRep.update({'user': user}, {'is_default': False})
-        _scanRep.update({'user': user, 'scan_id': scan_id}, {'is_default': True})
-
-    _scanMetricValueRep.delete(dict(scan=scan))
-
-    try:
-        update_scan_attributes(scan, scan_type)
-    except requests.HTTPError:
-        print('HTTPError')
-    return scan
-
-
 def update_foot_scans(user, scanner, scan_id, scan_types, is_scan_default):
     scans = []
     for scan_type in scan_types:
         try:
-            scan = update_scan(
+            scan = ScanActionService.update_user_scan(
                 user,
                 scanner,
                 scan_id,

@@ -33,9 +33,10 @@ class ModelTypeMetricRepository(RepositoryBase):
         )
 
     def get_by_name_and_scanner_model(self, model_type, metric_name):
-        return super(ModelTypeMetricRepository, self).get(
+        metric = super(ModelTypeMetricRepository, self).get(
             dict(
                 processed_name=normalize_string(metric_name),
                 model_type=model_type,
             )
         )
+        return metric[0] if metric else None

@@ -1,7 +1,7 @@
 import base64
 import os
 
-from apirest.fitting.endpoints.scan_action import create_file
+from services.utils.files import create_file
 from apirest.fitting.serializers import model as model_serializer
 from apirest.fitting.mixins import ListModelMixin
 from apirest.restplus import api
