@@ -1,8 +1,8 @@
 import base64
-import tempfile
-import petl
-import operator
 import itertools
+import tempfile
+import petl as etl
+import operator
 from toolz import functoolz
 from functools import partial
 
@@ -20,6 +20,7 @@ from data.repositories import ModelTypeMetricRepository
 from data.repositories import ScanMetricRepository
 from data.repositories import ScannerModelRepository
 from data.repositories import ModelMetricValueRepository
+from data.repositories import ComparisonResultRepository
 
 _productRep = ProductRepository()
 _modelRep = ModelRepository()
@@ -32,13 +33,13 @@ _modelTypeMetricRep = ModelTypeMetricRepository()
 _scanMetricRep = ScanMetricRepository()
 _scannerModelRep = ScannerModelRepository()
 _modelMetricValueRep = ModelMetricValueRepository()
+_comparisonResultRep = ComparisonResultRepository()
 
 
 class ProductActionsService:
 
     @classmethod
     def add_comp_rule_metric(cls, product_obj, size, scan_metric, value, modeltype_metric, f1, shift, f2):
-        print(product_obj, size, scan_metric, value, modeltype_metric, f1, shift, f2)
         model_type_obj = modeltype_metric.model_type
         model_obj = _modelRep.get({'product': product_obj, 'model_type': model_type_obj, 'size': size})
         if not model_obj:
@@ -65,11 +66,12 @@ class ProductActionsService:
                                                         'scan_metric': scan_metric},
                                                        {'f1': f1, 'shift': shift, 'f2': f2})
 
+        _comparisonResultRep.delete(dict(model=model_obj))
         return comp_rule_metr_obj
 
     @classmethod
     def csv_field_converter(cls, fields, func, tbl):
-        return petl.convert(tbl, fields, func)
+        return etl.convert(tbl, fields, func)
 
     @classmethod
     def get_model_type_metrics(cls, model_types, metric_name):
@@ -82,7 +84,7 @@ class ProductActionsService:
 
     @classmethod
     def divide_rows(cls, fields, side_fields, tbl, suffix):
-        return petl.cut(tbl, fields + tuple(map(partial(functoolz.flip, operator.add, suffix), side_fields)))
+        return etl.cut(tbl, fields + tuple(map(partial(functoolz.flip, operator.add, suffix), side_fields)))
 
     @classmethod
     def update_product(cls, product_id, product_data):
@@ -117,32 +119,43 @@ class ProductActionsService:
                 ('size', 'scan_metric', 'value',),
                 ('model_metric', 'f1', 'shift', 'f2',),
             )
-            table_creator = functoolz.compose(
-                partial(petl.skip, n=1),
-                lambda tbls: petl.stack(*tbls),
-                lambda tbl: (rows_divider(tbl, '_l'), rows_divider(tbl, '_r')),
-                partial(
-                    cls.csv_field_converter,
-                    'size',
-                    partial(_sizeRep.get_model_types_size, model_type_objects)
-                ),
-                partial(petl.unpack, field='model_metric', newfields=['model_metric_l', 'model_metric_r']),
-                partial(
-                    cls.csv_field_converter,
-                    'model_metric',
-                    partial(cls.get_model_type_metrics, model_types)
-                ),
-                partial(
-                    cls.csv_field_converter,
-                    'scan_metric',
-                    partial(_scanMetricRep.get_by_name_and_scanner_model, scanner_model)
-                ),
-                partial(cls.csv_field_converter, float_columns, float),
-                partial(cls.csv_field_converter, str_columns, 'strip'),
-                partial(petl.setheader, header=str_columns + float_columns),
-                partial(petl.fromcsv, delimiter=','),
+            table = etl.fromcsv(
+                file.name,
+                delimiter=',',
+            ).setheader(
+                header=str_columns + float_columns,
+            ).convert(
+                str_columns,
+                'strip'
+            ).convert(
+                'scan_metric',
+                partial(_scanMetricRep.get_by_name_and_scanner_model, scanner_model),
+            ).convert(
+                'model_metric',
+                partial(cls.get_model_type_metrics, model_types),
+            ).unpack(
+                field='model_metric',
+                newfields=['model_metric_l', 'model_metric_r'],
+            ).convert(
+                'size',
+                partial(_sizeRep.get_model_types_size, model_type_objects),
             )
-            list(itertools.starmap(partial(cls.add_comp_rule_metric, product_obj), table_creator(file.name)))
+            constraints = [
+                dict(
+                    name='Not none',
+                    assertion=functoolz.complement(partial(functoolz.flip, operator.contains, None)),
+                )
+            ]
+            header = ('size', 'scan_metric', 'value', 'model_metric', 'f1', 'shift', 'f2',)
+            result_table = etl.stack(rows_divider(table, '_l'), rows_divider(table, '_r')).skip(1)
+            validation_table = result_table.setheader(header).validate(
+                constraints=constraints,
+                header=header,
+            )
+            if validation_table.nrows() > 0:
+                return dict(product=None, success=False, errors=tuple(validation_table.dicts()))
+
+            list(itertools.starmap(partial(cls.add_comp_rule_metric, product_obj), result_table))
 
         product_data['brand'] = OrientRecordLink(product_data['brand'])
         product_data['default_comparison_rule'] = OrientRecordLink(product_data['default_comparison_rule'])
@@ -154,4 +167,4 @@ class ProductActionsService:
             product_obj = _productRep.update({'uuid': product_id}, product_data)
         if product_obj:
             product_obj = product_obj[0]
-        return {'@rid': product_obj._id, 'name': product_obj.name}
+        return dict(product={'@rid': product_obj._id, 'name': product_obj.name}, success=True, errors=())

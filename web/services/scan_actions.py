@@ -45,9 +45,37 @@ scan_type_dict = {
 
 
 class ScanActionService:
+    """
+    Service for actions with scan model
+
+    Methods
+    -------
+    upload(cls, url)
+        Upload file by url
+    create_scan_metric_value(cls, scan, value, metric)
+        Create entity of ScanMetricValue model
+    update_scan_attributes(cls, scan, scan_type)
+        Update metrics for scan
+    update_user_scan(cls, user, scanner, scan_id, scan_model_type, is_scan_default, scan_path)
+        Update user scans
+
+    """
 
     @classmethod
     def upload(cls, url):
+        """
+        Upload file by urls and return file content
+
+        Parameters
+        ----------
+        url: str
+            Destination url
+
+        Returns
+        -------
+        request.constent: bytes
+            Binary response
+        """
         request = requests.get(
             url=url,
         )
@@ -55,11 +83,24 @@ class ScanActionService:
         return request.content
 
     @classmethod
-    def procces_metrics(cls, scanner_model, metric_name):
-        return itertoolz.first(_scanMetricRep.get(dict(name=metric_name, scanner_model=scanner_model)))
-
-    @classmethod
     def create_scan_metric_value(cls, scan, value, metric):
+        """
+        Create entity of ScanMetricValue model for given metric with value
+
+        Parameters
+        ----------
+        scan: data.models.Scan.Scan
+            Scan object
+        value: str
+            Value of scan metric
+        metric: data.models.ScanMetric.ScanMetric
+            ScanMetric object
+
+        Returns
+        -------
+        results: data.models.ScanMetricValue.ScanMetricValue
+            created scan metric value object
+        """
         results = _scanMetricValueRep.update(dict(scan=scan, metric=metric), dict(value=value))
         if not results:
             results = _scanMetricValueRep.add(dict(scan=scan, metric=metric, value=value))
@@ -68,6 +109,19 @@ class ScanActionService:
 
     @classmethod
     def update_scan_attributes(cls, scan, scan_type):
+        """
+        Update scan metric
+
+        Parameters
+        ----------
+        scan: data.models.Scan.Scan
+            Scan object
+        scan_type: data.models.ModelType.ModelType
+
+        Returns
+        -------
+        None
+        """
         _graph = data_connection.get_graph()
         scanner_obj = _graph.element_from_link(scan.scanner)
         path_to_csv = '{}{}/{}/{}_{}_mes.csv'.format(scanner_obj.base_url, scanner_obj.name, scan.scan_id, scan.scan_id,
@@ -79,14 +133,14 @@ class ScanActionService:
         file.close()
         init_table = petl.fromcsv(file.name, delimiter=';')
         table = init_table.skip(1) if 'DOMESCAN' in init_table.header() else init_table
-        print(list(functoolz.pipe(
+        list(functoolz.pipe(
             itertoolz.first(table.dicts()),
             partial(dicttoolz.itemmap, reversed),
-            partial(dicttoolz.valmap, partial(cls.procces_metrics, scanner_obj.model)),
-            partial(filter, itemgetter(1)),
+            partial(dicttoolz.valmap, partial(_scanMetricRep.get_by_name_and_scanner_model, scanner_obj.model)),
             methodcaller('items'),
+            partial(filter, itemgetter(1)),
             partial(starmap, partial(cls.create_scan_metric_value, scan),),
-        )))
+        ))
 
     @classmethod
     def update_user_scan(cls, user, scanner, scan_id, scan_model_type, is_scan_default, scan_path):

@@ -26,7 +26,22 @@ _comparisonResRep = ComparisonResultRepository()
 _modelResRep = ModelRepository()
 
 
-def get_compare_result(scan, lasts, comparision_rule):
+def get_compare_result(scan, lasts):
+    """
+    Calculate result for scan and models
+
+    Parameters
+    ----------
+    scan: data.models.Scan.Scan
+        User scan
+    lasts: data.models.Model.Model query
+        Models of product
+
+    Returns
+    -------
+    dict
+        Calculations results
+    """
 
     scan_data = []
     lasts_data = []
@@ -34,10 +49,7 @@ def get_compare_result(scan, lasts, comparision_rule):
         lasts_data.append((last, [], []))
     scan_metric_values = ScanMetricValue.query_set.filter_by(scan=scan).all()
     logger.debug('scan_metric_values')
-    logger.debug(sorted(map(str, map(operator.attrgetter('metric'), scan_metric_values))))
-    logger.debug(sorted(map(str, map(operator.attrgetter('_id'), ScanMetric.query_set.all()))))
-    logger.debug(sorted(map(str, map(operator.attrgetter('scan'), ScanMetricValue.query_set.all()))))
-    logger.debug(sorted(map(str, map(operator.attrgetter('metric'), ScanMetricValue.query_set.all()))))
+    logger.debug(scan_metric_values)
     for scan_metric_value in scan_metric_values:
         for last_data in lasts_data:
             comparision_rule_metric = ComparisonRuleMetric.query_set.filter_by(
@@ -64,17 +76,31 @@ def get_compare_result(scan, lasts, comparision_rule):
             scan_data.append(float(scan_metric_value.value))
     logger.debug(scan)
     logger.debug(scan.is_default)
+    logger.debug('scan_data')
     logger.debug(scan_data)
     return get_metrics_by_sizes(scan_data, lasts_data)
 
 
 def get_foot_best_size(product, scans):
-    comparision_rule = ComparisonRule.query_set.filter_by(**{'@rid': product.default_comparison_rule}).first()
+    """
+    Calculate comparision results for each model for product and scans
+
+    Parameters
+    ----------
+    product: data.models.Product.Product
+        Entity of product model
+    scans: data.models.Scan.Scan query
+        Query which describe scans
+
+    Returns
+    -------
+    comparison_results: dict
+    """
     comparison_results = []
     for scan in scans:
         lasts = Model.query_set.filter_by(product=product, model_type=scan.model_type)
 
-        results = get_compare_result(scan, lasts, comparision_rule)
+        results = get_compare_result(scan, lasts)
         for res in results:
             created = ComparisonResult.objects.create(**{'scan': scan,
                                                          'model': res[0],

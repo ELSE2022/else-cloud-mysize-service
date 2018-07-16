@@ -8,6 +8,5 @@ class SizeRepository(RepositoryBase):
         super().__init__(Size)
 
     def get_model_types_size(self, model_types, size):
-        print(model_types)
         sizes = super(SizeRepository, self).get({'model_types': model_types, 'string_value': size})
         return sizes[0] if sizes else None
