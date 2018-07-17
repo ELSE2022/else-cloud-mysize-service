@@ -1,3 +1,6 @@
+import base64
+import json
+import logging
 from apirest.fitting.serializers import product
 from apirest.fitting.mixins import ListModelMixin
 from apirest.restplus import api
@@ -24,9 +27,10 @@ from flask import abort
 from flask_restplus import Resource
 from orientdb_data_layer import data_connection
 from services.product_actions import ProductActionsService
+from services.csv_parser_service import CSVParserService
 
 ns = api.namespace('fitting_products', path='/fitting/products', description='Operations related to Product')
-
+logger = logging.getLogger('rest_api_demo')
 _productRep = ProductRepository()
 _modelRep = ModelRepository()
 _modelTypeRep = ModelTypeRepository()
@@ -73,6 +77,7 @@ class Products(Resource, ListModelMixin):
 
 @ns.route('/<string:id>')
 @api.response(404, 'Product not found.')
+@api.response(404, 'Product not found.')
 class ProductGetMetricsItem(Resource):
     @api.response(204, 'Product successfully deleted.')
     @api.marshal_with(product)
@@ -95,7 +100,16 @@ class ProductGetMetricsItem(Resource):
         """
         Api method to update product.
         """
-        return ProductActionsService.update_product(id, request.json), 201
+        product_obj = _productRep.get({'@rid': id})[0]
+        if 'files' in request.json:
+            filecodestring = request.json['files'][0]['src']
+            data = base64.b64decode(filecodestring.split(',')[1])
+            csv_data = CSVParserService.parse_model_csv(data, product_obj)
+        else:
+            csv_data = CSVParserService.get_empty_model_data()
+        if not csv_data.get('success', False):
+            return abort(400, list(csv_data.get('errors').values(csv_data.get('errors').fieldnames())))
+        return ProductActionsService.update_product(id, request.json, csv_data.get('metrics')), 201
 
 
 @ns.route('/<string:uuid>/get_metrics')

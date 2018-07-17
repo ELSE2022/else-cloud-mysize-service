@@ -5,6 +5,6 @@ from .ScannerModel import ScannerModel
 
 class ScanMetric(BaseNode, BaseModel):
     element_plural = 'scan_metrics'
-    scanner_model = Link(mandatory=True, nullable=False, linked_to=ScannerModel, indexed=True)
-    processed_name = String(indexed=True)
+    scanner_model = Link(mandatory=True, nullable=False, linked_to=ScannerModel)
+    processed_name = String()
     name = String(mandatory=True)

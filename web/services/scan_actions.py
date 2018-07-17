@@ -22,6 +22,8 @@ from data.repositories import ScannerModelRepository
 
 from .utils.files import create_file
 
+from services.csv_parser_service import CSVParserService
+
 
 _scannerRep = ScannerRepository()
 _scannerModelRep = ScannerModelRepository()
@@ -124,23 +126,16 @@ class ScanActionService:
         """
         _graph = data_connection.get_graph()
         scanner_obj = _graph.element_from_link(scan.scanner)
-        path_to_csv = '{}{}/{}/{}_{}_mes.csv'.format(scanner_obj.base_url, scanner_obj.name, scan.scan_id, scan.scan_id,
-                                                     attribute_urls_type[scan_type.name])
-        request = requests.get(path_to_csv)
-        request.raise_for_status()
-        file = tempfile.NamedTemporaryFile(delete=False)
-        file.write(request.content)
-        file.close()
-        init_table = petl.fromcsv(file.name, delimiter=';')
-        table = init_table.skip(1) if 'DOMESCAN' in init_table.header() else init_table
-        list(functoolz.pipe(
-            itertoolz.first(table.dicts()),
-            partial(dicttoolz.itemmap, reversed),
-            partial(dicttoolz.valmap, partial(_scanMetricRep.get_by_name_and_scanner_model, scanner_obj.model)),
-            methodcaller('items'),
-            partial(filter, itemgetter(1)),
-            partial(starmap, partial(cls.create_scan_metric_value, scan),),
-        ))
+        path_to_csv = '{}{}/{}/{}_{}_mes.csv'.format(
+            scanner_obj.base_url,
+            scanner_obj.name,
+            scan.scan_id, scan.scan_id,
+            attribute_urls_type[scan_type.name]
+        )
+
+        parsed_csv = CSVParserService.parse_scan_csv(cls.upload(path_to_csv), scan)
+        for row in parsed_csv:
+            cls.create_scan_metric_value(scan, *row)
 
     @classmethod
     def update_user_scan(cls, user, scanner, scan_id, scan_model_type, is_scan_default, scan_path):

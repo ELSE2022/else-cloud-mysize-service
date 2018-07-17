@@ -3,6 +3,7 @@ import itertools
 import tempfile
 import petl as etl
 import operator
+import logging
 from toolz import functoolz
 from functools import partial
 
@@ -37,9 +38,46 @@ _comparisonResultRep = ComparisonResultRepository()
 
 
 class ProductActionsService:
+    """
+    Service for actions with product model
+
+    Methods
+    -------
+    add_comp_rule_metric(cls, product_obj, size, scan_metric, value, modeltype_metric, f1, shift, f2)
+        Update or create comparision rule metric
+    get_model_type_metrics(cls, model_types, metric_name)
+        Return model types for metric
+    divide_table(cls, fields, side_fields, tbl, suffix)
+        Divide table
+    update_product(cls, product_id, product_data)
+        Update product by id
+    """
 
     @classmethod
     def add_comp_rule_metric(cls, product_obj, size, scan_metric, value, modeltype_metric, f1, shift, f2):
+        """
+        Update or create comparision rule metric
+
+        Parameters
+        ----------
+        product_obj: data.models.Product.Product
+            Entity of product model
+        size: data.models.Size.Size
+            Entity of size model
+        scan_metric: data.models.ScanMetric.ScanMetric
+            Entity of scan metric model
+        value: str
+            Value of comparision rule metric
+        modeltype_metric: data.models.ModelTypeMetric.ModelTypeMetric
+            Entity of model type metric model
+        f1: float
+        shift: float
+        f2: float
+
+        Returns
+        -------
+        comp_rule_metr_obj: data.models.ComparisionRuleMetric.ComparisionRuleMetric
+        """
         model_type_obj = modeltype_metric.model_type
         model_obj = _modelRep.get({'product': product_obj, 'model_type': model_type_obj, 'size': size})
         if not model_obj:
@@ -70,93 +108,25 @@ class ProductActionsService:
         return comp_rule_metr_obj
 
     @classmethod
-    def csv_field_converter(cls, fields, func, tbl):
-        return etl.convert(tbl, fields, func)
+    def update_product(cls, product_id, product_data, metrics_data):
+        """
+        Update product by rid
 
-    @classmethod
-    def get_model_type_metrics(cls, model_types, metric_name):
-        return tuple(
-            map(
-                partial(_modelTypeMetricRep.get_by_name_and_scanner_model, metric_name=metric_name),
-                model_types,
-            )
-        )
+        Parameters
+        ----------
+        product_id: str
+            Record id in orient data base or product uuid
+        product_data: dict
+            Product data which should be saved
 
-    @classmethod
-    def divide_rows(cls, fields, side_fields, tbl, suffix):
-        return etl.cut(tbl, fields + tuple(map(partial(functoolz.flip, operator.add, suffix), side_fields)))
-
-    @classmethod
-    def update_product(cls, product_id, product_data):
-        _graph = data_connection.get_graph()
+        Returns
+        -------
+        product_obj: dict
+            Updated product
+        """
         product_obj = _productRep.get({'@rid': product_id})[0]
-        if product_obj and 'files' in product_data:
-            filecodestring = product_data['files'][0]['src']
-            data = base64.b64decode(filecodestring.split(',')[1])
-            file = tempfile.NamedTemporaryFile(delete=False)
-            file.write(data)
-            file.close()
-            comparision_rule = _compRuleRep.get({'@rid': product_obj.default_comparison_rule})[0]
-            model_types = comparision_rule.model_types
-            scanner_model = comparision_rule.scanner_model
-            float_columns = (
-                'value',
-                'f1_l',
-                'shift_l',
-                'f2_l',
-                'f1_r',
-                'shift_r',
-                'f2_r',
-            )
-            str_columns = (
-                'size',
-                'model_metric',
-                'scan_metric',
-            )
-            model_type_objects = list(map(_graph.element_from_link, model_types))
-            rows_divider = partial(
-                cls.divide_rows,
-                ('size', 'scan_metric', 'value',),
-                ('model_metric', 'f1', 'shift', 'f2',),
-            )
-            table = etl.fromcsv(
-                file.name,
-                delimiter=',',
-            ).setheader(
-                header=str_columns + float_columns,
-            ).convert(
-                str_columns,
-                'strip'
-            ).convert(
-                'scan_metric',
-                partial(_scanMetricRep.get_by_name_and_scanner_model, scanner_model),
-            ).convert(
-                'model_metric',
-                partial(cls.get_model_type_metrics, model_types),
-            ).unpack(
-                field='model_metric',
-                newfields=['model_metric_l', 'model_metric_r'],
-            ).convert(
-                'size',
-                partial(_sizeRep.get_model_types_size, model_type_objects),
-            )
-            constraints = [
-                dict(
-                    name='Not none',
-                    assertion=functoolz.complement(partial(functoolz.flip, operator.contains, None)),
-                )
-            ]
-            header = ('size', 'scan_metric', 'value', 'model_metric', 'f1', 'shift', 'f2',)
-            result_table = etl.stack(rows_divider(table, '_l'), rows_divider(table, '_r')).skip(1)
-            validation_table = result_table.setheader(header).validate(
-                constraints=constraints,
-                header=header,
-            )
-            if validation_table.nrows() > 0:
-                return dict(product=None, success=False, errors=tuple(validation_table.dicts()))
-
-            list(itertools.starmap(partial(cls.add_comp_rule_metric, product_obj), result_table))
-
+        for metric_data in metrics_data:
+            cls.add_comp_rule_metric(product_obj, *metric_data)
         product_data['brand'] = OrientRecordLink(product_data['brand'])
         product_data['default_comparison_rule'] = OrientRecordLink(product_data['default_comparison_rule'])
 
@@ -167,4 +137,4 @@ class ProductActionsService:
             product_obj = _productRep.update({'uuid': product_id}, product_data)
         if product_obj:
             product_obj = product_obj[0]
-        return dict(product={'@rid': product_obj._id, 'name': product_obj.name}, success=True, errors=())
+        return {'@rid': product_obj._id, 'name': product_obj.name}
