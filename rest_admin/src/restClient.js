@@ -99,6 +99,13 @@ const convertHTTPResponseToREST = (response, type, resource, params) => {
     }
 };
 
+const convertHTTPErrorToRest = (error) => {
+    const { message } = error;
+
+    if (!!message.details) console.error(message.details);
+    throw new Error((message.message || message) + 'See details in console.');
+};
+
 /**
  * @param {string} type Request type, e.g GET_LIST
  * @param {string} resource Resource name, e.g. "posts"
@@ -109,5 +116,6 @@ export default (type, resource, params) => {
     const { fetchJson } = fetchUtils;
     const { url, options } = convertRESTRequestToHTTP(type, resource, params);
     return fetchJson(url, options)
-        .then(response => convertHTTPResponseToREST(response, type, resource, params));
+        .then(response => convertHTTPResponseToREST(response, type, resource, params))
+        .catch(error => convertHTTPErrorToRest(error));
 };

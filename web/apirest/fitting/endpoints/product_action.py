@@ -1,5 +1,4 @@
 import base64
-import json
 import logging
 from apirest.fitting.serializers import product
 from apirest.fitting.mixins import ListModelMixin
@@ -99,6 +98,15 @@ class ProductGetMetricsItem(Resource):
     def put(self, id):
         """
         Api method to update product.
+
+        Parameters
+        ----------
+        id: str
+            Id or uuid of product
+
+        Returns
+        -------
+        Updated product
         """
         product_obj = _productRep.get({'@rid': id})[0]
         if 'files' in request.json:
@@ -108,7 +116,13 @@ class ProductGetMetricsItem(Resource):
         else:
             csv_data = CSVParserService.get_empty_model_data()
         if not csv_data.get('success', False):
-            return abort(400, list(csv_data.get('errors').values(csv_data.get('errors').fieldnames())))
+            return abort(
+                400,
+                dict(
+                    details=list(csv_data.get('errors').values(csv_data.get('errors').fieldnames())),
+                    message='CSV file contains invalid data.'
+                )
+            )
         return ProductActionsService.update_product(id, request.json, csv_data.get('metrics')), 201
 
 

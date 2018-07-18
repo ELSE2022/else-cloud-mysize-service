@@ -1,10 +1,4 @@
-from functools import partial
-from itertools import starmap
-from operator import methodcaller, itemgetter
-from toolz import dicttoolz, itertoolz, functoolz
-import tempfile
-
-import petl
+import logging
 from orientdb_data_layer import data_connection
 from pathlib import Path
 import requests
@@ -34,6 +28,7 @@ _productRep = ProductRepository()
 _userRep = UserRepository()
 _modelTypeRep = ModelTypeRepository()
 
+logger = logging.getLogger(__file__)
 
 msg_object_does_not_exist = '{} object with id "{}" not found'
 attribute_urls_type = {
@@ -194,5 +189,5 @@ class ScanActionService:
         try:
             cls.update_scan_attributes(scan, scan_type)
         except requests.HTTPError:
-            print('HTTPError')
+            logger.error('HTTPError')
         return scan

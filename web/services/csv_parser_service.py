@@ -82,6 +82,19 @@ class CSVParserService:
 
     @classmethod
     def create_temp_file(cls, data):
+        """
+        Create temp file
+
+        Parameters
+        ----------
+        data: bytes
+            Binary content
+
+        Returns
+        -------
+        file: tempfile.NamedTemporaryFile
+            Temporary file
+        """
         file = tempfile.NamedTemporaryFile(delete=False)
         file.write(data)
         file.close()
@@ -89,6 +102,20 @@ class CSVParserService:
 
     @classmethod
     def parse_scan_csv(cls, data, scan):
+        """
+        Parse scan csv
+
+        Parameters
+        ----------
+        data: bytes
+            CSV content in binary string
+        scan: data.models.Scan.Scan
+            Scan model
+
+        Returns
+        -------
+        dict with parsed csv
+        """
         _graph = data_connection.get_graph()
         scanner_obj = _graph.element_from_link(scan.scanner)
         init_table = etl.fromcsv(cls.create_temp_file(data).name, delimiter=';')
@@ -103,10 +130,31 @@ class CSVParserService:
 
     @classmethod
     def get_empty_model_data(cls):
+        """
+        Return empty parsed csv object
+
+        Returns
+        -------
+        dict with empty etl object
+        """
         return dict(metrics=etl.empty(), success=True, errors=etl.empty())
 
     @classmethod
     def parse_model_csv(cls, data, product_obj):
+        """
+        Parse model csv
+
+        Parameters
+        ----------
+        data: bytes
+            CSV content in binary string
+        product_obj: data.models.Product.Product
+            Product model
+
+        Returns
+        -------
+        dict with parsed csv
+        """
         _sizeRep.delete(dict())
 
         _graph = data_connection.get_graph()
@@ -155,19 +203,17 @@ class CSVParserService:
             'size',
             partial(_sizeRep.get_model_types_size, model_type_objects),
         )
-        header = ('size', 'scan_metric', 'value', 'model_metric', 'f1', 'shift', 'f2',)
         constraints = list(map(
             lambda field: dict(
-                name=f'{field} is not None',
+                name=f'{field} is not found',
                 field=field,
                 assertion=partial(functoolz.flip, operator.is_not, None)
             ),
-            header
+            table.fieldnames()
         ))
-        result_table = etl.stack(rows_divider(table, '_l'), rows_divider(table, '_r')).skip(1)
-        validation_table = result_table.setheader(header).validate(
+        validation_table = table.validate(
             constraints=constraints,
-            header=header,
+            header=table.fieldnames(),
         )
         if validation_table.nrows() > 0:
             return dict(
@@ -175,5 +221,6 @@ class CSVParserService:
                 success=False,
                 errors=validation_table
             )
+        result_table = etl.stack(rows_divider(table, '_l'), rows_divider(table, '_r')).skip(1)
 
         return dict(metrics=result_table, success=True, errors=etl.empty())

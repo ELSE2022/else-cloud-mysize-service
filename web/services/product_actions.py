@@ -1,13 +1,3 @@
-import base64
-import itertools
-import tempfile
-import petl as etl
-import operator
-import logging
-from toolz import functoolz
-from functools import partial
-
-from orientdb_data_layer import data_connection
 from pyorient import OrientRecordLink
 
 from data.repositories import ProductRepository
