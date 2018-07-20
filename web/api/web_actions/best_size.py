@@ -56,10 +56,6 @@ def get_compare_result(scan, lasts):
                 scan_metric=scan_metric_value.metric,
                 model=last_data[0],
             ).first()
-            logger.debug(ComparisonRuleMetric.query_set.filter_by(
-                scan_metric=scan_metric_value.metric,
-                model=last_data[0],
-            ))
             logger.debug('comparision_rule_metric')
             logger.debug(comparision_rule_metric)
             if comparision_rule_metric:
