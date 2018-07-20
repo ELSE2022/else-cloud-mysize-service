@@ -76,7 +76,6 @@ class Products(Resource, ListModelMixin):
 
 @ns.route('/<string:id>')
 @api.response(404, 'Product not found.')
-@api.response(404, 'Product not found.')
 class ProductGetMetricsItem(Resource):
     @api.response(204, 'Product successfully deleted.')
     @api.marshal_with(product)
@@ -115,15 +114,15 @@ class ProductGetMetricsItem(Resource):
             csv_data = CSVParserService.parse_model_csv(data, product_obj)
         else:
             csv_data = CSVParserService.get_empty_model_data()
-        if not csv_data.get('success', False):
+        if not csv_data['success']:
             return abort(
                 400,
                 dict(
-                    details=list(csv_data.get('errors').values(csv_data.get('errors').fieldnames())),
+                    details=list(csv_data['errors'].values(csv_data['errors'].fieldnames())),
                     message='CSV file contains invalid data.'
                 )
             )
-        return ProductActionsService.update_product(id, request.json, csv_data.get('metrics')), 201
+        return ProductActionsService.update_product(id, request.json, csv_data['metrics']), 201
 
 
 @ns.route('/<string:uuid>/get_metrics')
