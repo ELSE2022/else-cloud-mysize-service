@@ -1,17 +1,28 @@
 import logging
-import operator
 from flask import Blueprint, jsonify, request, abort
 from ..authentication import requires_auth
-from data.repositories import ProductRepository, UserRepository, UserSizeRepository, ScanRepository, ComparisonRuleMetricRepository, ScanMetricValueRepository, ModelMetricValueRepository
+from data.repositories import (
+    ProductRepository,
+    UserRepository,
+    UserSizeRepository,
+    ScanRepository,
+    ComparisonRuleMetricRepository,
+    ScanMetricValueRepository,
+    ModelMetricValueRepository,
+)
 from data.repositories import ComparisonResultRepository
 from data.repositories import SizeRepository
 from data.repositories import ModelRepository
 from orientdb_data_layer import data_connection
 from calculations.fitting_algorithms.get_metrics_by_sizes import get_metrics_by_sizes
 
-from data.models import ComparisonRule, Size, Model, \
-    ComparisonResult, ComparisonRuleMetric, ScanMetricValue, \
-    ModelMetricValue, ModelTypeMetric, ScanMetric
+from data.models import (
+    Model,
+    ComparisonResult,
+    ComparisonRuleMetric,
+    ScanMetricValue,
+    ModelMetricValue,
+)
 
 logger = logging.getLogger('rest_api_demo')
 _productRep = ProductRepository()
