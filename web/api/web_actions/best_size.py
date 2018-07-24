@@ -18,7 +18,6 @@ from calculations.fitting_algorithms.get_metrics_by_sizes import get_metrics_by_
 
 from data.models import (
     Model,
-    ComparisonResult,
     ComparisonRuleMetric,
     ScanMetricValue,
     ModelMetricValue,
@@ -76,7 +75,8 @@ def get_compare_result(scan, lasts):
                 ).first()
                 logger.debug(last_metric)
                 last_data[1].append(float(last_metric.value))
-                last_data[2].append((comparision_rule_metric.f1, comparision_rule_metric.shift, comparision_rule_metric.f2))
+                last_data[2].append(
+                    (comparision_rule_metric.f1, comparision_rule_metric.shift, comparision_rule_metric.f2))
             else:
                 break
         else:
@@ -109,9 +109,11 @@ def get_foot_best_size(product, scans):
 
         results = get_compare_result(scan, lasts)
         for res in results:
-            created = ComparisonResult.objects.create(**{'scan': scan,
-                                                         'model': res[0],
-                                                         'value': res[1]})
+            created = _comparisonResRep.add({
+                'scan': scan,
+                'model': res[0],
+                'value': res[1]},
+            )
             comparison_results.append(created)
 
     return comparison_results

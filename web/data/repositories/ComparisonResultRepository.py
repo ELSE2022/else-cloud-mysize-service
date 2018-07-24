@@ -1,8 +1,8 @@
 from data.models.ComparisonResult import ComparisonResult
-from orientdb_data_layer.data import RepositoryBase
+from .BaseRepository import BaseRepository
 
 
-class ComparisonResultRepository(RepositoryBase):
+class ComparisonResultRepository(BaseRepository):
 
     def __init__(self):
         super().__init__(ComparisonResult)

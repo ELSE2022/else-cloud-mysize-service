@@ -21,3 +21,9 @@ IMPORT_DATA_FROM_POSTGRES = False
 
 DEFAULT_STORAGE_LOGIN = 'else'
 DEFAULT_STORAGE_PASSWORD = '7kjfWVWcRN'
+
+# database settings
+DB_HOST = os.getenv('ORIENT_DB_HOST', 'plocal://orientdb:2424')
+DB_NAME = os.getenv('ORIENT_DB_NAME', 'test')
+DB_USER = os.getenv('ORIENT_DB_USER', 'root')
+DB_PASSWORD = os.getenv('ORIENT_DB_PASSWORD', 'test')

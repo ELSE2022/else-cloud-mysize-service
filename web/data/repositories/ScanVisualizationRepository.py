@@ -1,8 +1,8 @@
 from data.models.ScanVisualization import ScanVisualization
-from orientdb_data_layer.data import RepositoryBase
+from .BaseRepository import BaseRepository
 
 
-class ScanVisualizationRepository(RepositoryBase):
+class ScanVisualizationRepository(BaseRepository):
 
     def __init__(self):
         super().__init__(ScanVisualization)

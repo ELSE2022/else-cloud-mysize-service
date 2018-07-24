@@ -1,8 +1,8 @@
 from data.models.Brand import Brand
-from orientdb_data_layer.data import RepositoryBase
+from .BaseRepository import BaseRepository
 
 
-class BrandRepository(RepositoryBase):
+class BrandRepository(BaseRepository):
 
     def __init__(self):
         super().__init__(Brand)

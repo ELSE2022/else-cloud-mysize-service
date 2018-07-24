@@ -1,5 +1,5 @@
 from data.models.ScanMetric import ScanMetric
-from orientdb_data_layer.data import RepositoryBase
+from .BaseRepository import BaseRepository
 from data.utils.string_processor import normalize_string
 
 
@@ -9,7 +9,7 @@ class DuplicatedScanMetric(Exception):
         super().__init__(f'Metric with name {name} for scanner model {scanner_model} is exist')
 
 
-class ScanMetricRepository(RepositoryBase):
+class ScanMetricRepository(BaseRepository):
 
     def __init__(self):
         super().__init__(ScanMetric)

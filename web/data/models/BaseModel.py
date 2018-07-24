@@ -1,4 +1,5 @@
-from orientdb_data_layer import data_connection
+from pyorient.ogm.property import Boolean
+from orientdb_data_layer.data_connection import NodeBase
 
 
 class ClassPropertyDescriptor(object):
@@ -20,7 +21,7 @@ def classproperty(func):
     return ClassPropertyDescriptor(func)
 
 
-class BaseModel:
+class BaseModel(NodeBase):
 
     @classproperty
     def query_set(cls):
@@ -50,4 +51,33 @@ class BaseModel:
         return cls.objects.g.client.record_delete(cluster, id)
 
 
-BaseNode = data_connection.NodeBase
+class SoftDeleteModel(BaseModel):
+
+    is_delete = Boolean(default=True)
+
+    @classproperty
+    def query_set(cls):
+        return cls.objects.query().filter(cls.is_delete.__eq__(False)) if hasattr(cls, 'objects') else None
+
+    @classmethod
+    def add(cls, prop_dict, result_as_json=False):
+        props = {**prop_dict, **dict(is_delete=False)}
+        if not result_as_json:
+            return cls.objects.create(**props)
+        return cls.objects.g.client.command(
+            'SELECT @this.toJson("rid,version,fetchPlan:*:-1") AS data FROM ({})'
+                .format('SELECT * FROM V WHERE @rid = {}'
+                        .format(cls.objects.create(**props)))
+        )[0].oRecordData['data'] if hasattr(cls, 'objects') else None
+
+    @classmethod
+    def get(cls, elem_id):
+        query_dict = {'rid': elem_id}
+        return cls.query_set.filter_by(**query_dict).one()
+
+    @classmethod
+    def delete(cls, elem_id):
+        return cls.update(elem_id, dict(is_delete=True))
+
+
+BaseNode = NodeBase

@@ -1,8 +1,8 @@
 from data.models.ModelType import ModelType
-from orientdb_data_layer.data import RepositoryBase
+from .BaseRepository import BaseRepository
 
 
-class ModelTypeRepository(RepositoryBase):
+class ModelTypeRepository(BaseRepository):
 
     def __init__(self):
         super().__init__(ModelType)

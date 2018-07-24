@@ -1,5 +1,5 @@
 from data.models.Size import Size
-from orientdb_data_layer.data import RepositoryBase
+from .BaseRepository import BaseRepository
 
 from data.utils.string_processor import normalize_string
 
@@ -10,7 +10,7 @@ class DuplicatedSize(Exception):
         super().__init__(f'Size with value {value} is exist')
 
 
-class SizeRepository(RepositoryBase):
+class SizeRepository(BaseRepository):
 
     def __init__(self):
         super().__init__(Size)

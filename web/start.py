@@ -19,12 +19,10 @@ from flask import Blueprint
 from flask import Flask, jsonify
 from flask import request
 from flask import abort
-from orientdb_data_layer import data_connection
 import api
 import settings
 from data import cloud_object_storage
 from api import authentication
-from api.authentication import requires_auth
 import posgresql_import
 from apirest.fitting.endpoints.action import ns as fitting_namespace
 from apirest.fitting.endpoints.product_action import ns as product_namespace
@@ -44,6 +42,7 @@ from apirest.fitting.endpoints.model_metric_value_action import ns as model_metr
 from apirest.fitting.endpoints.visual_action import ns as visual_namespace
 from apirest.fitting.endpoints.benchmark_action import ns as benchmark_namespace
 from apirest.restplus import api as api_rest
+from services.db_connector_service import database_connect_service
 
 
 application = Flask(__name__)
@@ -63,13 +62,7 @@ cloud_object_storage.connect_to_storage(dict(key="MfRt~2TyK~nacEY6",
                                                  'region_name': "london"
                                              }))
 
-# Connect database
-initial_drop = False
-# data_connection.connect_database('plocal://5.153.55.125:2424/test', 'root', '68f90924-cd63-4df1-a945-47bcd18d45d3', initial_drop)
-data_connection.connect_database('plocal://orientdb:2424/test', 'root', 'test', initial_drop)
-# data_connection.refresh_models()
-data_connection.attach_models()
-
+database_connect_service(settings.DB_HOST, settings.DB_NAME, settings.DB_USER, settings.DB_PASSWORD)
 # Import data from postgress (if needed)
 if settings.IMPORT_DATA_FROM_POSTGRES:
     posgresql_import.import_sql('postgresql://postgres:postgres@else-fitting-service.cloudapp.net:54321/else')

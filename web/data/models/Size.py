@@ -1,9 +1,9 @@
 from pyorient.ogm.property import String, Integer, LinkSet
-from .BaseModel import BaseNode, BaseModel
+from .BaseModel import SoftDeleteModel
 from .ModelType import ModelType
 
 
-class Size(BaseNode, BaseModel):
+class Size(SoftDeleteModel):
     element_plural = 'sizes'
     model_types = LinkSet(mandatory=True, nullable=False, linked_to=ModelType)
     processed_value = String()
