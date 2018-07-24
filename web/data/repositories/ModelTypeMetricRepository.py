@@ -14,7 +14,7 @@ class ModelTypeMetricRepository(BaseRepository):
     def __init__(self):
         super().__init__(ModelTypeMetric)
 
-    def add(self, metric_dict, result_JSON= False):
+    def add(self, metric_dict, result_JSON=False):
         """
         Create model type metric object
 

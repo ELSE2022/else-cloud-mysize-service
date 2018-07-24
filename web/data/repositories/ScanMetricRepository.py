@@ -14,7 +14,7 @@ class ScanMetricRepository(BaseRepository):
     def __init__(self):
         super().__init__(ScanMetric)
 
-    def add(self, metric_dict, result_JSON= False):
+    def add(self, metric_dict, result_JSON=False):
         """
         Create scan metric object
 

@@ -85,14 +85,18 @@ class ProductActionsService:
                                                      'model_metric': modeltype_metric,
                                                      'scan_metric': scan_metric})
         if not comp_rule_metr_obj:
-            _compRuleMetricRep.add({'model': model_obj,
-                                 'model_metric': modeltype_metric,
-                                 'scan_metric': scan_metric,
-                                 'rule': product_obj.default_comparison_rule})
-        comp_rule_metr_obj = _compRuleMetricRep.update({'model': model_obj,
-                                                        'model_metric': modeltype_metric,
-                                                        'scan_metric': scan_metric},
-                                                       {'f1': f1, 'shift': shift, 'f2': f2})
+            _compRuleMetricRep.add({
+                'model': model_obj,
+                'model_metric': modeltype_metric,
+                'scan_metric': scan_metric,
+                'rule': product_obj.default_comparison_rule},
+            )
+        comp_rule_metr_obj = _compRuleMetricRep.update({
+            'model': model_obj,
+            'model_metric': modeltype_metric,
+            'scan_metric': scan_metric},
+            {'f1': f1, 'shift': shift, 'f2': f2},
+        )
 
         _comparisonResultRep.delete(dict(model=model_obj))
         return comp_rule_metr_obj
