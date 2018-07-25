@@ -9,10 +9,10 @@ from data.repositories import (
     ComparisonRuleMetricRepository,
     ScanMetricValueRepository,
     ModelMetricValueRepository,
+    ComparisonResultRepository,
+    SizeRepository,
+    ModelRepository,
 )
-from data.repositories import ComparisonResultRepository
-from data.repositories import SizeRepository
-from data.repositories import ModelRepository
 from orientdb_data_layer import data_connection
 from calculations.fitting_algorithms.get_metrics_by_sizes import get_metrics_by_sizes
 
