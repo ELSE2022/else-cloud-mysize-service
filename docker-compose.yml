@@ -27,6 +27,8 @@ services:
     links:
       - orientdb:orientdb
     command: bash start.sh
+    logging:
+      driver: journald
 
   nginx:
     build: ./nginx

@@ -1,8 +1,8 @@
 from data.models.ComparisonRule import ComparisonRule
-from orientdb_data_layer.data import RepositoryBase
+from .BaseRepository import BaseRepository
 
 
-class ComparisonRuleRepository(RepositoryBase):
+class ComparisonRuleRepository(BaseRepository):
 
     def __init__(self):
         super().__init__(ComparisonRule)

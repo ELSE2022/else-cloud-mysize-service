@@ -1,6 +1,5 @@
 import base64
-import csv
-
+import logging
 from apirest.fitting.serializers import product
 from apirest.fitting.mixins import ListModelMixin
 from apirest.restplus import api
@@ -26,10 +25,11 @@ from flask import Response
 from flask import abort
 from flask_restplus import Resource
 from orientdb_data_layer import data_connection
-from pyorient import OrientRecordLink
+from services.product_actions import ProductActionsService
+from services.csv_parser_service import CSVParserService
 
 ns = api.namespace('fitting_products', path='/fitting/products', description='Operations related to Product')
-
+logger = logging.getLogger('rest_api_demo')
 _productRep = ProductRepository()
 _modelRep = ModelRepository()
 _modelTypeRep = ModelTypeRepository()
@@ -43,49 +43,6 @@ _scannerModelRep = ScannerModelRepository()
 _modelMetricValueRep = ModelMetricValueRepository()
 
 msg_object_does_not_exist = '{} object with id "{}" not found'
-
-
-def add_comp_rule_metric(modeltype_metr, scan_metric, value, f1, shift, f2, product_obj, model_type_obj, size_obj):
-    model_obj = _modelRep.get({'product': product_obj, 'model_type': model_type_obj, 'size': size_obj})
-    if not model_obj:
-        model_obj = _modelRep.add({'product': product_obj, 'model_type': model_type_obj, 'size': size_obj})
-    else:
-        model_obj = model_obj[0]
-
-    scanner_model_obj = _scannerModelRep.get({})
-
-    modeltype_metric_obj = _modelTypeMetricRep.get({'model_type': model_type_obj, 'name': modeltype_metr})
-    if not modeltype_metric_obj:
-        modeltype_metric_obj = _modelTypeMetricRep.add({'model_type': model_type_obj, 'name': modeltype_metr})
-    else:
-        modeltype_metric_obj = modeltype_metric_obj[0]
-
-    model_metric_value_obj = _modelMetricValueRep.get({'model': model_obj, 'metric': modeltype_metric_obj})
-    if not model_metric_value_obj:
-        _modelMetricValueRep.add({'model': model_obj, 'metric': modeltype_metric_obj, 'value': value})
-    else:
-        _modelMetricValueRep.update({'model': model_obj, 'metric': modeltype_metric_obj}, {'value': value})
-
-    scan_metric_obj = _scanMetricRep.get({'name': scan_metric})
-    if not scan_metric_obj:
-        scan_metric_obj = _scanMetricRep.add({'scanner_model': scanner_model_obj[0], 'name': scan_metric})
-    else:
-        scan_metric_obj = scan_metric_obj[0]
-
-    comp_rule_metr_obj = _compRuleMetricRep.get({'model': model_obj,
-                                                 'model_metric': modeltype_metric_obj,
-                                                 'scan_metric': scan_metric_obj})
-    if not comp_rule_metr_obj:
-        comp_rule_metr_obj = _compRuleMetricRep.add({'model': model_obj,
-                                                     'model_metric': modeltype_metric_obj,
-                                                     'scan_metric': scan_metric_obj,
-                                                     'rule': product_obj.default_comparison_rule})
-    comp_rule_metr_obj = _compRuleMetricRep.update({'model': model_obj,
-                                                    'model_metric': modeltype_metric_obj,
-                                                    'scan_metric': scan_metric_obj},
-                                                   {'f1': f1, 'shift': shift, 'f2': f2})
-
-    return comp_rule_metr_obj
 
 
 @ns.route('', )
@@ -140,46 +97,32 @@ class ProductGetMetricsItem(Resource):
     def put(self, id):
         """
         Api method to update product.
+
+        Parameters
+        ----------
+        id: str
+            Id or uuid of product
+
+        Returns
+        -------
+        Updated product
         """
-        _graph = data_connection.get_graph()
-        if request.json.get('files'):
+        product_obj = _productRep.get({'@rid': id})[0]
+        if 'files' in request.json:
             filecodestring = request.json['files'][0]['src']
             data = base64.b64decode(filecodestring.split(',')[1])
-
-            iter_lines = [s.strip().decode('utf-8') for s in data.splitlines()]
-
-            reader = csv.reader(iter_lines, delimiter=',')
-
-            product_obj = _productRep.get({'@rid': id})[0]
-            foot_types = _graph.element_from_link(product_obj.default_comparison_rule).model_types
-            model_type_objects = []
-            for t in foot_types:
-                model_type_objects.append(_graph.element_from_link(t))
-            next(reader)
-            for i in reader:
-                count = 0
-                for foot_type in foot_types:
-                    size_obj = _sizeRep.get({'model_types': model_type_objects, 'string_value': i[0]})
-                    if not size_obj:
-                        size_obj = _sizeRep.add({'model_types': model_type_objects, 'string_value': i[0]})
-                    else:
-                        size_obj = size_obj[0]
-                    add_comp_rule_metric(i[1], i[2], i[3], i[4 + count], i[5 + count], i[6 + count],
-                                         product_obj, foot_type, size_obj)
-                    count += 3
-
-        data_dict = request.json
-        data_dict['brand'] = OrientRecordLink(request.json['brand'])
-        data_dict['default_comparison_rule'] = OrientRecordLink(request.json['default_comparison_rule'])
-
-        product_obj = _productRep.get({'uuid': id})
-        if not product_obj:
-            product_obj = _productRep.update({'@rid': id}, data_dict)
+            csv_data = CSVParserService.parse_model_csv(data, product_obj)
         else:
-            product_obj = _productRep.update({'uuid': id}, data_dict)
-        if product_obj:
-            product_obj = product_obj[0]
-        return {'@rid': product_obj._id, 'name': product_obj.name}, 201
+            csv_data = CSVParserService.get_empty_model_data()
+        if not csv_data['success']:
+            return abort(
+                400,
+                dict(
+                    details=list(csv_data['errors'].values(csv_data['errors'].fieldnames())),
+                    message='CSV file contains invalid data.'
+                )
+            )
+        return ProductActionsService.update_product(id, request.json, csv_data['metrics']), 201
 
 
 @ns.route('/<string:uuid>/get_metrics')

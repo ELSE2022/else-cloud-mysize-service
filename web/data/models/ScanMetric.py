@@ -1,9 +1,10 @@
 from pyorient.ogm.property import String, Link
-from .BaseModel import BaseNode, BaseModel
+from .BaseModel import SoftDeleteModel
 from .ScannerModel import ScannerModel
 
 
-class ScanMetric(BaseNode, BaseModel):
+class ScanMetric(SoftDeleteModel):
     element_plural = 'scan_metrics'
     scanner_model = Link(mandatory=True, nullable=False, linked_to=ScannerModel)
-    name = String()
+    processed_name = String()
+    name = String(mandatory=True)

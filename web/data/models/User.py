@@ -1,10 +1,10 @@
 from settings import SCANNER_STORAGE_BASE_URL
 from pyorient.ogm.property import String, Integer, LinkSet
-from .BaseModel import BaseNode, BaseModel
+from .BaseModel import BaseModel
 # from .Scan import Scan
 
 
-class User(BaseNode, BaseModel):
+class User(BaseModel):
     element_plural = 'users'
     uuid = String(unique=True, mandatory=True, nullable=False)
     num_id = Integer()

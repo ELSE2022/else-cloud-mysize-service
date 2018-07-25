@@ -1,8 +1,8 @@
 from data.models.Scan import Scan
-from orientdb_data_layer.data import RepositoryBase
+from .BaseRepository import BaseRepository
 
 
-class ScanRepository(RepositoryBase):
+class ScanRepository(BaseRepository):
 
     def __init__(self):
         super().__init__(Scan)

@@ -99,7 +99,7 @@ def get_objects(graph, user_uuid, product_uuid):
     return user_obj, product_obj, scans
 
 
-@ns.route('',)
+@ns.route('', )
 class Users(Resource, ListModelMixin):
     model = User
     serializer = fitting_user
@@ -290,7 +290,13 @@ class Size(Resource):
                 model_type_obj = model_type_obj[0]
             model_type_objects.append(model_type_obj._id)
 
-            size_object = _sizeRep.sql_command("select @rid as _id, string_value, model_types from size where {0} IN model_types AND string_value={1}".format(model_type_obj._id, request.json['string_value']), result_as_dict=True)
+            size_object = _sizeRep.sql_command("""
+              select @rid as _id, string_value, model_types from size 
+              where {0} IN model_types AND string_value={1} AND is_delete=false
+              """.format(
+                model_type_obj._id,
+                request.json['string_value']
+            ), result_as_dict=True)
             if size_object:
                 user_size_rep = _userSizeRep.get({
                     'user': user,
@@ -507,11 +513,13 @@ class Recalculate(Resource):
                 ComparisonResult.delete(x._id)
 
         comparison_results = []
-        results = get_compare_result(scan_obj, model_obj, None)
+        results = get_compare_result(scan_obj, model_obj)
         for res in results:
-            created = ComparisonResult.objects.create(**{'scan': scan_obj,
-                                                         'model': res[0],
-                                                         'value': res[1]})
+            created = _comparisonResRep.add({
+                'scan': scan_obj,
+                'model': res[0],
+                'value': res[1]},
+            )
             comparison_results.append(created)
 
         return comparison_results

@@ -1,11 +1,11 @@
 from pyorient.ogm.property import String, Link
-from .BaseModel import BaseNode, BaseModel
+from .BaseModel import SoftDeleteModel
 from .Product import Product
 from .Size import Size
 from .ModelType import ModelType
 
 
-class Model(BaseNode, BaseModel):
+class Model(SoftDeleteModel):
     element_plural = 'models'
     product = Link(mandatory=True, nullable=False, linked_to=Product)
     model_type = Link(mandatory=True, nullable=False, linked_to=ModelType)

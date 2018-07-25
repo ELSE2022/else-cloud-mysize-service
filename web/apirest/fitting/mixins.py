@@ -15,7 +15,7 @@ class ListModelMixin(object):
     filter_field = ''
 
     def get_objects(self):
-        return self.model.objects.query()
+        return self.model.query_set
 
     def get(self):
         search_query = ast.literal_eval(request.args.get('filter', '{}'))

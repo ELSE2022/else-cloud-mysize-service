@@ -1,7 +1,7 @@
 from pyorient.ogm.property import String
-from .BaseModel import BaseNode, BaseModel
+from .BaseModel import BaseModel
 
 
-class ModelType(BaseNode, BaseModel):
+class ModelType(BaseModel):
     element_plural = 'model_types'
     name = String()

@@ -1,12 +1,12 @@
 from pyorient.ogm.property import String, Link, Float
-from .BaseModel import BaseNode, BaseModel
+from .BaseModel import SoftDeleteModel
 from .ComparisonRule import ComparisonRule
 from .Model import Model
 from .ModelTypeMetric import ModelTypeMetric
 from .ScanMetric import ScanMetric
 
 
-class ComparisonRuleMetric(BaseNode, BaseModel):
+class ComparisonRuleMetric(SoftDeleteModel):
     element_plural = 'comparisonrule_metrics'
     rule = Link(mandatory=True, nullable=False, linked_to=ComparisonRule)
     model = Link(mandatory=True, nullable=False, linked_to=Model)
