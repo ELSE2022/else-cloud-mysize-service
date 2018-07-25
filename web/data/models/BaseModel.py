@@ -110,7 +110,8 @@ class BaseModel(NodeBase):
         -------
         Class model object
         """
-        return cls.objects.g.get_element(elem_id)
+        query_dict = {'@rid': elem_id}
+        return cls.query_set.filter_by(**query_dict).one()
 
     @classmethod
     def delete(cls, elem_id):
@@ -183,31 +184,7 @@ class SoftDeleteModel(BaseModel):
         -------
         Class model if result_as_json is false, else dict
         """
-        props = {**prop_dict, **dict(is_delete=False)}
-        if not result_as_json:
-            return cls.objects.create(**props)
-        return cls.objects.g.client.command(
-            'SELECT @this.toJson("rid,version,fetchPlan:*:-1") AS data FROM ({})'
-                .format('SELECT * FROM V WHERE @rid = {}'
-                        .format(cls.objects.create(**props)))
-        )[0].oRecordData['data'] if hasattr(cls, 'objects') else None
-
-    @classmethod
-    def get(cls, elem_id):
-        """
-        Get element by ID
-
-        Parameters
-        ----------
-        elem_id: str
-            ID of element
-
-        Returns
-        -------
-        Class model object
-        """
-        query_dict = {'rid': elem_id}
-        return cls.query_set.filter_by(**query_dict).one()
+        return super().add({**prop_dict, **dict(is_delete=False)}, result_as_json)
 
     @classmethod
     def delete(cls, elem_id):
