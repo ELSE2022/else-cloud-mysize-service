@@ -155,8 +155,6 @@ class CSVParserService:
         -------
         dict with parsed csv
         """
-        _sizeRep.delete(dict())
-
         _graph = data_connection.get_graph()
 
         comparision_rule = _compRuleRep.get({'@rid': product_obj.default_comparison_rule})[0]
