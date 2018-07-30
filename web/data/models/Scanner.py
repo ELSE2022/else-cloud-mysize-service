@@ -2,11 +2,11 @@ from settings import SCANNER_STORAGE_BASE_URL
 from settings import DEFAULT_STORAGE_LOGIN
 from settings import DEFAULT_STORAGE_PASSWORD
 from pyorient.ogm.property import String, Link
-from .BaseModel import BaseNode, BaseModel
+from .BaseModel import BaseModel
 from .ScannerModel import ScannerModel
 
 
-class Scanner(BaseNode, BaseModel):
+class Scanner(BaseModel):
     element_plural = 'scanners'
     model = Link(mandatory=True, nullable=False, linked_to=ScannerModel)
     name = String()

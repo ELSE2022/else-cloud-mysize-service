@@ -1,8 +1,8 @@
 from data.models.ComparisonRuleMetric import ComparisonRuleMetric
-from orientdb_data_layer.data import RepositoryBase
+from .BaseRepository import BaseRepository
 
 
-class ComparisonRuleMetricRepository(RepositoryBase):
+class ComparisonRuleMetricRepository(BaseRepository):
 
     def __init__(self):
         super().__init__(ComparisonRuleMetric)

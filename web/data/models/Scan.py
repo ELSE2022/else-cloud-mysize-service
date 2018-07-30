@@ -1,11 +1,11 @@
 from pyorient.ogm.property import String, DateTime, Link, Boolean, Integer
-from .BaseModel import BaseNode, BaseModel
+from .BaseModel import SoftDeleteModel
 from .Scanner import Scanner
 from .ModelType import ModelType
 from .User import User
 
 
-class Scan(BaseNode, BaseModel):
+class Scan(SoftDeleteModel):
     element_plural = 'scans'
     user = Link(mandatory=True, nullable=False, linked_to=User)
     scanner = Link(mandatory=True, nullable=False, linked_to=Scanner)

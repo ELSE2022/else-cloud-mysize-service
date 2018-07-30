@@ -1,10 +1,10 @@
 from pyorient.ogm.property import DateTime, Link, String
-from .BaseModel import BaseNode, BaseModel
+from .BaseModel import SoftDeleteModel
 from .Scan import Scan
 from .Model import Model
 
 
-class CompareVisualization(BaseNode, BaseModel):
+class CompareVisualization(SoftDeleteModel):
     element_plural = 'compare_visualization'
     scan = Link(mandatory=True, nullable=False, linked_to=Scan)
     model = Link(mandatory=True, nullable=False, linked_to=Model)

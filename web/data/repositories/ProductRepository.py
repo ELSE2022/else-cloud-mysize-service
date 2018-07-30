@@ -1,8 +1,8 @@
 from data.models.Product import Product
-from orientdb_data_layer.data import RepositoryBase
+from .BaseRepository import BaseRepository
 
 
-class ProductRepository(RepositoryBase):
+class ProductRepository(BaseRepository):
 
     def __init__(self):
         super().__init__(Product)

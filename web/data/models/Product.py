@@ -1,10 +1,10 @@
 from pyorient.ogm.property import String, Link
-from .BaseModel import BaseNode, BaseModel
+from .BaseModel import BaseModel
 from .Brand import Brand
 from .ComparisonRule import ComparisonRule
 
 
-class Product(BaseNode, BaseModel):
+class Product(BaseModel):
     element_plural = 'products'
     uuid = String(unique=True, mandatory=True, nullable=False)
     brand = Link(mandatory=True, nullable=False, linked_to=Brand)

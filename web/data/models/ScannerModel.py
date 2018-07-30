@@ -1,7 +1,7 @@
 from pyorient.ogm.property import String
-from .BaseModel import BaseNode, BaseModel
+from .BaseModel import BaseModel
 
 
-class ScannerModel(BaseNode, BaseModel):
+class ScannerModel(BaseModel):
     element_plural = 'scanner_models'
     name = String()

@@ -3,7 +3,7 @@ from pyorient.ogm.property import String, DateTime, Link, Float
 from .User import User
 from .Scan import Scan
 from .Brand import Brand
-from .BaseModel import BaseNode, BaseModel
+from .BaseModel import SoftDeleteModel
 from .Model import Model
 from .Size import Size
 
@@ -18,7 +18,7 @@ OPERATION_TYPES = (
 )
 
 
-class FittingHistory(BaseNode, BaseModel):
+class FittingHistory(SoftDeleteModel):
     element_plural = 'fitting_history'
     creation_time = DateTime(mandatory=True)
     operation_type = String(unique=False, mandatory=True, nullable=False)

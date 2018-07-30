@@ -1,8 +1,8 @@
 from data.models.ModelMetricValue import ModelMetricValue
-from orientdb_data_layer.data import RepositoryBase
+from .BaseRepository import BaseRepository
 
 
-class ModelMetricValueRepository(RepositoryBase):
+class ModelMetricValueRepository(BaseRepository):
 
     def __init__(self):
         super().__init__(ModelMetricValue)

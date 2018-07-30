@@ -1,8 +1,8 @@
 from data.models.User import User
-from orientdb_data_layer.data import RepositoryBase
+from .BaseRepository import BaseRepository
 
 
-class UserRepository(RepositoryBase):
+class UserRepository(BaseRepository):
 
     def __init__(self):
         super().__init__(User)
