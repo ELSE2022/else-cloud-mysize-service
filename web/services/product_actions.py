@@ -119,10 +119,12 @@ class ProductActionsService:
             Updated product
         """
         product_obj = _productRep.get({'@rid': product_id})[0]
-        for metric_data in metrics_data:
-            cls.add_comp_rule_metric(product_obj, *metric_data)
-        product_data['brand'] = OrientRecordLink(product_data['brand'])
-        product_data['default_comparison_rule'] = OrientRecordLink(product_data['default_comparison_rule'])
+        product_data['brand'] = _brandRep.get({'@rid': product_data['brand']})[0]
+        product_data['default_comparison_rule'] = _compRuleRep.get({'@rid': product_data['default_comparison_rule']})[0]
+
+        if metrics_data.nrows():
+            for metric_data in metrics_data:
+                cls.add_comp_rule_metric(product_obj, *metric_data)
 
         product_obj = _productRep.get({'uuid': product_id})
         if not product_obj:
