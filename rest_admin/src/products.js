@@ -42,8 +42,8 @@ export const ProductEdit = (props) => (
             </ReferenceInput>
             <TextInput source="sku" />
             <LongTextInput source="name" />
-            <FileInput source="files" label="Csv files" accept=".csv">
-                <FileField source="csv_file" title="CSV" />
+            <FileInput source="files" label="Csv files" accept=".csv, .stl" multiple>
+                <FileField source="src" title="name" />
             </FileInput>
         </SimpleForm>
     </Edit>

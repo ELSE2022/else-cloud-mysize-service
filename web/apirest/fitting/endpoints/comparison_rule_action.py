@@ -80,11 +80,11 @@ class ComparisonRuleItem(Resource):
         """
         model_type_obj = []
         for x in request.json['model_types']:
-            model_type_obj.append(OrientRecordLink(x))
+            model_type_obj.extend(_modelTypeRep.get({'@rid': x}))
 
         data_dict = request.json
         data_dict['model_types'] = model_type_obj
-        data_dict['scanner_model'] = OrientRecordLink(request.json['scanner_model'])
+        data_dict['scanner_model'] = _scannerModelRep.get({'@rid': request.json['scanner_model']})[0]
 
         rule_obj = _compRuleRep.update({'@rid': id}, data_dict)[0]
         return {'@rid': rule_obj._id, 'name': rule_obj.name}, 201

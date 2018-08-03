@@ -7,7 +7,7 @@
 const convertFileToBase64 = file => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file.rawFile);
-    reader.onload = () => resolve(reader.result);
+    reader.onload = () => resolve({ src: reader.result, title: file.name});
     reader.onerror = reject;
 });
 
@@ -22,10 +22,6 @@ const addUploadCapabilities = requestHandler => (type, resource, params) => {
             const formerPictures = params.data.files.filter(p => !(p instanceof File));
             // const newPictures = params.data.files.filter(p => p instanceof File);
             return Promise.all(formerPictures.map(convertFileToBase64))
-                .then(base64Pictures => base64Pictures.map(picture64 => ({
-                    src: picture64,
-                    title: `${params.data.title}`,
-                })))
                 .then(transformedNewPictures => requestHandler(type, resource, {
                     ...params,
                     data: {
