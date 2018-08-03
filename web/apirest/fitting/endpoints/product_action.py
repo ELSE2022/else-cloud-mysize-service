@@ -29,7 +29,7 @@ from flask import abort
 from flask_restplus import Resource
 from orientdb_data_layer import data_connection
 from toolz import compose
-from operator import itemgetter, methodcaller
+import operator
 
 
 ns = api.namespace('fitting_products', path='/fitting/products', description='Operations related to Product')
@@ -116,13 +116,13 @@ class ProductGetMetricsItem(Resource):
         stl_files = []
         if 'files' in request.json:
             csv_files = list(filter(
-                compose(methodcaller('endswith', '.csv'), itemgetter('title')),
+                compose(operator.methodcaller('endswith', '.csv'), operator.itemgetter('title')),
                 request.json['files']
             ))
-            if len(csv_files):
+            if csv_files:
                 csv_file = csv_files[0]
             stl_files = filter(
-                compose(methodcaller('endswith', '.stl'), itemgetter('title')),
+                compose(operator.methodcaller('endswith', '.stl'), operator.itemgetter('title')),
                 request.json['files']
             )
         if csv_file:

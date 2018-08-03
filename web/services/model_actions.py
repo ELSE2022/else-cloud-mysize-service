@@ -29,7 +29,7 @@ def add_stl_to_models_service(product, stl_data):
         size_value, model_type_value = stl['title'].replace('.stl', '').split('-')
         size = SizeRepository().get_size_by_value(size_value)
         model_types = ModelTypeRepository().get(dict(name=model_type_value))
-        model_type = model_types[0] if len(model_types) else None
+        model_type = model_types[0] if model_types else None
 
         filecodestring = stl['src']
         data = base64.b64decode(filecodestring.split(',')[1])
