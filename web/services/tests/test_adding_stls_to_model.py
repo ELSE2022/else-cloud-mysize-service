@@ -74,7 +74,7 @@ class TestRepositoryDeleteMethod(unittest.TestCase):
                 settings.MEDIA_ROOT.strip('/'),
                 'Last',
                 self.product.uuid,
-                '42-LEFT_FOOT.stl'
+                '42-LEFT_FOOT.stl',
             ]
         )
         expected_right_path = os.path.sep.join(
@@ -82,7 +82,7 @@ class TestRepositoryDeleteMethod(unittest.TestCase):
                 settings.MEDIA_ROOT.strip('/'),
                 'Last',
                 self.product.uuid,
-                '42-RIGHT_FOOT.stl'
+                '42-RIGHT_FOOT.stl',
             ]
         )
         self.assertEqual(ModelRepository().get({'@rid': self.left_model._id})[0].stl_path, expected_left_path)
