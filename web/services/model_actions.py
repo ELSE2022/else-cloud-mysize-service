@@ -10,6 +10,11 @@ from data.repositories import (
 from .utils.files import create_file
 
 
+modelTypeRep = ModelTypeRepository()
+sizeRep = SizeRepository()
+modelRep = ModelRepository()
+
+
 def add_stl_to_models_service(product, stl_data):
     """
     Add stl files to models
@@ -25,14 +30,10 @@ def add_stl_to_models_service(product, stl_data):
     -------
     None
     """
-    get_size_by_value = SizeRepository().get_size_by_value
-    get_from_model_repository = ModelTypeRepository().get
-    update_model_repository = ModelRepository().update
-
     for stl in stl_data:
         size_value, model_type_value = stl['title'].replace('.stl', '').split('-')
-        size = get_size_by_value
-        model_types = get_from_model_repository(dict(name=model_type_value))
+        size = sizeRep.get_size_by_value(size_value)
+        model_types = modelTypeRep.get(dict(name=model_type_value))
         model_type = model_types[0] if model_types else None
 
         filecodestring = stl['src']
@@ -46,7 +47,7 @@ def add_stl_to_models_service(product, stl_data):
         )
         attachment_path = create_file(attachment_name)
         Path(attachment_path).write_bytes(data)
-        update_model_repository(
+        modelRep.update(
             dict(model_type=model_type, size=size, product=product),
             dict(stl_path=attachment_path),
         )

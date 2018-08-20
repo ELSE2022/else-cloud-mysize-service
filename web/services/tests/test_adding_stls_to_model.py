@@ -3,8 +3,6 @@ import unittest
 import base64
 import shutil
 from pathlib import Path
-from operator import methodcaller
-
 from data.repositories import (
     BrandRepository,
     ModelRepository,
