@@ -42,7 +42,7 @@ export const ModelEdit = (props) => (
                 <SelectInput optionText="string_value" />
             </ReferenceInput>
             <FileInput source="files" label="STL" accept=".stl" >
-                <FileField source="stl_path" title="STL" />
+                <FileField source="stl_path" title="name" />
             </FileInput>
             <UrlField label="STL file" source="stl_path" defaultValue=""/>
         </SimpleForm>
@@ -63,7 +63,7 @@ export const ModelCreate = (props) => (
                 <SelectInput optionText="string_value" />
             </ReferenceInput>
             <FileInput source="files" label="STL" accept=".stl">
-                <FileField source="stl_path" title="STL" />
+                <FileField source="stl_path" title="name" />
             </FileInput>
         </SimpleForm>
     </Create>

@@ -89,16 +89,12 @@ class ModelItem(Resource):
         Api method to update model.
         """
         data_dict = request.json
-        data_dict['product'] = OrientRecordLink(request.json['product'])
-        data_dict['model_type'] = OrientRecordLink(request.json['model_type'])
-        data_dict['size'] = OrientRecordLink(request.json['size'])
-
         files = request.json.get('files')
         if files:
             filecodestring = files[0]['src']
             data = base64.b64decode(filecodestring.split(',')[1])
-            size_obj = _sizeRep.get({'@rid': data_dict['size'].get()})
-            product_obj = _productRep.get({'@rid': data_dict['product'].get()})
+            size_obj = _sizeRep.get({'@rid': data_dict['size']})
+            product_obj = _productRep.get({'@rid': data_dict['product']})
 
             attachment_name = os.path.sep.join(
                 [
