@@ -20,13 +20,17 @@ from data.models import ModelMetricValue
 from data.models import ComparisonResult
 from data.models import CompareVisualization
 from data.models import ComparisonRuleMetric
+from services.product_actions import ProductActionsService
+from services.csv_parser_service import CSVParserService
+from services.model_actions import add_stl_to_models_service
 from flask import request
 from flask import Response
 from flask import abort
 from flask_restplus import Resource
 from orientdb_data_layer import data_connection
-from services.product_actions import ProductActionsService
-from services.csv_parser_service import CSVParserService
+from toolz import compose
+import operator
+
 
 ns = api.namespace('fitting_products', path='/fitting/products', description='Operations related to Product')
 logger = logging.getLogger('rest_api_demo')
@@ -108,8 +112,21 @@ class ProductGetMetricsItem(Resource):
         Updated product
         """
         product_obj = _productRep.get({'@rid': id})[0]
+        csv_file = None
+        stl_files = []
         if 'files' in request.json:
-            filecodestring = request.json['files'][0]['src']
+            csv_files = list(filter(
+                compose(operator.methodcaller('endswith', '.csv'), operator.itemgetter('title')),
+                request.json['files']
+            ))
+            if csv_files:
+                csv_file = csv_files[0]
+            stl_files = filter(
+                compose(operator.methodcaller('endswith', '.stl'), operator.itemgetter('title')),
+                request.json['files']
+            )
+        if csv_file:
+            filecodestring = csv_file['src']
             data = base64.b64decode(filecodestring.split(',')[1])
             csv_data = CSVParserService.parse_model_csv(data, product_obj)
         else:
@@ -122,7 +139,9 @@ class ProductGetMetricsItem(Resource):
                     message='CSV file contains invalid data.'
                 )
             )
-        return ProductActionsService.update_product(id, request.json, csv_data['metrics']), 201
+        updated_product = ProductActionsService.update_product(id, request.json, csv_data['metrics'])
+        add_stl_to_models_service(product_obj, stl_files)
+        return updated_product, 201
 
 
 @ns.route('/<string:uuid>/get_metrics')
