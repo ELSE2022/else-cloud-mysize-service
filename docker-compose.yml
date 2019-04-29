@@ -10,6 +10,7 @@ services:
       - "2424:2424"
     environment:
       - ORIENTDB_ROOT_PASSWORD=test
+      - ORIENTDB_OPTS_MEMORY=-Xms2G -Xmx6G
     volumes:
       - ./dockerfiles/orientdbdata/databases:/orientdb/databases
       - ./dockerfiles/orientdbdata/backup:/orientdb/backup
