@@ -1,0 +1,54 @@
+---
+
+version: '2'
+services:
+  orientdb:
+    image: orientdb:2.2.30
+    ports:
+      - "2434:2434"
+      - "2480:2480"
+      - "2424:2424"
+    environment:
+      - ORIENTDB_ROOT_PASSWORD=test
+      - ORIENTDB_OPTS_MEMORY=-Xms2G -Xmx6G
+    volumes:
+      - ./dockerfiles/orientdbdata/databases:/orientdb/databases
+      - ./dockerfiles/orientdbdata/backup:/orientdb/backup
+#      - ./dockerfiles/orientdbdata/config:/orientdb/config
+
+  web:
+    build: ./web
+    env_file: .env
+    depends_on:
+      - orientdb
+#    ports:
+#      - "5000:5000"
+    volumes:
+      - ./web:/app
+    links:
+      - orientdb:orientdb
+    command: bash start.sh
+    logging:
+      driver: journald
+
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+#      - "5000:5000"
+    volumes:
+      - ./nginx/sites-enabled:/etc/nginx/sites-enabled
+    volumes_from:
+      - web
+    depends_on:
+      - web
+
+  frontweb:
+    build: ./rest_admin
+    volumes:
+      - ./rest_admin:/usr/app
+#    ports:
+#      - "3000:3000"
+    depends_on:
+      - web
+    command: sh start.sh
