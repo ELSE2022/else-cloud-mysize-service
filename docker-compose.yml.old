@@ -21,15 +21,15 @@ services:
     env_file: .env
     depends_on:
       - orientdb
-    ports:
-      - "5000:5000"
+#    ports:
+#      - "5000:5000"
     volumes:
       - ./web:/app
     links:
       - orientdb:orientdb
     command: bash start.sh
-    # logging:
-      # driver: journald
+    logging:
+      driver: journald
 
   nginx:
     build: ./nginx
